@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="Skill" format=3 uid="uid://dwag2boybp0ln"]
+
+[ext_resource type="Texture2D" uid="uid://dgq5l3nv6gdqm" path="res://Skills/hp_level4.png" id="1_60xvf"]
+[ext_resource type="Script" uid="uid://cwbxmv6ud8e5u" path="res://skill.gd" id="1_ajv2e"]
+
+[resource]
+script = ExtResource("1_ajv2e")
+icon = ExtResource("1_60xvf")
+bonus_health_percent = 5.0
+stackable = false
+metadata/_custom_type_script = "uid://cwbxmv6ud8e5u"
