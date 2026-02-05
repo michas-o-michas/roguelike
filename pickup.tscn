@@ -1,0 +1,15 @@
+[gd_scene format=3 uid="uid://bocf7xu8pccbf"]
+
+[ext_resource type="Script" uid="uid://dfjooeecev3me" path="res://Scenes/items/pickup.gd" id="1_iqk3k"]
+[ext_resource type="PackedScene" uid="uid://c32ppfpvc1q50" path="res://coin.tscn" id="2_weqpt"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_pu7wf"]
+radius = 0.8793962
+
+[node name="pickup" type="Area3D" unique_id=1104316869]
+script = ExtResource("1_iqk3k")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1756914341]
+shape = SubResource("SphereShape3D_pu7wf")
+
+[node name="Coin" parent="." unique_id=934959057 instance=ExtResource("2_weqpt")]

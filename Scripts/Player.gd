@@ -44,8 +44,6 @@ var camera_pitch := 0.0
 var base_health := 100
 var health := base_health
 
-@export var coins := 100
-
 # ================= PASSOS =================
 var step_timer := 0.0
 @export var step_interval := 0.6
@@ -53,11 +51,29 @@ var step_timer := 0.0
 @onready var step_audio: AudioStreamPlayer3D = $StepAudio
 
 
+# ================= MODO CRIATIVO (VOAR) =================
+@export var fly_speed := 12.0
+@export var fly_sprint_speed := 500.0
+
+@export var creative_mode := false
+var flying := false
+
+
 func _ready():
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	add_to_group("player")
+
+
+func _set(property, value):
+	if property == "creative_mode":
+		creative_mode = value
+		if not creative_mode:
+			flying = false
+	return true
 
 
 func _input(event):
+
 	if event.is_action_pressed("ui_cancel"):
 		Input.set_mouse_mode(
 			Input.MOUSE_MODE_VISIBLE
@@ -77,6 +93,39 @@ func _process(delta):
 
 
 func _physics_process(delta):
+
+	var input_dir = Input.get_vector("a", "d", "w", "s")
+	var direction = (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
+
+	# ============== MODO CRIATIVO / VOO ==============
+	if creative_mode:
+
+		# Alterna voo com o botão de pulo
+		if Input.is_action_just_pressed("jump"):
+			flying = !flying
+
+		if flying:
+			var current_fly_speed = fly_speed
+
+			if Input.is_action_pressed("sprint"):
+				current_fly_speed = fly_sprint_speed
+
+			# Movimento livre no ar
+			velocity.x = direction.x * current_fly_speed
+			velocity.z = direction.z * current_fly_speed
+
+			# Subir e descer
+			if Input.is_action_pressed("jump"):
+				velocity.y = current_fly_speed
+			elif Input.is_action_pressed("crouch"):
+				velocity.y = -current_fly_speed
+			else:
+				velocity.y = 0
+
+			move_and_slide()
+			return
+
+	# ============== FÍSICA NORMAL ==============
 
 	if not is_on_floor():
 		coyote_timer = max(coyote_timer - delta, 0.0)
@@ -114,9 +163,6 @@ func _physics_process(delta):
 			jump_buffered = false
 			jumps_left -= 1
 
-	var input_dir = Input.get_vector("a", "d", "w", "s")
-	var direction = (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
-
 	var current_speed = speed
 	var step_current = step_interval
 
@@ -151,6 +197,7 @@ func _physics_process(delta):
 
 
 func handle_dash(delta, direction):
+
 	if dash_cooldown_timer > 0:
 		dash_cooldown_timer -= delta
 

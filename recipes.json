@@ -1,0 +1,12 @@
+{
+  "recipes": [
+	{
+	  "name": "Espada de Madeira",
+	  "output": "wood_sword",
+	  "output_amount": 1,
+	  "inputs": [
+		{"item": "wood", "amount": 1}
+	  ]
+	},
+  ]
+}

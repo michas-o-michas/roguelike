@@ -29,6 +29,9 @@ var is_dead := false
 
 
 func _ready():
+	# Adiciona ao grupo "enemies" — necessário pra o weapon_handler reconhecer como alvo
+	add_to_group("enemies")
+
 	player = get_tree().get_first_node_in_group("player")
 	current_health = max_health
 	update_health_bar()
@@ -145,7 +148,6 @@ func apply_damage_to_player():
 	if not player:
 		return
 
-	# Aqui o player precisa ter função take_damage
 	if player.has_method("take_damage"):
 		player.take_damage(attack_damage)
 
@@ -173,7 +175,7 @@ func take_damage(amount: int, damage_dir: Vector3 = Vector3.ZERO):
 
 	# Knockback opcional
 	if damage_dir != Vector3.ZERO:
-		knockback_dir = -damage_dir.normalized()
+		knockback_dir = damage_dir.normalized()
 
 	animation_player.play("CharacterArmature|HitReact")
 
@@ -205,6 +207,10 @@ func die():
 
 	is_dead = true
 	velocity = Vector3.ZERO
+
+	# Dropa itens quando morre (se tiver EnemyDrop como filho)
+	if has_node("EnemyDrop"):
+		$EnemyDrop.drop()
 
 	if animation_player.has_animation("CharacterArmature|Death"):
 		animation_player.play("CharacterArmature|Death")

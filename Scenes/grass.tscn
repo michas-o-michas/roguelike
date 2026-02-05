@@ -1,0 +1,18 @@
+[gd_scene format=3 uid="uid://cd2buh3hvi3sy"]
+
+[ext_resource type="Texture2D" uid="uid://buexy2sa0ohr5" path="res://Assets/Grass/low_poly_grass1.png" id="1_on02d"]
+[ext_resource type="Texture2D" uid="uid://df2m0u8x4n7wc" path="res://Assets/Grass/low_poly_grass_normal.png" id="2_qm417"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_qruad"]
+transparency = 1
+cull_mode = 2
+albedo_texture = ExtResource("1_on02d")
+normal_enabled = true
+normal_texture = ExtResource("2_qm417")
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_8gyqa"]
+material = SubResource("StandardMaterial3D_qruad")
+orientation = 0
+
+[node name="MeshInstance3D" type="MeshInstance3D" unique_id=227467378]
+mesh = SubResource("PlaneMesh_8gyqa")

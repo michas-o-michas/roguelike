@@ -1,0 +1,91 @@
+[gd_scene format=3 uid="uid://rakpo2msvw5c"]
+
+[ext_resource type="Script" uid="uid://ipdv01hybnk3" path="res://Scripts/UI/recipe_card.gd" id="1_kaofu"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kaofu"]
+bg_color = Color(0.11372549, 0.1254902, 0.14509805, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.16470589, 0.1764706, 0.20784314, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_xsjuk"]
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.41568628, 0.6509804, 0.41568628, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[node name="recipe_card" type="Panel" unique_id=89167002]
+custom_minimum_size = Vector2(720, 100)
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_kaofu")
+script = ExtResource("1_kaofu")
+
+[node name="OutputContainer" type="HBoxContainer" parent="." unique_id=206441828]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 16.0
+offset_right = 52.0
+offset_bottom = 56.0
+theme_override_constants/separation = 8
+
+[node name="OutputIcon" type="Panel" parent="OutputContainer" unique_id=1007817553]
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_xsjuk")
+
+[node name="IconLabel" type="Label" parent="OutputContainer/OutputIcon" unique_id=1757337740]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 20
+text = "1"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="OutputName" type="Label" parent="OutputContainer" unique_id=546936979]
+layout_mode = 2
+text = "aaasas"
+horizontal_alignment = 1
+
+[node name="RequiresLabel" type="Label" parent="." unique_id=375303657]
+layout_mode = 0
+offset_left = 11.0
+offset_top = 65.0
+offset_right = 72.0
+offset_bottom = 88.0
+text = "Requer:"
+
+[node name="InputsContainer" type="HBoxContainer" parent="." unique_id=1590575784]
+layout_mode = 0
+offset_left = 80.0
+offset_top = 50.0
+offset_right = 120.0
+offset_bottom = 90.0
+theme_override_constants/separation = 8
+
+[node name="CraftButton" type="Button" parent="." unique_id=1172505639]
+custom_minimum_size = Vector2(100, 40)
+layout_mode = 0
+offset_left = 441.0
+offset_top = 30.0
+offset_right = 541.0
+offset_bottom = 70.0
+text = "CRAFTAR"

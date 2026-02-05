@@ -1,0 +1,244 @@
+[gd_scene format=3 uid="uid://pd8x13h546aw"]
+
+[ext_resource type="PackedScene" uid="uid://chmt2wxe13a3o" path="res://player.tscn" id="1_f3sb7"]
+[ext_resource type="Texture2D" uid="uid://mjtbkfnnon5t" path="res://Assets/mixedmoss-Unity/mixedmoss-albedo2.png" id="1_k3n1d"]
+[ext_resource type="Texture2D" uid="uid://cl1vng3v1ky22" path="res://Assets/mixedmoss-Unity/mixedmoss-ao2.png" id="2_2o6r5"]
+[ext_resource type="Texture2D" uid="uid://c23aa4dbkufbi" path="res://Assets/mixedmoss-Unity/mixedmoss-height.png" id="3_70uel"]
+[ext_resource type="Texture2D" uid="uid://c0h6hbtle14c5" path="res://Assets/mixedmoss-Unity/mixedmoss-normal2-inverted.png" id="4_hiqwa"]
+[ext_resource type="Texture2D" uid="uid://c2lj8ppcdswei" path="res://Assets/sky/dia.exr" id="5_1ew0l"]
+[ext_resource type="PackedScene" uid="uid://4nlhd3fs1c3u" path="res://chest.tscn" id="5_2o6r5"]
+[ext_resource type="Script" uid="uid://bslm3j56qnbce" path="res://Scripts/DayNightSystem.gd" id="6_gbfbk"]
+[ext_resource type="Script" uid="uid://c8muu7taujpal" path="res://Scripts/EnemySpawner.gd" id="6_pkg7o"]
+[ext_resource type="PackedScene" uid="uid://dwbfauwet3t21" path="res://Enemy.tscn" id="7_gbfbk"]
+[ext_resource type="Script" uid="uid://bwcb12qmb2fma" path="res://Scripts/WorldGenerator.gd" id="8_ikiii"]
+[ext_resource type="PackedScene" uid="uid://blpchb0gwdu2x" path="res://Scenes/Tree.tscn" id="9_26xuy"]
+[ext_resource type="PackedScene" uid="uid://b3fjj174abt04" path="res://rock.tscn" id="10_bc84e"]
+[ext_resource type="Script" uid="uid://bbwcjlccr203h" path="res://Scripts/SkillManager.gd" id="14_26xuy"]
+[ext_resource type="Texture2D" uid="uid://cx0y8t0wxeqpw" path="res://Skills/hp_level1.png" id="15_2u3nc"]
+[ext_resource type="Script" uid="uid://cwbxmv6ud8e5u" path="res://skill.gd" id="15_bc84e"]
+[ext_resource type="Texture2D" uid="uid://dgq5l3nv6gdqm" path="res://Skills/hp_level4.png" id="16_udxuc"]
+[ext_resource type="Resource" uid="uid://qinafm4w04qx" path="res://Skills/hp_level1.tres" id="16_wukud"]
+[ext_resource type="PackedScene" uid="uid://b3lw6vkxtxx4l" path="res://Assets/LowPoly Environment Pack/Plant_1.fbx" id="17_7qk3m"]
+[ext_resource type="Resource" uid="uid://dwag2boybp0ln" path="res://Skills/hp_level2.tres" id="17_il2jm"]
+[ext_resource type="PackedScene" uid="uid://borhv6lm8ewod" path="res://Assets/LowPoly Environment Pack/Plant_2.fbx" id="18_xpnt2"]
+[ext_resource type="AudioStream" uid="uid://b3m1kt2swv6po" path="res://Assets/sounds/day.wav" id="19_26xuy"]
+[ext_resource type="AudioStream" uid="uid://dymr761r3u8p6" path="res://Assets/sounds/night.wav" id="19_cbp6q"]
+[ext_resource type="PackedScene" uid="uid://csmobnv8uxvge" path="res://Assets/LowPoly Environment Pack/Plant_3.fbx" id="19_ruyqm"]
+[ext_resource type="PackedScene" uid="uid://b4xhba76seb57" path="res://Assets/LowPoly Environment Pack/Plant_4.fbx" id="20_fnoqa"]
+[ext_resource type="PackedScene" uid="uid://dg4j51w8rbjef" path="res://Assets/LowPoly Environment Pack/Plant_5.fbx" id="21_nx736"]
+[ext_resource type="PackedScene" uid="uid://80krk7t7d2gf" path="res://Assets/LowPoly Environment Pack/Plant_6.fbx" id="22_55kwu"]
+[ext_resource type="PackedScene" uid="uid://diijo4k5eaoi2" path="res://Assets/LowPoly Environment Pack/Plant_7.fbx" id="23_f3o6s"]
+[ext_resource type="PackedScene" uid="uid://b1feif10d5dyl" path="res://Assets/LowPoly Environment Pack/Grass_1.fbx" id="24_w4lh7"]
+[ext_resource type="PackedScene" uid="uid://clabur2s8201t" path="res://Assets/LowPoly Environment Pack/Grass_2.fbx" id="25_k3lar"]
+[ext_resource type="AudioStream" uid="uid://dcobdymhcson2" path="res://Assets/sounds/street-corner-jazz-cafe-338559.mp3" id="40_ryup7"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2u3nc"]
+albedo_texture = ExtResource("1_k3n1d")
+albedo_texture_force_srgb = true
+normal_enabled = true
+normal_texture = ExtResource("4_hiqwa")
+ao_enabled = true
+ao_texture = ExtResource("2_2o6r5")
+heightmap_enabled = true
+heightmap_texture = ExtResource("3_70uel")
+uv1_scale = Vector3(41, 41, 41)
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_dwbse"]
+material = SubResource("StandardMaterial3D_2u3nc")
+
+[sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_pkg7o"]
+data = PackedVector3Array(1, 0, 1, -1, 0, 1, 1, 0, -1, -1, 0, 1, -1, 0, -1, 1, 0, -1)
+
+[sub_resource type="Shader" id="Shader_1ew0l"]
+code = "shader_type sky;
+
+uniform sampler2D source_panorama : filter_linear, source_color, hint_default_black;
+
+// Intensidade geral do céu (controlada pelo script)
+uniform float exposure : hint_range(0, 128) = 1.0;
+
+// Velocidade de movimento do panorama
+uniform float speed = 0.002;
+
+void sky() {
+	// Movimento horizontal suave do céu
+	vec2 offset_coords = SKY_COORDS;
+	offset_coords.x += TIME * speed;
+
+	// Amostra o panorama com deslocamento
+	vec3 panorama = texture(source_panorama, offset_coords).rgb;
+
+	// Aplica exposição (intensidade)
+	COLOR = panorama * exposure;
+}
+"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ryup7"]
+shader = SubResource("Shader_1ew0l")
+shader_parameter/source_panorama = ExtResource("5_1ew0l")
+shader_parameter/exposure = 1.0
+shader_parameter/speed = 0.001
+
+[sub_resource type="Sky" id="Sky_ytpkv"]
+sky_material = SubResource("ShaderMaterial_ryup7")
+
+[sub_resource type="Environment" id="Environment_gbfbk"]
+background_mode = 2
+sky = SubResource("Sky_ytpkv")
+fog_enabled = true
+fog_light_color = Color(0.6, 0.7, 0.8, 1)
+fog_sun_scatter = 0.19
+fog_density = 0.003
+fog_aerial_perspective = 1.0
+fog_sky_affect = 0.605
+
+[sub_resource type="Resource" id="Resource_ikiii"]
+script = ExtResource("15_bc84e")
+name = "+5 HP"
+icon = ExtResource("15_2u3nc")
+bonus_health = 5
+metadata/_custom_type_script = "uid://cwbxmv6ud8e5u"
+
+[sub_resource type="Resource" id="Resource_cbp6q"]
+script = ExtResource("15_bc84e")
+name = "+5 HP"
+bonus_health = 5
+metadata/_custom_type_script = "uid://cwbxmv6ud8e5u"
+
+[sub_resource type="Resource" id="Resource_26xuy"]
+script = ExtResource("15_bc84e")
+name = "+5 HP"
+icon = ExtResource("16_udxuc")
+bonus_health = 5
+metadata/_custom_type_script = "uid://cwbxmv6ud8e5u"
+
+[node name="World" type="Node3D" unique_id=2059586170]
+
+[node name="Ground" type="MeshInstance3D" parent="." unique_id=171940123]
+transform = Transform3D(500, 0, 0, 0, 5, 0, 0, 0, 500, 0, -9.297379, 0)
+visible = false
+mesh = SubResource("PlaneMesh_dwbse")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Ground" unique_id=1723847484]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ground/StaticBody3D" unique_id=1625040999]
+shape = SubResource("ConcavePolygonShape3D_pkg7o")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1847540652]
+environment = SubResource("Environment_gbfbk")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=36054505]
+transform = Transform3D(1, 0, 0, 0, 0.9848077, 0.17364818, 0, -0.17364818, 0.9848077, 0, 0, 0)
+light_energy = 1.2
+shadow_enabled = true
+
+[node name="Chest" type="Node3D" parent="." unique_id=1485514794]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.7539439, 2.8888955, 0)
+
+[node name="Chest2" parent="Chest" unique_id=1183278877 instance=ExtResource("5_2o6r5")]
+skill_manager_path = NodePath("../../SkillManager")
+
+[node name="Chest3" parent="Chest" unique_id=1962364937 instance=ExtResource("5_2o6r5")]
+skill_manager_path = NodePath("../../SkillManager")
+
+[node name="Chest4" parent="Chest" unique_id=1870337610 instance=ExtResource("5_2o6r5")]
+skill_manager_path = NodePath("../../SkillManager")
+
+[node name="Chest5" parent="Chest" unique_id=1121196646 instance=ExtResource("5_2o6r5")]
+skill_manager_path = NodePath("../../SkillManager")
+
+[node name="Chest6" parent="Chest" unique_id=1020639749 instance=ExtResource("5_2o6r5")]
+skill_manager_path = NodePath("../../SkillManager")
+
+[node name="Chest7" parent="Chest" unique_id=790259559 instance=ExtResource("5_2o6r5")]
+skill_manager_path = NodePath("../../SkillManager")
+
+[node name="Chest" parent="Chest" unique_id=518922173 instance=ExtResource("5_2o6r5")]
+skill_manager_path = NodePath("../../SkillManager")
+
+[node name="Chest8" parent="Chest" unique_id=1848686386 instance=ExtResource("5_2o6r5")]
+skill_manager_path = NodePath("../../SkillManager")
+
+[node name="Chest9" parent="Chest" unique_id=725180124 instance=ExtResource("5_2o6r5")]
+skill_manager_path = NodePath("../../SkillManager")
+
+[node name="Chest10" parent="Chest" unique_id=1796609510 instance=ExtResource("5_2o6r5")]
+skill_manager_path = NodePath("../../SkillManager")
+
+[node name="Chest11" parent="Chest" unique_id=1153240084 instance=ExtResource("5_2o6r5")]
+skill_manager_path = NodePath("../../SkillManager")
+
+[node name="Chest12" parent="Chest" unique_id=1899405517 instance=ExtResource("5_2o6r5")]
+skill_manager_path = NodePath("../../SkillManager")
+
+[node name="Chest13" parent="Chest" unique_id=2084534500 instance=ExtResource("5_2o6r5")]
+skill_manager_path = NodePath("../../SkillManager")
+
+[node name="Chest14" parent="Chest" unique_id=162833827 instance=ExtResource("5_2o6r5")]
+skill_manager_path = NodePath("../../SkillManager")
+
+[node name="Chest15" parent="Chest" unique_id=586795920 instance=ExtResource("5_2o6r5")]
+skill_manager_path = NodePath("../../SkillManager")
+
+[node name="Chest16" parent="Chest" unique_id=667270183 instance=ExtResource("5_2o6r5")]
+skill_manager_path = NodePath("../../SkillManager")
+
+[node name="Chest17" parent="Chest" unique_id=405878870 instance=ExtResource("5_2o6r5")]
+skill_manager_path = NodePath("../../SkillManager")
+
+[node name="Chest18" parent="Chest" unique_id=963889570 instance=ExtResource("5_2o6r5")]
+skill_manager_path = NodePath("../../SkillManager")
+
+[node name="Chest19" parent="Chest" unique_id=163385735 instance=ExtResource("5_2o6r5")]
+skill_manager_path = NodePath("../../SkillManager")
+
+[node name="Chest20" parent="Chest" unique_id=1276353647 instance=ExtResource("5_2o6r5")]
+skill_manager_path = NodePath("../../SkillManager")
+
+[node name="Chest21" parent="Chest" unique_id=874505036 instance=ExtResource("5_2o6r5")]
+skill_manager_path = NodePath("../../SkillManager")
+
+[node name="Enemy" parent="." unique_id=1656402655 instance=ExtResource("7_gbfbk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.008562, 8.687097, 0)
+stop_distance = 1.1
+
+[node name="Player" parent="." unique_id=267460793 instance=ExtResource("1_f3sb7")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.8888955, 0)
+
+[node name="DayNightSystem" type="Node" parent="." unique_id=717672189]
+script = ExtResource("6_gbfbk")
+
+[node name="WorldGenerator" type="Node3D" parent="." unique_id=1208256914]
+script = ExtResource("8_ikiii")
+tree_scene = ExtResource("9_26xuy")
+rock_scene = ExtResource("10_bc84e")
+chest_scene = ExtResource("5_2o6r5")
+grass_scenes = Array[PackedScene]([ExtResource("17_7qk3m"), ExtResource("18_xpnt2"), ExtResource("19_ruyqm"), ExtResource("20_fnoqa"), ExtResource("21_nx736"), ExtResource("22_55kwu"), ExtResource("23_f3o6s"), ExtResource("24_w4lh7"), ExtResource("25_k3lar")])
+skill_manager_path = NodePath("../SkillManager")
+
+[node name="Spawner" type="Node" parent="." unique_id=2111805195 node_paths=PackedStringArray("day_night_system")]
+script = ExtResource("6_pkg7o")
+enemy_scene = ExtResource("7_gbfbk")
+day_night_system = NodePath("../DayNightSystem")
+
+[node name="SkillManager" type="Node" parent="." unique_id=572250977]
+script = ExtResource("14_26xuy")
+common_skills = Array[ExtResource("15_bc84e")]([ExtResource("16_wukud"), ExtResource("17_il2jm")])
+rare_skills = Array[ExtResource("15_bc84e")]([SubResource("Resource_ikiii"), SubResource("Resource_cbp6q")])
+epic_skills = Array[ExtResource("15_bc84e")]([SubResource("Resource_26xuy")])
+
+[node name="DayCycle" type="AudioStreamPlayer2D" parent="." unique_id=859152391]
+stream = ExtResource("19_26xuy")
+volume_db = -25.336
+autoplay = true
+max_polyphony = 1294
+
+[node name="NightCycle" type="AudioStreamPlayer2D" parent="." unique_id=932669657]
+stream = ExtResource("19_cbp6q")
+volume_db = -12.169
+max_distance = 1293.55
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="." unique_id=97166341]
+stream = ExtResource("40_ryup7")
+volume_db = -20.756
+autoplay = true

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="BiomeItem" format=3 uid="uid://0g0msx52k4g4"]
+
+[ext_resource type="Script" uid="uid://b78jp2kr0j5w" path="res://world_generator_v2/biome_item.gd" id="1_quj3s"]
+[ext_resource type="Script" uid="uid://bhgcthxjxafoq" path="res://world_generator_v2/sub_biome_item.gd" id="2_g7cun"]
+[ext_resource type="Resource" uid="uid://owmfiunvaor4" path="res://world_generator_v2/biomes/subbiome/flores.tres" id="3_g7cun"]
+[ext_resource type="Script" uid="uid://okens1wa1haa" path="res://world_generator_v2/item_variant.gd" id="3_nedh0"]
+[ext_resource type="Resource" uid="uid://b2cvy8kxiimmw" path="res://world_generator_v2/biomes/ItemVariant/tree/pine.tres" id="4_54lry"]
+[ext_resource type="Resource" uid="uid://c76lmam8sqks4" path="res://world_generator_v2/biomes/ItemVariant/tree/red_pine.tres" id="5_6xmfm"]
+
+[resource]
+script = ExtResource("1_quj3s")
+item_name = "Árvore de Carvalho"
+spawn_chance = 0.1
+variants = Array[ExtResource("3_nedh0")]([ExtResource("4_54lry"), ExtResource("5_6xmfm")])
+sub_items = Array[ExtResource("2_g7cun")]([ExtResource("3_g7cun")])
+metadata/_custom_type_script = "uid://b78jp2kr0j5w"

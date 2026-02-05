@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://b0yd2mrmggoef"]
+
+[ext_resource type="ArrayMesh" uid="uid://dlunh7kgjtnla" path="res://Assets/Gold Bar/GoldBar.obj" id="1_woeal"]
+
+[node name="GoldBar" type="Node3D" unique_id=1162625242]
+
+[node name="GoldBar" type="MeshInstance3D" parent="." unique_id=521900069]
+mesh = ExtResource("1_woeal")

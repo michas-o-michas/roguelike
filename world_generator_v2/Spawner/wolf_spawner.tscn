@@ -1,0 +1,14 @@
+[gd_scene format=3 uid="uid://dg4ke5ystcgjy"]
+
+[ext_resource type="Script" uid="uid://2epjwpw8sx7e" path="res://world_generator_v2/Spawner/wolf_spawner.gd" id="1_se8ey"]
+[ext_resource type="PackedScene" uid="uid://bvim5kumscie8" path="res://Assets/Wolf/Wolf.fbx" id="2_20prr"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_20prr"]
+
+[node name="WolfSpawner" type="Node3D" unique_id=720303949]
+script = ExtResource("1_se8ey")
+animal_scene = ExtResource("2_20prr")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=259568980]
+transform = Transform3D(5, 0, 0, 0, 100, 0, 0, 0, 5, 0, 0, 0)
+mesh = SubResource("CylinderMesh_20prr")

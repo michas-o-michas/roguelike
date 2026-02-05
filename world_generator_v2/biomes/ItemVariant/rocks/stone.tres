@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="ItemVariant" format=3 uid="uid://ctdn377smaw32"]
+
+[ext_resource type="Script" uid="uid://okens1wa1haa" path="res://world_generator_v2/item_variant.gd" id="1_a2at4"]
+[ext_resource type="PackedScene" uid="uid://biqne5npgl5ny" path="res://Scenes/Vegetacao/rocks/stone.tscn" id="1_i7tqg"]
+
+[resource]
+script = ExtResource("1_a2at4")
+scene = ExtResource("1_i7tqg")
+metadata/_custom_type_script = "uid://okens1wa1haa"

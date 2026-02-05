@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="BiomeItem" format=3 uid="uid://bed86835h6cwg"]
+
+[ext_resource type="Script" uid="uid://b78jp2kr0j5w" path="res://world_generator_v2/biome_item.gd" id="1_23b22"]
+[ext_resource type="Script" uid="uid://bhgcthxjxafoq" path="res://world_generator_v2/sub_biome_item.gd" id="2_ac87h"]
+[ext_resource type="Script" uid="uid://okens1wa1haa" path="res://world_generator_v2/item_variant.gd" id="3_5xgtj"]
+[ext_resource type="Resource" uid="uid://ctdn377smaw32" path="res://world_generator_v2/biomes/ItemVariant/rocks/stone.tres" id="4_ac87h"]
+
+[resource]
+script = ExtResource("1_23b22")
+item_name = "Stone"
+spawn_chance = 1.0
+variants = Array[ExtResource("3_5xgtj")]([ExtResource("4_ac87h")])
+metadata/_custom_type_script = "uid://b78jp2kr0j5w"

@@ -1,0 +1,102 @@
+[gd_scene format=3 uid="uid://k5kw063o8n6i"]
+
+[ext_resource type="Script" uid="uid://v28trtmps15f" path="res://Scripts/UI/hotbar.gd" id="1_trnr3"]
+[ext_resource type="PackedScene" uid="uid://bj0fla0h0psld" path="res://Scenes/UI/inventory_slot.tscn" id="3_kjkqa"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sk345"]
+draw_center = false
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[node name="Hotbar" type="Control" unique_id=322133573]
+layout_mode = 3
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -52.0
+offset_bottom = 16.0
+grow_horizontal = 2
+grow_vertical = 0
+size_flags_vertical = 8
+script = ExtResource("1_trnr3")
+
+[node name="AttackAudio" type="AudioStreamPlayer3D" parent="." unique_id=550418786]
+
+[node name="Panel" type="Panel" parent="." unique_id=658038553]
+custom_minimum_size = Vector2(640, 80)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -320.0
+offset_top = -77.0
+offset_right = 320.0
+offset_bottom = 3.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(322, 31)
+theme_override_styles/panel = SubResource("StyleBoxFlat_sk345")
+
+[node name="SlotsContainer" type="HBoxContainer" parent="Panel" unique_id=800381439]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -320.0
+offset_top = -34.0
+offset_right = 316.0
+offset_bottom = 34.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="inventory_slot" parent="Panel/SlotsContainer" unique_id=12331941 instance=ExtResource("3_kjkqa")]
+layout_mode = 2
+slot_type = 1
+
+[node name="inventory_slot2" parent="Panel/SlotsContainer" unique_id=1080997910 instance=ExtResource("3_kjkqa")]
+layout_mode = 2
+slot_type = 1
+slot_index = 1
+
+[node name="inventory_slot3" parent="Panel/SlotsContainer" unique_id=603140858 instance=ExtResource("3_kjkqa")]
+layout_mode = 2
+slot_type = 1
+slot_index = 2
+
+[node name="inventory_slot4" parent="Panel/SlotsContainer" unique_id=1911312278 instance=ExtResource("3_kjkqa")]
+layout_mode = 2
+slot_type = 1
+slot_index = 3
+
+[node name="inventory_slot5" parent="Panel/SlotsContainer" unique_id=813182781 instance=ExtResource("3_kjkqa")]
+layout_mode = 2
+slot_type = 1
+slot_index = 4
+
+[node name="inventory_slot6" parent="Panel/SlotsContainer" unique_id=450052161 instance=ExtResource("3_kjkqa")]
+layout_mode = 2
+slot_type = 1
+slot_index = 5
+
+[node name="inventory_slot7" parent="Panel/SlotsContainer" unique_id=1329751161 instance=ExtResource("3_kjkqa")]
+layout_mode = 2
+slot_type = 1
+slot_index = 6
+
+[node name="inventory_slot8" parent="Panel/SlotsContainer" unique_id=1321561852 instance=ExtResource("3_kjkqa")]
+layout_mode = 2
+slot_type = 1
+slot_index = 7
+
+[node name="inventory_slot9" parent="Panel/SlotsContainer" unique_id=1808301335 instance=ExtResource("3_kjkqa")]
+layout_mode = 2
+slot_type = 1
+slot_index = 8

@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="ItemVariant" format=3 uid="uid://ckrhtlxa6cijg"]
+
+[ext_resource type="PackedScene" uid="uid://7tssubls3mb3" path="res://Scenes/Vegetacao/Trees/yellow.tscn" id="1_ibba0"]
+[ext_resource type="Script" uid="uid://okens1wa1haa" path="res://world_generator_v2/item_variant.gd" id="1_lwufq"]
+
+[resource]
+script = ExtResource("1_lwufq")
+variant_name = "Fall Tree"
+scene = ExtResource("1_ibba0")
+metadata/_custom_type_script = "uid://okens1wa1haa"

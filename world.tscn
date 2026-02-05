@@ -1,10 +1,6 @@
 [gd_scene format=3 uid="uid://pd8x13h546aw"]
 
 [ext_resource type="PackedScene" uid="uid://chmt2wxe13a3o" path="res://player.tscn" id="1_f3sb7"]
-[ext_resource type="Texture2D" uid="uid://mjtbkfnnon5t" path="res://Assets/mixedmoss-Unity/mixedmoss-albedo2.png" id="1_k3n1d"]
-[ext_resource type="Texture2D" uid="uid://cl1vng3v1ky22" path="res://Assets/mixedmoss-Unity/mixedmoss-ao2.png" id="2_2o6r5"]
-[ext_resource type="Texture2D" uid="uid://c23aa4dbkufbi" path="res://Assets/mixedmoss-Unity/mixedmoss-height.png" id="3_70uel"]
-[ext_resource type="Texture2D" uid="uid://c0h6hbtle14c5" path="res://Assets/mixedmoss-Unity/mixedmoss-normal2-inverted.png" id="4_hiqwa"]
 [ext_resource type="Texture2D" uid="uid://c2lj8ppcdswei" path="res://Assets/sky/dia.exr" id="5_1ew0l"]
 [ext_resource type="PackedScene" uid="uid://4nlhd3fs1c3u" path="res://chest.tscn" id="5_2o6r5"]
 [ext_resource type="Script" uid="uid://bslm3j56qnbce" path="res://Scripts/DayNightSystem.gd" id="6_gbfbk"]
@@ -13,15 +9,9 @@
 [ext_resource type="Script" uid="uid://bwcb12qmb2fma" path="res://Scripts/WorldGenerator.gd" id="8_ikiii"]
 [ext_resource type="PackedScene" uid="uid://blpchb0gwdu2x" path="res://Scenes/Tree.tscn" id="9_26xuy"]
 [ext_resource type="PackedScene" uid="uid://b3fjj174abt04" path="res://rock.tscn" id="10_bc84e"]
-[ext_resource type="PackedScene" uid="uid://d0lkpmb6ixvic" path="res://Assets/LowPoly Environment Pack/Rock_1.fbx" id="11_yx0jh"]
-[ext_resource type="PackedScene" uid="uid://cue281o05lvgp" path="res://Assets/LowPoly Environment Pack/Rock_2.fbx" id="12_1ew0l"]
-[ext_resource type="PackedScene" uid="uid://b0a3uoyv4y8dj" path="res://Assets/LowPoly Environment Pack/Rock_3.fbx" id="13_ryup7"]
 [ext_resource type="Script" uid="uid://bbwcjlccr203h" path="res://Scripts/SkillManager.gd" id="14_26xuy"]
-[ext_resource type="PackedScene" uid="uid://dlkpgj1o6hqp2" path="res://Assets/LowPoly Environment Pack/Rock_4.fbx" id="14_ytpkv"]
 [ext_resource type="Texture2D" uid="uid://cx0y8t0wxeqpw" path="res://Skills/hp_level1.png" id="15_2u3nc"]
 [ext_resource type="Script" uid="uid://cwbxmv6ud8e5u" path="res://skill.gd" id="15_bc84e"]
-[ext_resource type="PackedScene" uid="uid://b0redrd3aqo5d" path="res://Assets/LowPoly Environment Pack/Rock_5.fbx" id="15_jas3d"]
-[ext_resource type="PackedScene" uid="uid://but7720i7c0a4" path="res://Assets/LowPoly Environment Pack/Rock_6.fbx" id="16_7htu6"]
 [ext_resource type="Texture2D" uid="uid://dgq5l3nv6gdqm" path="res://Skills/hp_level4.png" id="16_udxuc"]
 [ext_resource type="Resource" uid="uid://qinafm4w04qx" path="res://Skills/hp_level1.tres" id="16_wukud"]
 [ext_resource type="PackedScene" uid="uid://b3lw6vkxtxx4l" path="res://Assets/LowPoly Environment Pack/Plant_1.fbx" id="17_7qk3m"]
@@ -36,27 +26,7 @@
 [ext_resource type="PackedScene" uid="uid://diijo4k5eaoi2" path="res://Assets/LowPoly Environment Pack/Plant_7.fbx" id="23_f3o6s"]
 [ext_resource type="PackedScene" uid="uid://b1feif10d5dyl" path="res://Assets/LowPoly Environment Pack/Grass_1.fbx" id="24_w4lh7"]
 [ext_resource type="PackedScene" uid="uid://clabur2s8201t" path="res://Assets/LowPoly Environment Pack/Grass_2.fbx" id="25_k3lar"]
-[ext_resource type="PackedScene" uid="uid://dkjwnrlnhohrp" path="res://Assets/LowPoly Environment Pack/Bush_1.fbx" id="26_olr1q"]
-[ext_resource type="PackedScene" uid="uid://b3vpvu1rabpak" path="res://Assets/LowPoly Environment Pack/Bush_2.fbx" id="27_q42o5"]
-[ext_resource type="PackedScene" uid="uid://b5wn78dc60lwo" path="res://Assets/LowPoly Environment Pack/Bush_3.fbx" id="28_b7btk"]
 [ext_resource type="AudioStream" uid="uid://dcobdymhcson2" path="res://Assets/sounds/street-corner-jazz-cafe-338559.mp3" id="40_ryup7"]
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2u3nc"]
-albedo_texture = ExtResource("1_k3n1d")
-albedo_texture_force_srgb = true
-normal_enabled = true
-normal_texture = ExtResource("4_hiqwa")
-ao_enabled = true
-ao_texture = ExtResource("2_2o6r5")
-heightmap_enabled = true
-heightmap_texture = ExtResource("3_70uel")
-uv1_scale = Vector3(41, 41, 41)
-
-[sub_resource type="PlaneMesh" id="PlaneMesh_dwbse"]
-material = SubResource("StandardMaterial3D_2u3nc")
-
-[sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_pkg7o"]
-data = PackedVector3Array(1, 0, 1, -1, 0, 1, 1, 0, -1, -1, 0, 1, -1, 0, -1, 1, 0, -1)
 
 [sub_resource type="Shader" id="Shader_1ew0l"]
 code = "shader_type sky;
@@ -94,6 +64,7 @@ sky_material = SubResource("ShaderMaterial_ryup7")
 [sub_resource type="Environment" id="Environment_gbfbk"]
 background_mode = 2
 sky = SubResource("Sky_ytpkv")
+ambient_light_source = 1
 fog_enabled = true
 fog_light_color = Color(0.6, 0.7, 0.8, 1)
 fog_sun_scatter = 0.19
@@ -122,16 +93,6 @@ bonus_health = 5
 metadata/_custom_type_script = "uid://cwbxmv6ud8e5u"
 
 [node name="World" type="Node3D" unique_id=2059586170]
-
-[node name="Ground" type="MeshInstance3D" parent="." unique_id=171940123]
-transform = Transform3D(500, 0, 0, 0, 5, 0, 0, 0, 500, 0, -9.297379, 0)
-visible = false
-mesh = SubResource("PlaneMesh_dwbse")
-
-[node name="StaticBody3D" type="StaticBody3D" parent="Ground" unique_id=1723847484]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Ground/StaticBody3D" unique_id=1625040999]
-shape = SubResource("ConcavePolygonShape3D_pkg7o")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1847540652]
 environment = SubResource("Environment_gbfbk")
@@ -207,30 +168,10 @@ skill_manager_path = NodePath("../../SkillManager")
 [node name="Chest21" parent="Chest" unique_id=874505036 instance=ExtResource("5_2o6r5")]
 skill_manager_path = NodePath("../../SkillManager")
 
-[node name="Enemy" parent="." unique_id=1656402655 instance=ExtResource("7_gbfbk")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.008562, 8.687097, 0)
-stop_distance = 1.1
-
 [node name="Player" parent="." unique_id=267460793 instance=ExtResource("1_f3sb7")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.8888955, 0)
-speed = null
-sprint_speed = null
-jump_force = null
-gravity = null
-accel = null
-deaccel = null
-air_accel = null
-air_deaccel = null
-dash_force = null
-dash_time = null
-dash_cooldown = null
-max_jumps = null
-coyote_time = null
-jump_buffer_time = null
-mouse_sensitivity = null
-cam_lerp_speed = null
-step_interval = null
-step_interval_sprint = null
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 391.3393, 0)
+jump_force = 40.0
+max_jumps = 10
 
 [node name="DayNightSystem" type="Node" parent="." unique_id=717672189]
 script = ExtResource("6_gbfbk")
@@ -240,18 +181,14 @@ script = ExtResource("8_ikiii")
 tree_scene = ExtResource("9_26xuy")
 rock_scene = ExtResource("10_bc84e")
 chest_scene = ExtResource("5_2o6r5")
-small_rocks_density = 0.049
-grass_density = 0.13
-bush_density = 0.083
-small_rocks_scenes = Array[PackedScene]([ExtResource("11_yx0jh"), ExtResource("12_1ew0l"), ExtResource("13_ryup7"), ExtResource("14_ytpkv"), ExtResource("15_jas3d"), ExtResource("16_7htu6")])
+map_size = 1000
 grass_scenes = Array[PackedScene]([ExtResource("17_7qk3m"), ExtResource("18_xpnt2"), ExtResource("19_ruyqm"), ExtResource("20_fnoqa"), ExtResource("21_nx736"), ExtResource("22_55kwu"), ExtResource("23_f3o6s"), ExtResource("24_w4lh7"), ExtResource("25_k3lar")])
-bush_scenes = Array[PackedScene]([ExtResource("26_olr1q"), ExtResource("27_q42o5"), ExtResource("28_b7btk")])
-tree_forest_density = 0.054
-tree_medium_density = 0.055
-rock_cluster_density = 0.04
-terrain_height = 50.0
-chunk_size = 50.0
-grass_level = 1.0
+tree_forest_density = 1.0
+tree_medium_density = 1.0
+tree_sparse_density = 0.05
+rock_cluster_density = 0.01
+noise_amplitude = 100.0
+terrain_chunk_size = 100.0
 chest_spawn_chance = 0.02
 skill_manager_path = NodePath("../SkillManager")
 

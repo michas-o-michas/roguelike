@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="BiomeData" format=3 uid="uid://ddifpics0l6m5"]
+
+[ext_resource type="Script" uid="uid://b78jp2kr0j5w" path="res://world_generator_v2/biome_item.gd" id="1_h4kd2"]
+[ext_resource type="Script" uid="uid://b21qcx74inoxd" path="res://world_generator_v2/biome_data.gd" id="2_hfggp"]
+[ext_resource type="Resource" uid="uid://bed86835h6cwg" path="res://world_generator_v2/biomes/BiomeItem/stone.tres" id="2_sga6u"]
+
+[resource]
+script = ExtResource("2_hfggp")
+biome_name = "Montanha Rochosa"
+min_height = 20.0
+max_height = 200.0
+preferred_moisture = 1.0
+preferred_temperature = 1.0
+biome_noise_value = 1.0
+biome_items = Array[ExtResource("1_h4kd2")]([ExtResource("2_sga6u")])
+metadata/_custom_type_script = "uid://b21qcx74inoxd"

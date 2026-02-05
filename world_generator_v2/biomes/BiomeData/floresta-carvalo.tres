@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="BiomeData" format=3 uid="uid://d2fg6i2elup0"]
+
+[ext_resource type="Script" uid="uid://b78jp2kr0j5w" path="res://world_generator_v2/biome_item.gd" id="1_ee0u6"]
+[ext_resource type="Script" uid="uid://b21qcx74inoxd" path="res://world_generator_v2/biome_data.gd" id="2_5rm5j"]
+[ext_resource type="Resource" uid="uid://0g0msx52k4g4" path="res://world_generator_v2/biomes/BiomeItem/arvore-carvalho.tres" id="2_8exqf"]
+
+[resource]
+script = ExtResource("2_5rm5j")
+biome_name = "Floresta Normal"
+max_height = 20.0
+preferred_moisture = 1.0
+preferred_temperature = 1.0
+biome_noise_value = 0.0
+biome_items = Array[ExtResource("1_ee0u6")]([ExtResource("2_8exqf")])
+metadata/_custom_type_script = "uid://b21qcx74inoxd"

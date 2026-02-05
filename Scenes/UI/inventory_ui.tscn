@@ -1,0 +1,380 @@
+[gd_scene format=3 uid="uid://bdkw73jxvmhn0"]
+
+[ext_resource type="Script" uid="uid://d4iblqgmao3ll" path="res://Scripts/UI/inventory_ui.gd" id="1_p83af"]
+[ext_resource type="PackedScene" uid="uid://bj0fla0h0psld" path="res://Scenes/UI/inventory_slot.tscn" id="2_o62ck"]
+[ext_resource type="FontFile" uid="uid://d1q5k65w0yrbm" path="res://Assets/aeogo-pxltd-serif-font/AeogoPxltdSerif-gw4vp.ttf" id="2_sfqc8"]
+[ext_resource type="Script" uid="uid://cdnjxp74inlvk" path="res://Scripts/UI/crafting_ui.gd" id="4_kyjlm"]
+[ext_resource type="Texture2D" uid="uid://dy20vbvd557ls" path="res://Assets/icons/placeholder.png" id="4_sfqc8"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sfqc8"]
+bg_color = Color(0.19076231, 0.19076234, 0.19076231, 0.9647059)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kyjlm"]
+bg_color = Color(0.039215688, 0.039215688, 0.039215688, 0.33333334)
+border_width_left = 8
+border_width_top = 8
+border_width_right = 8
+border_width_bottom = 8
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+expand_margin_left = 4.0
+expand_margin_top = 4.0
+expand_margin_right = 4.0
+expand_margin_bottom = 4.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hcmni"]
+bg_color = Color(0.6, 0.6, 0.6, 0)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_o62ck"]
+bg_color = Color(0, 0, 0, 0.21176471)
+
+[node name="InventoryUi" type="Control" unique_id=361916822]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_p83af")
+
+[node name="Overlay" type="Panel" parent="." unique_id=1456517709]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_sfqc8")
+
+[node name="PanelContainer" type="PanelContainer" parent="." unique_id=459632903]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -408.0
+offset_top = -258.0
+offset_right = 408.0
+offset_bottom = 258.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_kyjlm")
+
+[node name="Window" type="Panel" parent="PanelContainer" unique_id=2005788758]
+z_index = 1
+custom_minimum_size = Vector2(800, 500)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_hcmni")
+
+[node name="Header" type="Panel" parent="PanelContainer/Window" unique_id=371865553]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 33.0
+grow_horizontal = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_o62ck")
+
+[node name="CoinsLabel" type="Label" parent="PanelContainer/Window/Header" unique_id=635819316]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_top = -11.5
+offset_right = 41.0
+offset_bottom = 11.5
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("2_sfqc8")
+text = "coins"
+
+[node name="Title" type="Label" parent="PanelContainer/Window/Header" unique_id=615366502]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -37.5
+offset_top = -11.5
+offset_right = 37.5
+offset_bottom = 11.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("2_sfqc8")
+text = "Inventory"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CloseButton" type="Button" parent="PanelContainer/Window/Header" unique_id=1206782256]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -33.0
+offset_top = -15.5
+offset_right = -3.0
+offset_bottom = 15.5
+grow_horizontal = 0
+grow_vertical = 2
+text = "❌"
+
+[node name="Tabs" type="HBoxContainer" parent="PanelContainer/Window" unique_id=651941703]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 30.0
+offset_bottom = 61.0
+grow_horizontal = 2
+
+[node name="InventoryTab" type="Button" parent="PanelContainer/Window/Tabs" unique_id=481761105]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_sfqc8")
+text = "Inventory
+"
+
+[node name="CraftingTab" type="Button" parent="PanelContainer/Window/Tabs" unique_id=2116311981]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_sfqc8")
+text = "Crafting"
+
+[node name="InventoryContent" type="Control" parent="PanelContainer/Window" unique_id=1124085328]
+custom_minimum_size = Vector2(340, 270)
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_top = -135.0
+offset_right = 340.0
+offset_bottom = 135.0
+grow_vertical = 2
+
+[node name="InventoryGrid" type="GridContainer" parent="PanelContainer/Window/InventoryContent" unique_id=245748679]
+layout_mode = 0
+offset_left = 16.0
+offset_right = 352.0
+offset_bottom = 268.0
+columns = 5
+
+[node name="inventory_slot" parent="PanelContainer/Window/InventoryContent/InventoryGrid" unique_id=12331941 instance=ExtResource("2_o62ck")]
+layout_mode = 2
+slot_index = 9
+
+[node name="inventory_slot2" parent="PanelContainer/Window/InventoryContent/InventoryGrid" unique_id=2093890740 instance=ExtResource("2_o62ck")]
+layout_mode = 2
+slot_index = 10
+
+[node name="inventory_slot3" parent="PanelContainer/Window/InventoryContent/InventoryGrid" unique_id=1607027037 instance=ExtResource("2_o62ck")]
+layout_mode = 2
+slot_index = 11
+
+[node name="inventory_slot4" parent="PanelContainer/Window/InventoryContent/InventoryGrid" unique_id=1769784402 instance=ExtResource("2_o62ck")]
+layout_mode = 2
+slot_index = 12
+
+[node name="inventory_slot5" parent="PanelContainer/Window/InventoryContent/InventoryGrid" unique_id=1133654334 instance=ExtResource("2_o62ck")]
+layout_mode = 2
+slot_index = 13
+
+[node name="inventory_slot6" parent="PanelContainer/Window/InventoryContent/InventoryGrid" unique_id=2090232152 instance=ExtResource("2_o62ck")]
+layout_mode = 2
+slot_index = 14
+
+[node name="inventory_slot7" parent="PanelContainer/Window/InventoryContent/InventoryGrid" unique_id=722124981 instance=ExtResource("2_o62ck")]
+layout_mode = 2
+slot_index = 15
+
+[node name="inventory_slot8" parent="PanelContainer/Window/InventoryContent/InventoryGrid" unique_id=1573306998 instance=ExtResource("2_o62ck")]
+layout_mode = 2
+slot_index = 16
+
+[node name="inventory_slot9" parent="PanelContainer/Window/InventoryContent/InventoryGrid" unique_id=1228538436 instance=ExtResource("2_o62ck")]
+layout_mode = 2
+slot_index = 17
+
+[node name="inventory_slot10" parent="PanelContainer/Window/InventoryContent/InventoryGrid" unique_id=981679996 instance=ExtResource("2_o62ck")]
+layout_mode = 2
+slot_index = 18
+
+[node name="inventory_slot11" parent="PanelContainer/Window/InventoryContent/InventoryGrid" unique_id=2089783432 instance=ExtResource("2_o62ck")]
+layout_mode = 2
+slot_index = 19
+
+[node name="inventory_slot12" parent="PanelContainer/Window/InventoryContent/InventoryGrid" unique_id=1140344958 instance=ExtResource("2_o62ck")]
+layout_mode = 2
+slot_index = 20
+
+[node name="inventory_slot13" parent="PanelContainer/Window/InventoryContent/InventoryGrid" unique_id=344075005 instance=ExtResource("2_o62ck")]
+layout_mode = 2
+slot_index = 21
+
+[node name="inventory_slot14" parent="PanelContainer/Window/InventoryContent/InventoryGrid" unique_id=1696552517 instance=ExtResource("2_o62ck")]
+layout_mode = 2
+slot_index = 22
+
+[node name="inventory_slot15" parent="PanelContainer/Window/InventoryContent/InventoryGrid" unique_id=497535573 instance=ExtResource("2_o62ck")]
+layout_mode = 2
+slot_index = 23
+
+[node name="inventory_slot16" parent="PanelContainer/Window/InventoryContent/InventoryGrid" unique_id=726491134 instance=ExtResource("2_o62ck")]
+layout_mode = 2
+slot_index = 24
+
+[node name="inventory_slot17" parent="PanelContainer/Window/InventoryContent/InventoryGrid" unique_id=110581758 instance=ExtResource("2_o62ck")]
+layout_mode = 2
+slot_index = 25
+
+[node name="inventory_slot18" parent="PanelContainer/Window/InventoryContent/InventoryGrid" unique_id=271477709 instance=ExtResource("2_o62ck")]
+layout_mode = 2
+slot_index = 26
+
+[node name="inventory_slot19" parent="PanelContainer/Window/InventoryContent/InventoryGrid" unique_id=2009550918 instance=ExtResource("2_o62ck")]
+layout_mode = 2
+slot_index = 27
+
+[node name="inventory_slot20" parent="PanelContainer/Window/InventoryContent/InventoryGrid" unique_id=368924748 instance=ExtResource("2_o62ck")]
+layout_mode = 2
+slot_index = 28
+
+[node name="EquipmentPanel" type="Control" parent="PanelContainer/Window/InventoryContent" unique_id=1305830969]
+anchors_preset = 0
+offset_left = 467.0
+offset_right = 467.0
+
+[node name="ArmorSlot1" parent="PanelContainer/Window/InventoryContent/EquipmentPanel" unique_id=952615022 instance=ExtResource("2_o62ck")]
+layout_mode = 0
+offset_left = 184.0
+offset_top = -38.0
+offset_right = 248.0
+offset_bottom = 26.0
+slot_type = 3
+slot_index = 29
+
+[node name="Label" type="Label" parent="PanelContainer/Window/InventoryContent/EquipmentPanel/ArmorSlot1" unique_id=2060055296]
+layout_mode = 0
+offset_left = -39.0
+offset_top = 21.0
+offset_right = 1.0
+offset_bottom = 44.0
+text = "🛡️"
+
+[node name="ArmorSlot2" parent="PanelContainer/Window/InventoryContent/EquipmentPanel" unique_id=1125833509 instance=ExtResource("2_o62ck")]
+layout_mode = 0
+offset_left = 201.0
+offset_top = 44.0
+offset_right = 265.0
+offset_bottom = 108.0
+slot_type = 3
+slot_index = 30
+
+[node name="Label" type="Label" parent="PanelContainer/Window/InventoryContent/EquipmentPanel/ArmorSlot2" unique_id=266856345]
+layout_mode = 0
+offset_left = -39.0
+offset_top = 21.0
+offset_right = 1.0
+offset_bottom = 44.0
+text = "🛡️"
+
+[node name="ArmorSlot3" parent="PanelContainer/Window/InventoryContent/EquipmentPanel" unique_id=1341587723 instance=ExtResource("2_o62ck")]
+layout_mode = 0
+offset_left = 213.0
+offset_top = 130.0
+offset_right = 277.0
+offset_bottom = 194.0
+slot_type = 3
+slot_index = 31
+
+[node name="Label" type="Label" parent="PanelContainer/Window/InventoryContent/EquipmentPanel/ArmorSlot3" unique_id=31209285]
+layout_mode = 0
+offset_left = -39.0
+offset_top = 21.0
+offset_right = 1.0
+offset_bottom = 44.0
+text = "🛡️"
+
+[node name="WeaponSlot" parent="PanelContainer/Window/InventoryContent/EquipmentPanel" unique_id=1550791080 instance=ExtResource("2_o62ck")]
+custom_minimum_size = Vector2(84, 84)
+layout_mode = 0
+offset_left = -68.0
+offset_top = 42.0
+offset_right = 16.0
+offset_bottom = 126.0
+slot_type = 2
+slot_index = 32
+
+[node name="Label" type="Label" parent="PanelContainer/Window/InventoryContent/EquipmentPanel/WeaponSlot" unique_id=475358037]
+layout_mode = 0
+offset_left = 29.0
+offset_top = -24.0
+offset_right = 69.0
+offset_bottom = -1.0
+text = "⚔️"
+
+[node name="AccessorySlot1" parent="PanelContainer/Window/InventoryContent/EquipmentPanel" unique_id=1855903210 instance=ExtResource("2_o62ck")]
+layout_mode = 0
+offset_left = 5.0
+offset_top = 299.0
+offset_right = 69.0
+offset_bottom = 363.0
+slot_type = 4
+slot_index = 33
+
+[node name="Label" type="Label" parent="PanelContainer/Window/InventoryContent/EquipmentPanel/AccessorySlot1" unique_id=1460048080]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 63.0
+offset_right = 60.0
+offset_bottom = 86.0
+text = "💍"
+
+[node name="AccessorySlot2" parent="PanelContainer/Window/InventoryContent/EquipmentPanel" unique_id=392345304 instance=ExtResource("2_o62ck")]
+layout_mode = 0
+offset_left = 132.0
+offset_top = 298.0
+offset_right = 196.0
+offset_bottom = 362.0
+slot_type = 4
+slot_index = 34
+
+[node name="Label" type="Label" parent="PanelContainer/Window/InventoryContent/EquipmentPanel/AccessorySlot2" unique_id=928672600]
+layout_mode = 0
+offset_left = 22.0
+offset_top = 63.0
+offset_right = 62.0
+offset_bottom = 86.0
+text = "💍"
+
+[node name="CraftingContent" type="Control" parent="PanelContainer/Window" unique_id=1366819968]
+custom_minimum_size = Vector2(600, 400)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -397.0
+offset_top = -153.0
+offset_right = 203.0
+offset_bottom = 247.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("4_kyjlm")
+
+[node name="ScrollContainer" type="ScrollContainer" parent="PanelContainer/Window/CraftingContent" unique_id=884245080]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="RecipesList" type="VBoxContainer" parent="PanelContainer/Window/CraftingContent/ScrollContainer" unique_id=1122965751]
+layout_mode = 2
+
+[node name="Placeholder" type="Sprite2D" parent="PanelContainer" unique_id=2021623543]
+position = Vector2(571, 251)
+scale = Vector2(0.45, 0.45)
+texture = ExtResource("4_sfqc8")

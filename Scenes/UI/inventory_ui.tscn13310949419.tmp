@@ -1,0 +1,331 @@
+[gd_scene format=3 uid="uid://bdkw73jxvmhn0"]
+
+[ext_resource type="Script" uid="uid://gn7h3ca4gf1v" path="res://Scripts/UI/smart_inventory_setup.gd" id="1_o62ck"]
+[ext_resource type="Script" uid="uid://bcfiidggh5q4o" path="res://Scripts/UI/inventory_slot.gd" id="2_hcmni"]
+[ext_resource type="PackedScene" uid="uid://bj0fla0h0psld" path="res://Scenes/UI/inventory_slot.tscn" id="2_o62ck"]
+
+[node name="InventoryUi" type="Control" unique_id=361916822]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_o62ck")
+setup_all_inventory = true
+create_slot_children = true
+
+[node name="Overlay" type="Panel" parent="." unique_id=1456517709]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Window" type="Panel" parent="." unique_id=2005788758]
+custom_minimum_size = Vector2(800, 530)
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -300.0
+offset_top = 8.0
+offset_right = 300.0
+offset_bottom = 508.0
+grow_horizontal = 2
+
+[node name="Header" type="Panel" parent="Window" unique_id=371865553]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+grow_horizontal = 2
+
+[node name="Title" type="Label" parent="Window/Header" unique_id=635819316]
+layout_mode = 1
+offset_right = 40.0
+offset_bottom = 23.0
+text = "coins"
+
+[node name="CoinsLabel" type="Label" parent="Window/Header" unique_id=615366502]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -20.0
+offset_right = 20.0
+offset_bottom = 23.0
+grow_horizontal = 2
+text = "Inventory"
+
+[node name="CloseButton" type="Button" parent="Window/Header" unique_id=1206782256]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -74.0
+offset_bottom = 31.0
+grow_horizontal = 0
+text = "× Close"
+
+[node name="Tabs" type="HBoxContainer" parent="Window" unique_id=651941703]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 30.0
+offset_bottom = 61.0
+grow_horizontal = 2
+
+[node name="InventoryTab" type="Button" parent="Window/Tabs" unique_id=481761105]
+layout_mode = 2
+text = "Inventory
+"
+
+[node name="CraftingTab" type="Button" parent="Window/Tabs" unique_id=2116311981]
+layout_mode = 2
+text = "Crafting"
+
+[node name="InventoryContent" type="Control" parent="Window" unique_id=1124085328]
+custom_minimum_size = Vector2(340, 270)
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_top = -135.0
+offset_right = 340.0
+offset_bottom = 135.0
+grow_vertical = 2
+
+[node name="InventoryGrid" type="GridContainer" parent="Window/InventoryContent" unique_id=245748679]
+layout_mode = 0
+offset_left = 16.0
+offset_right = 352.0
+offset_bottom = 268.0
+columns = 5
+
+[node name="EquipmentPanel" type="GridContainer" parent="Window/InventoryContent" unique_id=1425526220]
+layout_mode = 0
+offset_left = 522.0
+offset_top = -87.0
+offset_right = 586.0
+offset_bottom = 385.0
+columns = 3
+
+[node name="WeaponSlot" parent="Window/InventoryContent/EquipmentPanel" unique_id=12331941 instance=ExtResource("2_o62ck")]
+layout_mode = 2
+
+[node name="HelmetSlot" type="Panel" parent="Window/InventoryContent/EquipmentPanel" unique_id=1295959445]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+script = ExtResource("2_hcmni")
+slot_type = 3
+slot_index = 101
+
+[node name="ItemIcon" type="TextureRect" parent="Window/InventoryContent/EquipmentPanel/HelmetSlot" unique_id=1833397707]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="AmountLabel" type="Label" parent="Window/InventoryContent/EquipmentPanel/HelmetSlot" unique_id=1675874601]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -23.0
+offset_right = 20.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="ChestSlot" type="Panel" parent="Window/InventoryContent/EquipmentPanel" unique_id=803423921]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+script = ExtResource("2_hcmni")
+slot_type = 3
+slot_index = 102
+
+[node name="ItemIcon" type="TextureRect" parent="Window/InventoryContent/EquipmentPanel/ChestSlot" unique_id=1435376266]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="AmountLabel" type="Label" parent="Window/InventoryContent/EquipmentPanel/ChestSlot" unique_id=959977349]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -23.0
+offset_right = 20.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="Panel4" type="Panel" parent="Window/InventoryContent/EquipmentPanel" unique_id=483120101]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+script = ExtResource("2_hcmni")
+slot_type = 3
+slot_index = 224
+
+[node name="ItemIcon" type="TextureRect" parent="Window/InventoryContent/EquipmentPanel/Panel4" unique_id=1494804567]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="AmountLabel" type="Label" parent="Window/InventoryContent/EquipmentPanel/Panel4" unique_id=1486010675]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -23.0
+offset_right = 20.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="Panel5" type="Panel" parent="Window/InventoryContent/EquipmentPanel" unique_id=1534520280]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+script = ExtResource("2_hcmni")
+slot_type = 4
+slot_index = 225
+
+[node name="ItemIcon" type="TextureRect" parent="Window/InventoryContent/EquipmentPanel/Panel5" unique_id=1346448761]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="AmountLabel" type="Label" parent="Window/InventoryContent/EquipmentPanel/Panel5" unique_id=1429310201]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -23.0
+offset_right = 20.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="Panel6" type="Panel" parent="Window/InventoryContent/EquipmentPanel" unique_id=692343450]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+script = ExtResource("2_hcmni")
+slot_type = 4
+slot_index = 226
+
+[node name="ItemIcon" type="TextureRect" parent="Window/InventoryContent/EquipmentPanel/Panel6" unique_id=101167282]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="AmountLabel" type="Label" parent="Window/InventoryContent/EquipmentPanel/Panel6" unique_id=331301044]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -23.0
+offset_right = 20.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="Panel7" type="Panel" parent="Window/InventoryContent/EquipmentPanel" unique_id=309845468]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+script = ExtResource("2_hcmni")
+slot_type = 4
+slot_index = 227
+
+[node name="ItemIcon" type="TextureRect" parent="Window/InventoryContent/EquipmentPanel/Panel7" unique_id=1233556679]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="AmountLabel" type="Label" parent="Window/InventoryContent/EquipmentPanel/Panel7" unique_id=1761026194]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -23.0
+offset_right = 20.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="CraftingContent" type="Control" parent="Window" unique_id=1366819968]
+visible = false
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="RecipesList" type="VBoxContainer" parent="Window/CraftingContent" unique_id=1122965751]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
