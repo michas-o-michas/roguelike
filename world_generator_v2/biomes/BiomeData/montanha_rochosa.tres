@@ -8,9 +8,6 @@
 script = ExtResource("2_hfggp")
 biome_name = "Montanha Rochosa"
 min_height = 20.0
-max_height = 200.0
-preferred_moisture = 1.0
-preferred_temperature = 1.0
-biome_noise_value = 1.0
+biome_noise_value = 0.172
 biome_items = Array[ExtResource("1_h4kd2")]([ExtResource("2_sga6u")])
 metadata/_custom_type_script = "uid://b21qcx74inoxd"

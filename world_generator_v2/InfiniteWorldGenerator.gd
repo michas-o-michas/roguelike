@@ -3,39 +3,70 @@ class_name InfiniteWorldGenerator
 
 ## Sistema de mundo infinito - gera chunks ao redor do jogador dinamicamente
 
-@export var player_path: NodePath ## Caminho para o jogador (ex: ../Player)
-@export var chunk_size: int = 100 ## Tamanho de cada chunk em metros
-@export var view_distance: int = 3 ## Quantos chunks carregar ao redor do jogador (3 = 7x7 chunks)
-@export var world_seed: int = 12345
+@export var player_path: NodePath ## 🎮 Caminho para o jogador (ex: ../Player). OU adicione o player ao grupo "player"
+@export var chunk_size: int = 100 ## 📐 Tamanho de cada chunk em metros (50-200). Menor = mais chunks, maior = chunks maiores
+@export var view_distance: int = 3 ## 👁️ Quantos chunks carregar ao redor do jogador. 3 = 7x7 chunks = 700x700m visíveis (com chunk_size=100)
+@export var world_seed: int = 12345 ## 🌱 Seed para geração procedural. Mesmo seed = mesmo mundo
+
+@export_group("🎨 Tema do Mundo")
+@export var world_theme: WorldTheme ## 🌍 Tema visual do mundo (Normal, Deserto, Lava, Neve, Alien). Muda cores, líquido, atmosfera!
+@export var show_layer_debug: bool = false ## 🔍 DEBUG: Mostrar camadas do terreno em cores vivas (Azul=água, Verde=grama, Cinza=rocha, Branco=neve)
 
 @export_group("Otimização")
-@export var chunks_per_frame: int = 1 ## Quantos chunks gerar por frame (1 = suave, 3+ = mais rápido)
-@export var unload_distance: int = 5 ## Quando descarregar chunks (maior que view_distance)
-@export var skip_terrain_collision: bool = false ## ⚠️ Pular colisão (MUITO mais rápido, mas sem física)
+@export var chunks_per_frame: int = 1 ## ⚡ Quantos chunks gerar por frame. 1 = suave (60 FPS), 2-3 = rápido (pode dar lag), 5+ = muito lag
+@export var unload_distance: int = 5 ## 🗑️ Distância para descarregar chunks (em chunks). Deve ser > view_distance. Recomendado: view_distance + 2
+@export var skip_terrain_collision: bool = false ## ⚠️ Pular geração de colisão (10x mais rápido, MAS personagem cai pelo chão). Só para testes visuais!
 
 @export_group("Terreno")
-@export var noise_frequency: float = 0.002
-@export var noise_amplitude: float = 25.0
-@export var octaves: int = 5
-@export var persistence: float = 0.45
-@export var lacunarity: float = 2.0
-@export var height_redistribution: float = 1.8
-@export var terrain_subdivisions: int = 20 ## Subdivisões do mesh (20 = suave)
+@export var noise_frequency: float = 0.002 ## 🌊 Frequência do ruído (0.001-0.005). Menor = terreno mais suave, maior = mais variado
+@export var noise_amplitude: float = 25.0 ## 📏 Altura MÁXIMA do terreno. 25 = colinas, 50 = montanhas, 80+ = montanhas épicas. Combine com height_redistribution!
+@export var octaves: int = 5 ## 🎨 Camadas de detalhe do terreno (3-8). Mais = mais detalhado mas mais lento
+@export var persistence: float = 0.45 ## 📉 Quanto cada octave afeta a altura (0.3-0.7). Menor = mais suave
+@export var lacunarity: float = 2.0 ## 🔁 Frequência entre octaves (1.5-3.0). Maior = mais detalhes pequenos
+@export var height_redistribution: float = 1.8 ## 🏔️ Distribuição de altura. 1.0 = natural, 1.5+ = mais planícies, <1.0 = mais montanhas
+@export var terrain_subdivisions: int = 20 ## 🔲 Subdivisões do mesh por chunk (10-30). Mais = terreno mais suave mas mais pesado. 20 = balanceado
 
-@export_group("Níveis")
-@export var water_level: float = -8.0
-@export var beach_level: float = -6.0
-@export var grass_level: float = 2.0
-@export var mountain_level: float = 18.0
+@export_group("🌊 Níveis de Camadas")
+@export var water_level: float = -8.0 ## 🌊 Altura do nível da água. Tudo abaixo = submerso. -8 = pouca água, -2 = muita água
+@export var water_depth_limit: float = 10.0 ## 🏊 Profundidade máxima da água (metros). Evita vales muito fundos. 10 = normal, 20 = oceano profundo, 5 = raso
+@export var beach_level: float = -6.0 ## 🏖️ Altura onde termina a praia e começa a grama. Deve ser > water_level
+@export var grass_level: float = 2.0 ## 🌱 Altura onde grama baixa vira grama média/floresta
+@export var mountain_level: float = 18.0 ## ⛰️ Altura onde começa rocha/montanha (DEPRECATED - use rock_start_height)
+
+@export_group("🪨 Camadas de Altitude")
+@export var enable_rock_layer: bool = true ## 🪨 Ativar camada de rocha nas montanhas
+@export var rock_start_height: float = 18.0 ## 🏔️ Altura onde começa a rocha (normalmente = mountain_level)
+@export var rock_thickness: float = 12.0 ## 📏 Espessura da camada de rocha (metros). 8 = fina, 15 = média, 25+ = montanhas rochosas épicas
+
+@export var enable_snow_layer: bool = true ## ❄️ Ativar camada de neve nos picos
+@export var snow_start_height: float = -1.0 ## 🏔️ Altura onde começa a neve. Se -1, calcula automaticamente (rock_start + rock_thickness)
+@export var snow_transition: float = 5.0 ## 🌨️ Tamanho da transição rocha→neve (metros). 3 = abrupto, 8 = suave
 
 @export_group("Vegetação")
-@export var spawn_spacing: float = 5.0
-@export var biomes: Array[BiomeData] = []
-@export var enable_vegetation: bool = true
+@export var spawn_spacing: float = 5.0 ## 📏 Distância entre tentativas de spawn (metros). 5 = denso, 7 = normal, 10+ = esparso
+@export var biomes: Array[BiomeData] = [] ## 🌳 Biomas com difficulty_tier! Tier 1 = perto do spawn (floresta simples), Tier 2+ = longe (floresta perigosa, vulcão)
+@export var enable_vegetation: bool = true ## 🌿 Ativar/desativar spawn de vegetação. false = só terreno (útil para testar performance)
+@export var biome_transition_distance: float = 200.0 ## 🔄 Distância de transição suave entre tiers de biomas (metros)
 
 @export_group("Água")
-@export var enable_water: bool = true
-@export var water_size: float = 2000.0 ## Tamanho do plano de água
+@export var enable_water: bool = true ## 🌊 Ativar/desativar plano de água. false = sem água no mundo
+@export var water_size: float = 2000.0 ## 📐 Tamanho do plano de água (metros). Deve ser maior que a área explorável. 2000 = 2km x 2km
+@export var use_animated_water: bool = true ## 🌊 Usar shader animado de água (ondas). false = água estática
+@export var water_shader_path: String = "res://shaders/agua_animada.gdshader" ## 📁 Caminho para o shader de água (deixe vazio para usar shader embutido)
+
+@export_group("Pontos de Interesse (POIs)")
+@export var enable_pois: bool = true ## 🏛️ Ativar/desativar sistema de POIs
+@export var poi_check_interval: float = 300.0 ## 🔍 A cada X metros andados, verifica se spawna POI
+@export var poi_min_spacing: float = 200.0 ## 📏 Distância mínima entre POIs (evita spawnar muito perto)
+@export var poi_per_area_chance: float = 0.3 ## 🎲 Chance de spawnar POI ao entrar em nova área (0.0-1.0)
+@export var pois: Array[POIData] = [] ## 📍 POIs com difficulty_tier! Tier 1 = perto do spawn (0-500m), Tier 2 = médio (500-1500m), Tier 3+ = longe
+
+@export_group("Spawners de Animais")
+@export var enable_spawners: bool = true ## 🐾 Ativar/desativar sistema de spawners
+@export var spawner_check_interval: float = 150.0 ## 🔍 A cada X metros, verifica se spawna animal spawner
+@export var spawner_min_spacing: float = 80.0 ## 📏 Distância mínima entre spawners
+@export var spawner_per_area_chance: float = 0.5 ## 🎲 Chance de spawnar ao entrar em nova área (0.0-1.0)
+@export var animal_spawners: Array[AnimalSpawnerData] = [] ## 🐺 Spawners com difficulty_tier! Tier 1 = animais fracos, Tier 3+ = bosses
 
 # Dicionários de chunks
 var loaded_chunks = {} ## {Vector2i: ChunkData}
@@ -54,6 +85,12 @@ var last_player_chunk: Vector2i = Vector2i(999999, 999999)
 
 # Water
 var water_mesh: MeshInstance3D
+
+# POIs e Spawners dinâmicos (spawnam conforme jogador explora)
+var spawned_pois: Dictionary = {} ## {Vector2i: POI_node}
+var spawned_spawners: Dictionary = {} ## {Vector2i: Spawner_node}
+var last_poi_check_pos: Vector3 = Vector3(999999, 0, 999999)
+var last_spawner_check_pos: Vector3 = Vector3(999999, 0, 999999)
 
 class ChunkData:
 	var chunk_pos: Vector2i
@@ -85,6 +122,11 @@ func _process(_delta):
 	if not player:
 		return
 	
+	# Fazer água seguir o jogador (água infinita)
+	if water_mesh and enable_water:
+		water_mesh.global_position.x = player.global_position.x
+		water_mesh.global_position.z = player.global_position.z
+	
 	var current_chunk = world_to_chunk(player.global_position)
 	
 	# Player mudou de chunk?
@@ -94,6 +136,16 @@ func _process(_delta):
 	
 	# Gerar chunks da fila
 	generate_queued_chunks()
+	
+	# Verificar se precisa spawnar POIs
+	if enable_pois and player.global_position.distance_to(last_poi_check_pos) > poi_check_interval:
+		check_and_spawn_pois()
+		last_poi_check_pos = player.global_position
+	
+	# Verificar se precisa spawnar Animal Spawners
+	if enable_spawners and player.global_position.distance_to(last_spawner_check_pos) > spawner_check_interval:
+		check_and_spawn_spawners()
+		last_spawner_check_pos = player.global_position
 
 func setup_noise():
 	seed(world_seed)
@@ -127,36 +179,160 @@ func setup_noise():
 	temperature_noise.frequency = 0.012
 
 func create_water():
+	if not world_theme:
+		print("⚠️ WorldTheme não configurado, usando água padrão")
+	
+	# Verificar se o tema tem líquido
+	if world_theme and world_theme.liquid_type == WorldTheme.LiquidType.NONE:
+		print("🏜️ Mundo sem líquido (deserto/seco)")
+		return
+	
 	water_mesh = MeshInstance3D.new()
 	var plane = PlaneMesh.new()
 	plane.size = Vector2(water_size, water_size)
+	plane.subdivide_width = 50  # Subdivisões para ondas suaves
+	plane.subdivide_depth = 50
 	water_mesh.mesh = plane
-	water_mesh.position.y = water_level
 	
+	# Usar nível customizado se definido
+	var liquid_level = water_level
+	if world_theme and world_theme.use_custom_levels:
+		liquid_level = world_theme.custom_water_level
+	
+	water_mesh.position.y = liquid_level
+	
+	# ========================================
+	# ESCOLHER MATERIAL: Shader Animado ou Simples
+	# ========================================
+	if use_animated_water:
+		var shader_material = create_animated_water_shader()
+		if shader_material:
+			water_mesh.material_override = shader_material
+			print("🌊 Água animada ativada!")
+		else:
+			# Fallback para material simples
+			print("⚠️ Shader não encontrado, usando água simples")
+			water_mesh.material_override = create_simple_water_material()
+	else:
+		water_mesh.material_override = create_simple_water_material()
+	
+	add_child(water_mesh)
+	
+	# Colisão do líquido
+	var water_body = StaticBody3D.new()
+	var water_collision = CollisionShape3D.new()
+	var water_shape = BoxShape3D.new()
+	water_shape.size = Vector3(water_size, 0.5, water_size)
+	water_collision.shape = water_shape
+	water_collision.position.y = liquid_level - 0.25
+	water_body.add_child(water_collision)
+	add_child(water_body)
+	
+	# Log do tipo de líquido
+	if world_theme:
+		var liquid_name = get_liquid_name(world_theme.liquid_type)
+		print("🌊 Líquido: ", liquid_name, " em Y=", liquid_level)
+
+func create_animated_water_shader() -> ShaderMaterial:
+	# Tentar carregar shader do caminho especificado
+	var shader: Shader = null
+	
+	if water_shader_path != "" and ResourceLoader.exists(water_shader_path):
+		shader = load(water_shader_path)
+	
+	# Se não encontrou, usar shader embutido (código inline)
+	if not shader:
+		shader = Shader.new()
+		shader.code = """
+shader_type spatial;
+render_mode blend_mix, depth_draw_opaque, cull_back;
+
+uniform vec4 water_color : source_color = vec4(0.15, 0.5, 0.8, 0.7);
+uniform float wave_speed : hint_range(0.0, 3.0) = 1.0;
+uniform float wave_height : hint_range(0.0, 1.0) = 0.2;
+uniform float metallic : hint_range(0.0, 1.0) = 0.8;
+uniform float roughness : hint_range(0.0, 1.0) = 0.05;
+
+float noise(vec2 p) {
+    return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
+}
+
+float smooth_noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    
+    float a = noise(i);
+    float b = noise(i + vec2(1.0, 0.0));
+    float c = noise(i + vec2(0.0, 1.0));
+    float d = noise(i + vec2(1.0, 1.0));
+    
+    return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+}
+
+void vertex() {
+    vec3 world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+    vec2 uv = world_pos.xz * 0.1;
+    
+    float wave1 = sin(uv.x * 2.0 + TIME * wave_speed + uv.y * 0.5) * 0.5;
+    float wave2 = smooth_noise(uv * 2.0 + TIME * wave_speed * 0.3) * 0.3;
+    float wave3 = smooth_noise(uv * 4.0 - TIME * wave_speed * 0.5) * 0.2;
+    
+    VERTEX.y += (wave1 + wave2 + wave3) * wave_height;
+}
+
+void fragment() {
+    ALBEDO = water_color.rgb;
+    ALPHA = water_color.a;
+    METALLIC = metallic;
+    ROUGHNESS = roughness;
+}
+"""
+	
+	var material = ShaderMaterial.new()
+	material.shader = shader
+	
+	# Aplicar cores do WorldTheme se existir
+	if world_theme:
+		material.set_shader_parameter("water_color", world_theme.liquid_color)
+		material.set_shader_parameter("metallic", world_theme.liquid_metallic)
+		material.set_shader_parameter("roughness", world_theme.liquid_roughness)
+	
+	return material
+
+func create_simple_water_material() -> StandardMaterial3D:
 	var water_material = StandardMaterial3D.new()
-	water_material.albedo_color = Color(0.15, 0.5, 0.8, 0.6)
+	
+	# Aplicar cor e propriedades do tema
+	if world_theme:
+		water_material.albedo_color = world_theme.liquid_color
+		water_material.metallic = world_theme.liquid_metallic
+		water_material.roughness = world_theme.liquid_roughness
+	else:
+		# Padrão
+		water_material.albedo_color = Color(0.15, 0.5, 0.8, 0.6)
+		water_material.metallic = 0.8
+		water_material.roughness = 0.05
+	
 	water_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	water_material.metallic = 0.8
-	water_material.roughness = 0.05
 	water_material.rim_enabled = true
 	water_material.rim = 0.6
 	water_material.rim_tint = 0.5
 	water_material.clearcoat_enabled = true
 	water_material.clearcoat = 0.5
 	water_material.clearcoat_roughness = 0.1
-	water_mesh.material_override = water_material
 	
-	add_child(water_mesh)
-	
-	# Colisão da água
-	var water_body = StaticBody3D.new()
-	var water_collision = CollisionShape3D.new()
-	var water_shape = BoxShape3D.new()
-	water_shape.size = Vector3(water_size, 0.5, water_size)
-	water_collision.shape = water_shape
-	water_collision.position.y = water_level - 0.25
-	water_body.add_child(water_collision)
-	add_child(water_body)
+	return water_material
+
+func get_liquid_name(type: WorldTheme.LiquidType) -> String:
+	match type:
+		WorldTheme.LiquidType.WATER: return "Água"
+		WorldTheme.LiquidType.LAVA: return "Lava"
+		WorldTheme.LiquidType.ACID: return "Ácido"
+		WorldTheme.LiquidType.OIL: return "Óleo"
+		WorldTheme.LiquidType.BLOOD: return "Sangue"
+		WorldTheme.LiquidType.CRYSTAL: return "Cristal Líquido"
+		_: return "Desconhecido"
 
 func world_to_chunk(world_pos: Vector3) -> Vector2i:
 	return Vector2i(
@@ -433,62 +609,209 @@ func get_terrain_height(x: float, z: float) -> float:
 		height = -normalized * noise_amplitude
 	
 	height += 3.0
+	
+	# ========================================
+	# CORREÇÃO: Limitar profundidade da água
+	# ========================================
+	# Evita "montanhas invertidas" muito fundas
+	var min_height = water_level - water_depth_limit
+	if height < min_height:
+		height = min_height
+	
 	return height
 
 func get_terrain_color(x: float, z: float, height: float) -> Color:
 	var moisture = (moisture_noise.get_noise_2d(x, z) + 1.0) / 2.0
 	
-	if height < water_level - 2.0:
+	# Calcular níveis das camadas
+	var w_level = water_level
+	var b_level = beach_level
+	var g_level = grass_level
+	var m_level = mountain_level
+	
+	# Calcular níveis de rocha e neve
+	var rock_start = rock_start_height if enable_rock_layer else 99999.0
+	var rock_end = rock_start + rock_thickness if enable_rock_layer else 99999.0
+	
+	var snow_start = snow_start_height
+	if enable_snow_layer and snow_start_height < 0:
+		# Auto-calcular: neve começa onde rocha termina
+		snow_start = rock_end if enable_rock_layer else rock_start
+	elif not enable_snow_layer:
+		snow_start = 99999.0  # Desabilitar neve
+	
+	# Aplicar níveis customizados do tema
+	if world_theme and world_theme.use_custom_levels:
+		w_level = world_theme.custom_water_level
+		b_level = world_theme.custom_beach_level
+		g_level = world_theme.custom_grass_level
+		m_level = world_theme.custom_mountain_level
+	
+	# ========================================
+	# MODO DEBUG: Mostrar camadas em cores vivas
+	# ========================================
+	if show_layer_debug:
+		if height < w_level - 2.0:
+			return Color(0.0, 0.0, 0.5)  # Azul escuro = água profunda
+		elif height < w_level:
+			return Color(0.0, 0.5, 1.0)  # Azul claro = água rasa
+		elif height < b_level:
+			return Color(1.0, 1.0, 0.0)  # Amarelo = praia
+		elif height < g_level + 3.0:
+			return Color(0.5, 1.0, 0.0)  # Verde claro = transição
+		elif height < m_level * 0.4:
+			return Color(0.0, 1.0, 0.0)  # Verde = grama baixa
+		elif height < m_level * 0.7:
+			return Color(0.0, 0.7, 0.0)  # Verde escuro = grama alta
+		elif height < rock_start:
+			return Color(0.7, 0.7, 0.0)  # Amarelo esverdeado = transição rocha
+		elif height < rock_end:
+			return Color(0.5, 0.5, 0.5)  # Cinza = ROCHA
+		elif height < snow_start + snow_transition:
+			return Color(0.8, 0.8, 0.8)  # Cinza claro = transição neve
+		else:
+			return Color(1.0, 1.0, 1.0)  # Branco = NEVE
+	
+	# ========================================
+	# CORES CUSTOMIZADAS (com WorldTheme)
+	# ========================================
+	if world_theme and world_theme.use_custom_colors:
+		# 1. ÁGUA PROFUNDA
+		if height < w_level - 2.0:
+			return world_theme.deep_water_color
+		
+		# 2. ÁGUA RASA
+		elif height < w_level:
+			var t = (height - (w_level - 2.0)) / 2.0
+			return world_theme.deep_water_color.lerp(world_theme.shallow_water_color, t)
+		
+		# 3. PRAIA/AREIA
+		elif height < b_level:
+			var t = (height - w_level) / (b_level - w_level)
+			t = clamp(t, 0.0, 1.0)
+			return world_theme.shallow_water_color.lerp(world_theme.beach_color, t)
+		
+		# 4. TRANSIÇÃO PRAIA → GRAMA
+		elif height < g_level + 3.0:
+			var t = (height - b_level) / ((g_level + 3.0) - b_level)
+			t = clamp(t, 0.0, 1.0)
+			return world_theme.beach_color.lerp(world_theme.grass_low_color, t * t)
+		
+		# 5. GRAMA BAIXA/PLANÍCIE
+		elif height < m_level * 0.5:
+			return world_theme.grass_low_color.lerp(world_theme.grass_high_color, moisture * 0.3)
+		
+		# 6. GRAMA ALTA/FLORESTA
+		elif height < m_level * 0.8:
+			var t = (height - m_level * 0.5) / (m_level * 0.3)
+			t = clamp(t, 0.0, 1.0)
+			return world_theme.grass_low_color.lerp(world_theme.grass_high_color, t)
+		
+		# 7. TRANSIÇÃO GRAMA → ROCHA
+		elif height < rock_start:
+			var distance_to_rock = rock_start - (m_level * 0.8)
+			if distance_to_rock > 0:
+				var t = (height - m_level * 0.8) / distance_to_rock
+				t = clamp(t, 0.0, 1.0)
+				t = t * t
+				return world_theme.grass_high_color.lerp(world_theme.rock_color, t)
+			else:
+				return world_theme.grass_high_color
+		
+		# 8. ROCHA
+		elif height < rock_end:
+			return world_theme.rock_color
+		
+		# 9. TRANSIÇÃO ROCHA → NEVE
+		elif height < snow_start + snow_transition:
+			var t = (height - rock_end) / snow_transition
+			t = clamp(t, 0.0, 1.0)
+			t = t * t
+			return world_theme.rock_color.lerp(world_theme.snow_color, t)
+		
+		# 10. NEVE
+		else:
+			return world_theme.snow_color
+	
+	# ========================================
+	# CORES PADRÃO (sem tema)
+	# ========================================
+	
+	# Água profunda
+	if height < w_level - 2.0:
 		return Color(0.08, 0.15, 0.35)
-	elif height < water_level:
-		var t = (height - (water_level - 2.0)) / 2.0
+	
+	# Água rasa
+	elif height < w_level:
+		var t = (height - (w_level - 2.0)) / 2.0
 		return Color(0.08, 0.15, 0.35).lerp(Color(0.15, 0.3, 0.5), t)
-	elif height < beach_level:
-		var t = (height - water_level) / (beach_level - water_level)
+	
+	# Praia/Areia
+	elif height < b_level:
+		var t = (height - w_level) / (b_level - w_level)
 		t = clamp(t, 0.0, 1.0)
 		return Color(0.7, 0.65, 0.5).lerp(Color(0.85, 0.8, 0.65), t)
-	elif height < grass_level + 3.0:
-		var t = (height - beach_level) / ((grass_level + 3.0) - beach_level)
+	
+	# Transição praia → grama
+	elif height < g_level + 3.0:
+		var t = (height - b_level) / ((g_level + 3.0) - b_level)
 		t = clamp(t, 0.0, 1.0)
 		var sand = Color(0.85, 0.8, 0.65)
 		var grass = Color(0.4, 0.65, 0.35).lerp(Color(0.35, 0.6, 0.3), moisture)
 		return sand.lerp(grass, t * t)
-	elif height < mountain_level * 0.4:
+	
+	# Grama baixa
+	elif height < m_level * 0.4:
 		var grass_light = Color(0.35, 0.6, 0.3)
 		var grass_dark = Color(0.28, 0.5, 0.25)
 		return grass_light.lerp(grass_dark, moisture * 0.5)
-	elif height < mountain_level * 0.7:
-		var t = (height - mountain_level * 0.4) / (mountain_level * 0.3)
+	
+	# Grama média
+	elif height < m_level * 0.7:
+		var t = (height - m_level * 0.4) / (m_level * 0.3)
 		t = clamp(t, 0.0, 1.0)
 		var grass = Color(0.28, 0.5, 0.25)
 		var grass_hill = Color(0.3, 0.48, 0.25)
 		return grass.lerp(grass_hill, t)
-	elif height < mountain_level:
-		var t = (height - mountain_level * 0.7) / (mountain_level * 0.3)
-		t = clamp(t, 0.0, 1.0)
-		t = t * t
-		var grass = Color(0.3, 0.48, 0.25)
-		var rock_grass = Color(0.35, 0.4, 0.3)
-		return grass.lerp(rock_grass, t)
-	elif height < mountain_level + 8.0:
-		var t = (height - mountain_level) / 8.0
-		t = clamp(t, 0.0, 1.0)
-		t = t * t
-		var rock_grass = Color(0.35, 0.4, 0.3)
-		var rock = Color(0.5, 0.5, 0.5)
-		return rock_grass.lerp(rock, t)
-	else:
-		var t = (height - mountain_level - 8.0) / 8.0
+	
+	# Transição grama → rocha
+	elif height < rock_start:
+		var distance_to_rock = rock_start - (m_level * 0.7)
+		if distance_to_rock > 0:
+			var t = (height - m_level * 0.7) / distance_to_rock
+			t = clamp(t, 0.0, 1.0)
+			t = t * t
+			var grass = Color(0.3, 0.48, 0.25)
+			var rock_transition = Color(0.35, 0.4, 0.3)
+			return grass.lerp(rock_transition, t)
+		else:
+			return Color(0.3, 0.48, 0.25)
+	
+	# ROCHA (camada pura)
+	elif height < rock_end:
+		return Color(0.5, 0.5, 0.5)
+	
+	# Transição rocha → neve
+	elif height < snow_start + snow_transition:
+		var t = (height - rock_end) / snow_transition
 		t = clamp(t, 0.0, 1.0)
 		t = t * t
 		var rock = Color(0.5, 0.5, 0.5)
 		var snow = Color(0.92, 0.92, 0.95)
 		return rock.lerp(snow, t)
+	
+	# NEVE
+	else:
+		return Color(0.92, 0.92, 0.95)
 
 func get_biome_at_position(x: float, z: float, height: float) -> BiomeData:
 	var moisture = (moisture_noise.get_noise_2d(x, z) + 1.0) / 2.0
 	var temperature = (temperature_noise.get_noise_2d(x, z) + 1.0) / 2.0
 	var biome_value = (biome_noise.get_noise_2d(x, z) + 1.0) / 2.0
+	
+	# Calcular tier baseado na distância do spawn
+	var distance_from_spawn = Vector2(x, z).length()
+	var current_tier = calculate_difficulty_tier(distance_from_spawn)
 	
 	var best_biome: BiomeData = null
 	var best_score = -999999.0
@@ -497,17 +820,238 @@ func get_biome_at_position(x: float, z: float, height: float) -> BiomeData:
 		if not biome:
 			continue
 		
+		# Verificar altura
 		if height < biome.min_height or height > biome.max_height:
 			continue
 		
+		# FILTRO DE TIER: Só permite biomas do tier atual ou menor
+		if biome.difficulty_tier > current_tier:
+			continue
+		
+		# Aplicar raridade do bioma
+		if randf() > biome.biome_rarity:
+			continue
+		
+		# Calcular score baseado em umidade, temperatura e biome noise
 		var moisture_diff = abs(moisture - biome.preferred_moisture)
 		var temp_diff = abs(temperature - biome.preferred_temperature)
 		var biome_diff = abs(biome_value - biome.biome_noise_value)
 		
 		var score = -(moisture_diff + temp_diff + biome_diff)
 		
+		# Bonus para biomas de tier mais alto (incentiva progressão)
+		score += biome.difficulty_tier * 0.1
+		
 		if score > best_score:
 			best_score = score
 			best_biome = biome
 	
 	return best_biome
+
+# ========================================
+# SISTEMA DE POIS DINÂMICO POR DIFICULDADE
+# ========================================
+
+func check_and_spawn_pois():
+	# Chance de NÃO spawnar nada
+	if randf() > poi_per_area_chance:
+		return
+	
+	var player_pos = player.global_position
+	var distance_from_spawn = Vector2(player_pos.x, player_pos.z).length()
+	
+	# Calcular difficulty tier baseado na distância
+	var current_tier = calculate_difficulty_tier(distance_from_spawn)
+	
+	# Filtrar POIs globais válidos para o tier atual
+	var valid_pois = []
+	for poi_data in pois:
+		if not poi_data or not poi_data.scene:
+			continue
+		
+		# POI deve estar no tier atual ou menor
+		if poi_data.difficulty_tier <= current_tier and poi_data.difficulty_tier > 0:
+			valid_pois.append(poi_data)
+	
+	# Tentar spawnar em local válido
+	for attempt in range(8):
+		var angle = randf() * TAU
+		var distance = randf_range(80.0, 250.0)
+		
+		var pos_x = player_pos.x + cos(angle) * distance
+		var pos_z = player_pos.z + sin(angle) * distance
+		
+		# Verificar espaçamento com POIs existentes
+		if not check_poi_spacing(Vector2(pos_x, pos_z)):
+			continue
+		
+		var height = get_terrain_height(pos_x, pos_z)
+		
+		# Verificar bioma nesta posição
+		var biome = get_biome_at_position(pos_x, pos_z, height)
+		
+		# Adicionar POIs específicos do bioma à lista
+		if biome and not biome.biome_pois.is_empty():
+			for biome_poi in biome.biome_pois:
+				if biome_poi and biome_poi.scene:
+					# POIs do bioma também respeitam tier
+					if biome_poi.difficulty_tier <= current_tier:
+						valid_pois.append(biome_poi)
+		
+		if valid_pois.is_empty():
+			continue
+		
+		# Escolher POI aleatório (pode ser global ou específico do bioma)
+		var poi_data: POIData = valid_pois[randi() % valid_pois.size()]
+		
+		# Verificar altura
+		if height < poi_data.min_height or height > poi_data.max_height:
+			continue
+		
+		# Spawnar POI!
+		var position = Vector3(pos_x, height + poi_data.height_offset, pos_z)
+		var poi = poi_data.scene.instantiate()
+		poi.position = position
+		poi.rotation.y = randf_range(0, TAU)
+		add_child(poi)
+		
+		# Registrar posição
+		var grid_key = Vector2i(int(pos_x / poi_min_spacing), int(pos_z / poi_min_spacing))
+		spawned_pois[grid_key] = poi
+		
+		var tier_name = get_tier_name(current_tier)
+		var biome_name = biome.biome_name if biome else "Desconhecido"
+		print("📍 POI '", poi_data.poi_name, "' [", tier_name, "] spawned em ", biome_name, " (", int(distance_from_spawn), "m)")
+		break
+
+func calculate_difficulty_tier(distance: float) -> int:
+	# Sistema de tiers baseado na distância do spawn
+	# Tier 1: 0-500m (Iniciante)
+	# Tier 2: 500-1500m (Intermediário)
+	# Tier 3: 1500-3000m (Avançado)
+	# Tier 4: 3000-5000m (Difícil)
+	# Tier 5: 5000+m (Extremo)
+	
+	if distance < 500:
+		return 1
+	elif distance < 1500:
+		return 2
+	elif distance < 3000:
+		return 3
+	elif distance < 5000:
+		return 4
+	else:
+		return 5
+
+func get_tier_name(tier: int) -> String:
+	match tier:
+		1: return "Tier 1 - Iniciante"
+		2: return "Tier 2 - Intermediário"
+		3: return "Tier 3 - Avançado"
+		4: return "Tier 4 - Difícil"
+		5: return "Tier 5 - Extremo"
+		_: return "Tier " + str(tier)
+
+func check_poi_spacing(pos: Vector2) -> bool:
+	# Verifica se há POIs muito próximos
+	for poi_key in spawned_pois.keys():
+		var poi_pos = Vector2(poi_key.x * poi_min_spacing, poi_key.y * poi_min_spacing)
+		if pos.distance_to(poi_pos) < poi_min_spacing:
+			return false
+	return true
+
+# ========================================
+# SISTEMA DE SPAWNERS DINÂMICO POR DIFICULDADE
+# ========================================
+
+func check_and_spawn_spawners():
+	# Chance de NÃO spawnar nada
+	if randf() > spawner_per_area_chance:
+		return
+	
+	var player_pos = player.global_position
+	var distance_from_spawn = Vector2(player_pos.x, player_pos.z).length()
+	
+	# Calcular difficulty tier
+	var current_tier = calculate_difficulty_tier(distance_from_spawn)
+	
+	# Filtrar spawners globais válidos para o tier atual
+	var valid_spawners = []
+	for spawner_data in animal_spawners:
+		if not spawner_data or not spawner_data.spawner_scene:
+			continue
+		
+		# Spawner deve estar no tier atual ou menor
+		if spawner_data.difficulty_tier <= current_tier and spawner_data.difficulty_tier > 0:
+			valid_spawners.append(spawner_data)
+	
+	# Tentar spawnar em local válido
+	for attempt in range(6):
+		var angle = randf() * TAU
+		var distance = randf_range(50.0, 180.0)
+		
+		var pos_x = player_pos.x + cos(angle) * distance
+		var pos_z = player_pos.z + sin(angle) * distance
+		
+		# Verificar espaçamento
+		if not check_spawner_spacing(Vector2(pos_x, pos_z)):
+			continue
+		
+		var height = get_terrain_height(pos_x, pos_z)
+		
+		# Verificar bioma
+		var biome = get_biome_at_position(pos_x, pos_z, height)
+		
+		if not biome:
+			continue
+		
+		# Adicionar spawners específicos do bioma à lista
+		if not biome.biome_spawners.is_empty():
+			for biome_spawner in biome.biome_spawners:
+				if biome_spawner and biome_spawner.spawner_scene:
+					# Spawners do bioma também respeitam tier
+					if biome_spawner.difficulty_tier <= current_tier:
+						valid_spawners.append(biome_spawner)
+		
+		if valid_spawners.is_empty():
+			continue
+		
+		# Escolher spawner aleatório (pode ser global ou específico do bioma)
+		var spawner_data: AnimalSpawnerData = valid_spawners[randi() % valid_spawners.size()]
+		
+		# Verificar altura
+		if height < spawner_data.min_height or height > spawner_data.max_height:
+			continue
+		
+		# Verificar bioma se o spawner tem restrição (spawners globais)
+		if not spawner_data.allowed_biomes.is_empty():
+			var valid_biome = false
+			for allowed in spawner_data.allowed_biomes:
+				if allowed == biome.biome_name:
+					valid_biome = true
+					break
+			
+			if not valid_biome:
+				continue
+		
+		# Spawnar spawner!
+		var position = Vector3(pos_x, height, pos_z)
+		var spawner = spawner_data.spawner_scene.instantiate()
+		spawner.position = position
+		add_child(spawner)
+		
+		# Registrar posição
+		var grid_key = Vector2i(int(pos_x / spawner_min_spacing), int(pos_z / spawner_min_spacing))
+		spawned_spawners[grid_key] = spawner
+		
+		var tier_name = get_tier_name(current_tier)
+		print("🐾 Spawner '", spawner_data.spawner_name, "' [", tier_name, "] em ", biome.biome_name, " (", int(distance_from_spawn), "m)")
+		break
+
+func check_spawner_spacing(pos: Vector2) -> bool:
+	# Verifica se há spawners muito próximos
+	for spawner_key in spawned_spawners.keys():
+		var spawner_pos = Vector2(spawner_key.x * spawner_min_spacing, spawner_key.y * spawner_min_spacing)
+		if pos.distance_to(spawner_pos) < spawner_min_spacing:
+			return false
+	return true

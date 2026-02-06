@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="WorldTheme" format=3 uid="uid://bp18e2vqvo5do"]
+
+[ext_resource type="Script" uid="uid://c4pc3qiwssvlq" path="res://world_generator_v2/world_theme.gd" id="1_tk56k"]
+
+[resource]
+script = ExtResource("1_tk56k")
+liquid_color = Color(0, 0.38431373, 0.35686275, 0.92941177)
+liquid_metallic = 0.0
+liquid_roughness = 10.0
+use_custom_colors = true
+shallow_water_color = Color(0.2462565, 0.4466853, 0.71049106, 1)
+grass_high_color = Color(0.2141265, 0.39556313, 0.19186252, 1)
+custom_mountain_level = 40.0
+enable_custom_fog = true
+enable_custom_lighting = true

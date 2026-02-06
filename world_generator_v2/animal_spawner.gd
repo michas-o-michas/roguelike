@@ -1,101 +1,93 @@
-extends Node3D
+extends Resource
 class_name AnimalSpawner
 
-## Script de exemplo para spawner de animais
-## Cole isso em um Node3D e salve como cena (ex: wolf_spawner.tscn)
+@export var spawner_name: String = "Animal Spawner" ## Nome do spawner (ex: "Lobos", "Ursos", "Boss Dragon")
+@export var spawner_scene: PackedScene ## 🎬 Cena do spawner (.tscn) que controla spawn de animais
 
-@export var animal_scene: PackedScene
-@export var max_animals: int = 5
-@export var spawn_radius: float = 20.0
-@export var spawn_cooldown: float = 30.0
-@export var activation_distance: float = 50.0
-@export var check_interval: float = 2.0
+@export_group("Dificuldade (Mundo Infinito)")
+@export_range(1, 10) var difficulty_tier: int = 1 ## ⭐ Tier de dificuldade. Tier 1 = animais fracos (0-500m), Tier 2 = médios (500-1500m), Tier 3+ = fortes/bosses
 
-var alive_animals: int = 0
-var cooldown_timer: float = 0.0
-var check_timer: float = 0.0
+@export_group("Restrições de Altura")
+@export var min_height: float = 0.0 ## ⛰️ Altura mínima para spawnar
+@export var max_height: float = 20.0 ## ⛰️ Altura máxima
 
-func _ready():
-	# Opcional: adicionar um marcador visual para debug
-	var marker = MeshInstance3D.new()
-	var sphere = SphereMesh.new()
-	sphere.radius = 0.5
-	sphere.height = 1.0
-	marker.mesh = sphere
-	
-	var material = StandardMaterial3D.new()
-	material.albedo_color = Color(1.0, 0.5, 0.0, 0.5)
-	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	marker.material_override = material
-	
-	add_child(marker)
-	print("🐾 Spawner criado em: ", global_position)
+@export_group("Biomas Permitidos")
+@export var allowed_biomes: Array[String] = [] ## 🌳 Lista de biomas onde pode spawnar (vazio = qualquer bioma). Ex: ["Floresta Normal", "Floresta Escura"]
 
-func _process(delta):
-	cooldown_timer -= delta
-	check_timer -= delta
-	
-	if check_timer > 0:
-		return
-	
-	check_timer = check_interval
-	
-	var player = get_tree().get_first_node_in_group("player")
-	if not player:
-		return
-	
-	var distance = global_position.distance_to(player.global_position)
-	
-	# Spawnar animais quando jogador está próximo
-	if distance < activation_distance:
-		if cooldown_timer <= 0 and alive_animals < max_animals:
-			spawn_animal()
-			cooldown_timer = spawn_cooldown
+@export_group("Descrição")
+@export_multiline var description: String = ""
 
-func spawn_animal():
-	if not animal_scene:
-		push_error("⚠️ animal_scene não configurado no spawner!")
-		return
-	
-	# Posição aleatória ao redor do spawner
-	var angle = randf() * TAU
-	var distance = randf_range(5.0, spawn_radius)
-	var offset = Vector3(cos(angle) * distance, 0, sin(angle) * distance)
-	
-	var animal = animal_scene.instantiate()
-	animal.global_position = global_position + offset
-	
-	# Ajustar altura ao terreno (se houver raycast)
-	var space_state = get_world_3d().direct_space_state
-	var query = PhysicsRayQueryParameters3D.create(
-		animal.global_position + Vector3(0, 10, 0),
-		animal.global_position + Vector3(0, -50, 0)
-	)
-	var result = space_state.intersect_ray(query)
-	
-	if result:
-		animal.global_position.y = result.position.y
-	
-	# Conectar sinal de morte
-	if animal.has_signal("died"):
-		animal.died.connect(_on_animal_died)
-	elif animal.has_signal("tree_exited"):
-		animal.tree_exited.connect(_on_animal_died)
-	
-	get_tree().root.add_child(animal)
-	alive_animals += 1
-	
-	print("🐾 Animal spawned! Total vivo: ", alive_animals, "/", max_animals)
-
-func _on_animal_died():
-	alive_animals = max(0, alive_animals - 1)
-	print("💀 Animal morreu. Total vivo: ", alive_animals, "/", max_animals)
-
-# Desenhar área de spawn no editor
-func _get_configuration_warnings():
-	var warnings = []
-	
-	if not animal_scene:
-		warnings.append("⚠️ Nenhuma cena de animal configurada!")
-	
-	return warnings
+# ========================================
+# SISTEMA DE TIERS PARA ANIMAIS:
+# ========================================
+#
+# TIER 1 (0-500m) - INICIANTE:
+# - Coelhos (passivos)
+# - Veados (passivos)
+# - Lobos Fracos (HP baixo, dano baixo)
+# - Javalis Pequenos
+#
+# TIER 2 (500-1500m) - INTERMEDIÁRIO:
+# - Lobos Normais
+# - Ursos Marrons
+# - Javalis Grandes
+# - Aranhas Gigantes
+#
+# TIER 3 (1500-3000m) - AVANÇADO:
+# - Lobos Alfa (pack leader)
+# - Ursos Grandes
+# - Trolls
+# - Wyverns Jovens
+#
+# TIER 4 (3000-5000m) - DIFÍCIL:
+# - Ursos Ancestrais
+# - Wyverns Adultos
+# - Ogros
+# - Mini-Bosses
+#
+# TIER 5+ (5000+m) - EXTREMO:
+# - Dragons
+# - World Bosses
+# - Criaturas Lendárias
+#
+# ========================================
+# EXEMPLOS DE CONFIGURAÇÃO:
+# ========================================
+#
+# COELHOS (Tier 1 - Passivos):
+# spawner_name: "Coelhos"
+# difficulty_tier: 1
+# min_height: 0, max_height: 10
+# allowed_biomes: ["Planície", "Floresta Normal"]
+#
+# LOBOS (Tier 1 - Fracos):
+# spawner_name: "Lobos Fracos"
+# difficulty_tier: 1
+# min_height: 0, max_height: 15
+# allowed_biomes: ["Floresta Normal"]
+#
+# URSOS (Tier 2 - Médios):
+# spawner_name: "Ursos Marrons"
+# difficulty_tier: 2
+# min_height: 5, max_height: 18
+# allowed_biomes: ["Floresta Escura", "Montanha"]
+#
+# LOBOS ALFA (Tier 3 - Fortes):
+# spawner_name: "Lobos Alfa"
+# difficulty_tier: 3
+# min_height: 0, max_height: 20
+# allowed_biomes: ["Floresta Escura"]
+#
+# DRAGON (Tier 5 - Boss):
+# spawner_name: "Dragon Ancião"
+# difficulty_tier: 5
+# min_height: 10, max_height: 30
+# allowed_biomes: [] # Qualquer bioma
+#
+# ========================================
+# NOTA: O spawner_scene deve ter um script que:
+# 1. Detecta quando o jogador está próximo (activation_distance)
+# 2. Spawna animais ao redor do spawner
+# 3. Mantém um número máximo de animais vivos (max_animals)
+# 4. Respeita cooldowns entre spawns (spawn_cooldown)
+# 5. Ver animal_spawner.gd para exemplo

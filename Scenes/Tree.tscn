@@ -1,6 +1,7 @@
 [gd_scene format=4 uid="uid://blpchb0gwdu2x"]
 
 [ext_resource type="Script" uid="uid://dv27eggtunm0h" path="res://Scripts/ResourceNode.gd" id="1_gtca3"]
+[ext_resource type="PackedScene" uid="uid://mfwj67e13p71" path="res://Assets/LowPoly Environment Pack/Tree_3.fbx" id="2_itkj8"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_h33jg"]
 resource_name = "Tree_Wood"
@@ -325,7 +326,7 @@ script = ExtResource("1_gtca3")
 
 [node name="Tree_2" type="MeshInstance3D" parent="." unique_id=501766849]
 transform = Transform3D(58.600002, 0, 0, 0, -6.9856646e-06, 58.6, 0, -58.6, -6.9856646e-06, 0, 0, 0)
-visible = false
+lod_bias = 67.015
 mesh = SubResource("ArrayMesh_gtca3")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1917019625]
@@ -334,31 +335,50 @@ shape = SubResource("CylinderShape3D_itkj8")
 
 [node name="Leaves" type="Node3D" parent="." unique_id=69616784]
 transform = Transform3D(1, 0, 0, 0, 1, 7.5497894e-08, 0, -7.5497894e-08, 1, 0, -4.7683716e-07, 4.7683716e-07)
+visible = false
 
 [node name="Leaves_1" type="MeshInstance3D" parent="Leaves" unique_id=380440309]
 transform = Transform3D(1, 0, 0, 0, 1, -3.5527137e-15, 0, 3.5527137e-15, 1, -2.9901948, 7.129614, 1.5858728)
+lod_bias = 0.001
+gi_mode = 0
 mesh = SubResource("ArrayMesh_itkj8")
 
 [node name="Leaves_2" type="MeshInstance3D" parent="Leaves" unique_id=1579514486]
 transform = Transform3D(1.0000196, 0, 0, 0, 1, -3.5527137e-15, 0, 3.5527137e-15, 1, -1.1114465, 7.30002, 0.92086464)
+lod_bias = 0.001
+gi_mode = 0
 mesh = SubResource("ArrayMesh_0suky")
 
 [node name="Leaves_3" type="MeshInstance3D" parent="Leaves" unique_id=1295751363]
 transform = Transform3D(0.9999077, 0, 0, 0, 1, -3.5527137e-15, 0, 3.5527137e-15, 1, 1.8662763, 5.8577757, -0.38329843)
+lod_bias = 0.001
+gi_mode = 0
 mesh = SubResource("ArrayMesh_0e63j")
 
 [node name="Leaves_4" type="MeshInstance3D" parent="Leaves" unique_id=779909163]
 transform = Transform3D(1.0001125, 0, 0, 0, 1, -3.5527137e-15, 0, 3.5527137e-15, 1, 0.3401724, 9.915954, -2.717485)
+lod_bias = 0.001
+gi_mode = 0
 mesh = SubResource("ArrayMesh_cb0yx")
 
 [node name="Leaves_5" type="MeshInstance3D" parent="Leaves" unique_id=608610111]
 transform = Transform3D(0.9998721, 0, 0, 0, 1, -3.5527137e-15, 0, 3.5527137e-15, 1, -0.18776947, 8.035077, -0.22473586)
+lod_bias = 0.001
+gi_mode = 0
 mesh = SubResource("ArrayMesh_rtd5e")
 
 [node name="Leaves_6" type="MeshInstance3D" parent="Leaves" unique_id=1461763636]
 transform = Transform3D(1.0001596, 0, 0, 0, 1, -3.5527137e-15, 0, 3.5527137e-15, 1, 0.9185164, 7.184931, -4.5516596)
+lod_bias = 0.001
+gi_mode = 0
 mesh = SubResource("ArrayMesh_1s7xt")
 
 [node name="Tree_3" type="MeshInstance3D" parent="." unique_id=292983314]
 transform = Transform3D(0.9999702, 0, 0, 0, 1, 7.5497894e-08, 0, -7.5497894e-08, 1, 0, -4.7683716e-07, 4.7683716e-07)
+visible = false
+lod_bias = 0.001
+gi_mode = 0
 mesh = SubResource("ArrayMesh_lq7cu")
+
+[node name="Tree_4" parent="." unique_id=915969200 instance=ExtResource("2_itkj8")]
+visible = false
