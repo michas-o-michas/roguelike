@@ -3,6 +3,8 @@ class_name InfiniteWorldGenerator
 
 ## Sistema de mundo infinito - gera chunks ao redor do jogador dinamicamente
 
+@export var auto_start: bool = false ## 🚀 Iniciar geração automaticamente no _ready. false = aguarda comando manual
+
 @export var player_path: NodePath ## 🎮 Caminho para o jogador (ex: ../Player). OU adicione o player ao grupo "player"
 @export var chunk_size: int = 100 ## 📐 Tamanho de cada chunk em metros (50-200). Menor = mais chunks, maior = chunks maiores
 @export var view_distance: int = 3 ## 👁️ Quantos chunks carregar ao redor do jogador. 3 = 7x7 chunks = 700x700m visíveis (com chunk_size=100)
@@ -16,6 +18,14 @@ class_name InfiniteWorldGenerator
 @export var chunks_per_frame: int = 1 ## ⚡ Quantos chunks gerar por frame. 1 = suave (60 FPS), 2-3 = rápido (pode dar lag), 5+ = muito lag
 @export var unload_distance: int = 5 ## 🗑️ Distância para descarregar chunks (em chunks). Deve ser > view_distance. Recomendado: view_distance + 2
 @export var skip_terrain_collision: bool = false ## ⚠️ Pular geração de colisão (10x mais rápido, MAS personagem cai pelo chão). Só para testes visuais!
+@export var enable_collision_lod: bool = true ## 🎯 Ativar LOD de colisão (colisões simplificadas em chunks distantes = muito mais rápido!)
+@export var collision_lod_near: int = 2 ## 📍 Chunks próximos (0-N): colisão detalhada. 2 = chunks até 2 de distância têm colisão completa
+@export var collision_lod_far: int = 4 ## 📍 Chunks distantes (N+): colisão simplificada. 4 = chunks além de 4 têm colisão simples
+@export var enable_visual_lod: bool = false ## 🎨 DESABILITADO para evitar gaps! Ativar LOD visual (meshes simplificados em chunks distantes = muito mais FPS!)
+@export var visual_lod_near: int = 2 ## 📍 Chunks próximos: mesh completo. 2 = chunks até 2 de distância têm mesh completo
+@export var visual_lod_far: int = 4 ## 📍 Chunks distantes: mesh simplificado. 4 = chunks além de 4 têm mesh reduzido
+@export var use_shared_material: bool = true ## 🎨 Usar material compartilhado (muito mais rápido que criar um por chunk)
+@export var async_generation: bool = true ## ⚡ Gerar chunks de forma assíncrona (não trava o frame, melhor FPS)
 
 @export_group("Terreno")
 @export var noise_frequency: float = 0.002 ## 🌊 Frequência do ruído (0.001-0.005). Menor = terreno mais suave, maior = mais variado
@@ -25,6 +35,8 @@ class_name InfiniteWorldGenerator
 @export var lacunarity: float = 2.0 ## 🔁 Frequência entre octaves (1.5-3.0). Maior = mais detalhes pequenos
 @export var height_redistribution: float = 1.8 ## 🏔️ Distribuição de altura. 1.0 = natural, 1.5+ = mais planícies, <1.0 = mais montanhas
 @export var terrain_subdivisions: int = 20 ## 🔲 Subdivisões do mesh por chunk (10-30). Mais = terreno mais suave mas mais pesado. 20 = balanceado
+@export var reduce_near_subdivisions: bool = false ## 🔻 DESABILITADO para evitar gaps!
+@export var near_subdivisions_factor: float = 0.6 ## 📐 Fator de redução para chunks próximos (0.3-1.0). 0.6 = 60% das subdivisões = muito menos triângulos. Menor = menos triângulos mas terreno menos suave
 
 @export_group("🌊 Níveis de Camadas")
 @export var water_level: float = -8.0 ## 🌊 Altura do nível da água. Tudo abaixo = submerso. -8 = pouca água, -2 = muita água
@@ -92,15 +104,29 @@ var spawned_spawners: Dictionary = {} ## {Vector2i: Spawner_node}
 var last_poi_check_pos: Vector3 = Vector3(999999, 0, 999999)
 var last_spawner_check_pos: Vector3 = Vector3(999999, 0, 999999)
 
+# Otimizações: Material compartilhado e cache
+var shared_terrain_material: StandardMaterial3D
+var height_cache: Dictionary = {}  # Cache de alturas (opcional, pode ajudar)
+
+# ========================================
+# CLASSE INTERNA - DEVE VIR ANTES DAS FUNÇÕES!
+# ========================================
 class ChunkData:
 	var chunk_pos: Vector2i
 	var terrain_mesh: MeshInstance3D
 	var terrain_collision: StaticBody3D
 	var objects: Array[Node3D] = []
 	var is_loaded: bool = false
+	var collision_lod_level: int = 0  # 0 = detalhada, 1 = simplificada, 2 = muito simplificada
 
 func _ready():
 	setup_noise()
+	
+	# Criar material compartilhado para otimização
+	if use_shared_material:
+		shared_terrain_material = StandardMaterial3D.new()
+		shared_terrain_material.vertex_color_use_as_albedo = true
+		shared_terrain_material.roughness = 0.9
 	
 	if enable_water:
 		create_water()
@@ -111,12 +137,55 @@ func _ready():
 	if not player:
 		push_warning("⚠️ Player não encontrado! Procurando automaticamente...")
 		player = get_tree().get_first_node_in_group("player")
+
+# Iniciar geração do mundo manualmente
+func start_world_generation():
+	if not player:
+		player = get_tree().get_first_node_in_group("player")
 	
 	if player:
-		print("🌍 Mundo infinito iniciado! Player: ", player.name)
+		print("🌍 Iniciando geração do mundo! Player: ", player.name)
+		set_process(true)
+		set_physics_process(true)
 		update_chunks()
+		return true
 	else:
-		push_error("❌ Player não encontrado! Configure player_path ou adicione o player ao grupo 'player'")
+		push_error("❌ Player não encontrado!")
+		return false
+
+# Obter número de chunks carregados
+func get_loaded_chunks_count() -> int:
+	return loaded_chunks.size()
+
+# Obter número total de chunks necessários (baseado em view_distance)
+func get_total_chunks_needed() -> int:
+	if not player:
+		return 0
+	var player_chunk = world_to_chunk(player.global_position)
+	var total = 0
+	for x in range(-view_distance, view_distance + 1):
+		for z in range(-view_distance, view_distance + 1):
+			total += 1
+	return total
+
+# Verificar se o carregamento inicial está completo
+func is_initial_load_complete() -> bool:
+	if not player:
+		return false
+	
+	var player_chunk = world_to_chunk(player.global_position)
+	var chunks_needed = get_total_chunks_needed()
+	var chunks_loaded = 0
+	
+	# Contar quantos chunks necessários já estão carregados
+	for x in range(-view_distance, view_distance + 1):
+		for z in range(-view_distance, view_distance + 1):
+			var chunk_pos = player_chunk + Vector2i(x, z)
+			if loaded_chunks.has(chunk_pos):
+				chunks_loaded += 1
+	
+	# Considerar completo quando pelo menos 80% dos chunks estão carregados
+	return chunks_loaded >= (chunks_needed * 0.8)
 
 func _process(_delta):
 	if not player:
@@ -134,15 +203,21 @@ func _process(_delta):
 		last_player_chunk = current_chunk
 		update_chunks()
 	
-	# Gerar chunks da fila
-	generate_queued_chunks()
+	# Gerar chunks da fila (com otimização assíncrona)
+	if chunks_to_generate.size() > 0:
+		if async_generation:
+			# Em modo assíncrono, gerar apenas 1 chunk por frame para manter FPS
+			generate_queued_chunks()
+		else:
+			# Modo síncrono: gerar múltiplos chunks conforme configurado
+			generate_queued_chunks()
 	
-	# Verificar se precisa spawnar POIs
+	# Verificar se precisa spawnar POIs (otimizado: menos frequente)
 	if enable_pois and player.global_position.distance_to(last_poi_check_pos) > poi_check_interval:
 		check_and_spawn_pois()
 		last_poi_check_pos = player.global_position
 	
-	# Verificar se precisa spawnar Animal Spawners
+	# Verificar se precisa spawnar Animal Spawners (otimizado: menos frequente)
 	if enable_spawners and player.global_position.distance_to(last_spawner_check_pos) > spawner_check_interval:
 		check_and_spawn_spawners()
 		last_spawner_check_pos = player.global_position
@@ -374,11 +449,20 @@ func update_chunks():
 	
 	for chunk_pos in chunks_to_unload:
 		unload_chunk(chunk_pos)
+	
+	# Atualizar LOD de colisões se habilitado
+	if enable_collision_lod:
+		update_collision_lod(player_chunk)
 
 func generate_queued_chunks():
 	var generated = 0
+	var max_chunks = chunks_per_frame
 	
-	while generated < chunks_per_frame and chunks_to_generate.size() > 0:
+	# Em modo assíncrono, limitar a 1 chunk por frame para manter FPS suave
+	if async_generation:
+		max_chunks = 1
+	
+	while generated < max_chunks and chunks_to_generate.size() > 0:
 		var chunk_pos = chunks_to_generate.pop_front()
 		
 		if not loaded_chunks.has(chunk_pos):
@@ -386,6 +470,10 @@ func generate_queued_chunks():
 			generate_chunk(chunk_pos)
 			chunks_generating.erase(chunk_pos)
 			generated += 1
+			
+			# Yield após cada chunk se async estiver ativado
+			if async_generation:
+				await get_tree().process_frame
 
 func generate_chunk(chunk_pos: Vector2i):
 	var chunk_data = ChunkData.new()
@@ -403,75 +491,266 @@ func generate_chunk(chunk_pos: Vector2i):
 	chunk_data.is_loaded = true
 	loaded_chunks[chunk_pos] = chunk_data
 
-func create_chunk_terrain(chunk_data: ChunkData, start_pos: Vector3):
+# ========================================
+# FUNÇÃO CORRIGIDA - SEM GAPS!
+# ========================================
+func create_chunk_terrain(chunk_data, start_pos: Vector3):
+	# ===== FIX PARA GAPS: TODOS OS CHUNKS USAM MESMAS SUBDIVISÕES =====
+	var visual_subdivisions = terrain_subdivisions
+	
+	# LOD VISUAL DESABILITADO - causa gaps entre chunks!
+	# Para reativar: implementar geomorph ou skirts
+	
 	var mesh_instance = MeshInstance3D.new()
 	var surface_tool = SurfaceTool.new()
 	surface_tool.begin(Mesh.PRIMITIVE_TRIANGLES)
 	
-	var step = float(chunk_size) / terrain_subdivisions
+	var step = float(chunk_size) / visual_subdivisions
 	var vertices = []
 	var colors = []
 	
-	# Gerar vértices
-	for z in range(terrain_subdivisions + 1):
-		for x in range(terrain_subdivisions + 1):
-			var pos_x = start_pos.x + (x * step)
-			var pos_z = start_pos.z + (z * step)
+	# ===== GERAR VÉRTICES COM ALINHAMENTO PERFEITO =====
+	for z in range(visual_subdivisions + 1):
+		for x in range(visual_subdivisions + 1):
+			# CRÍTICO: Arredondar para evitar erros de floating point
+			var pos_x = snappedf(start_pos.x + (x * step), 0.001)
+			var pos_z = snappedf(start_pos.z + (z * step), 0.001)
+			
 			var height = get_terrain_height(pos_x, pos_z)
 			
 			vertices.append(Vector3(pos_x, height, pos_z))
 			colors.append(get_terrain_color(pos_x, pos_z, height))
 	
-	# Criar triângulos
-	for z in range(terrain_subdivisions):
-		for x in range(terrain_subdivisions):
-			var i = z * (terrain_subdivisions + 1) + x
+	# Criar triângulos usando índices (mais eficiente)
+	for z in range(visual_subdivisions):
+		for x in range(visual_subdivisions):
+			var i = z * (visual_subdivisions + 1) + x
 			
+			# Triângulo 1
 			surface_tool.set_color(colors[i])
 			surface_tool.add_vertex(vertices[i])
 			surface_tool.set_color(colors[i + 1])
 			surface_tool.add_vertex(vertices[i + 1])
-			surface_tool.set_color(colors[i + terrain_subdivisions + 1])
-			surface_tool.add_vertex(vertices[i + terrain_subdivisions + 1])
+			surface_tool.set_color(colors[i + visual_subdivisions + 1])
+			surface_tool.add_vertex(vertices[i + visual_subdivisions + 1])
 			
+			# Triângulo 2
 			surface_tool.set_color(colors[i + 1])
 			surface_tool.add_vertex(vertices[i + 1])
-			surface_tool.set_color(colors[i + terrain_subdivisions + 2])
-			surface_tool.add_vertex(vertices[i + terrain_subdivisions + 2])
-			surface_tool.set_color(colors[i + terrain_subdivisions + 1])
-			surface_tool.add_vertex(vertices[i + terrain_subdivisions + 1])
+			surface_tool.set_color(colors[i + visual_subdivisions + 2])
+			surface_tool.add_vertex(vertices[i + visual_subdivisions + 2])
+			surface_tool.set_color(colors[i + visual_subdivisions + 1])
+			surface_tool.add_vertex(vertices[i + visual_subdivisions + 1])
 	
+	# Gerar normais suavizadas (SurfaceTool já faz isso automaticamente)
 	surface_tool.generate_normals()
 	mesh_instance.mesh = surface_tool.commit()
 	
-	var material = StandardMaterial3D.new()
-	material.vertex_color_use_as_albedo = true
-	material.roughness = 0.9
-	mesh_instance.material_override = material
+	# Usar material compartilhado ou criar novo
+	if use_shared_material and shared_terrain_material:
+		mesh_instance.material_override = shared_terrain_material
+	else:
+		var material = StandardMaterial3D.new()
+		material.vertex_color_use_as_albedo = true
+		material.roughness = 0.9
+		mesh_instance.material_override = material
 	
 	add_child(mesh_instance)
 	chunk_data.terrain_mesh = mesh_instance
 	
-	# Colisão
+	# Colisão com LOD baseado em distância
 	if not skip_terrain_collision:
-		var static_body = StaticBody3D.new()
-		var collision = CollisionShape3D.new()
-		collision.shape = mesh_instance.mesh.create_trimesh_shape()
-		static_body.add_child(collision)
-		add_child(static_body)
-		chunk_data.terrain_collision = static_body
+		create_chunk_collision(chunk_data, start_pos, vertices)
 
-func create_chunk_vegetation(chunk_data: ChunkData, start_pos: Vector3):
+# Função auxiliar: calcula distância do chunk ao jogador (em chunks)
+func get_chunk_distance_to_player(chunk_pos: Vector2i) -> int:
+	if not player:
+		return 0
+	
+	var player_chunk = world_to_chunk(player.global_position)
+	var dist_x = abs(chunk_pos.x - player_chunk.x)
+	var dist_z = abs(chunk_pos.y - player_chunk.y)
+	return max(dist_x, dist_z)  # Distância Chebyshev (distância em chunks)
+
+# Cria colisão com LOD baseado na distância do jogador
+func create_chunk_collision(chunk_data, start_pos: Vector3, vertices: Array):
+	var static_body = StaticBody3D.new()
+	var collision = CollisionShape3D.new()
+	
+	# Calcular distância do chunk ao jogador e nível de LOD
+	var chunk_distance = 0
+	var lod_level = 0
+	
+	if enable_collision_lod and player:
+		chunk_distance = get_chunk_distance_to_player(chunk_data.chunk_pos)
+		
+		if chunk_distance <= collision_lod_near:
+			lod_level = 0  # Detalhada
+		elif chunk_distance <= collision_lod_far:
+			lod_level = 1  # Simplificada
+		else:
+			lod_level = 2  # Muito simplificada
+	else:
+		lod_level = 0  # Sem LOD = sempre detalhada
+	
+	chunk_data.collision_lod_level = lod_level
+	
+	var collision_shape: Shape3D
+	
+	if lod_level == 0:
+		# COLISÃO DETALHADA: Chunks próximos (distância <= collision_lod_near)
+		# Usa o mesh completo para colisão precisa
+		collision_shape = chunk_data.terrain_mesh.mesh.create_trimesh_shape()
+	
+	elif lod_level == 1:
+		# COLISÃO SIMPLIFICADA: Chunks médios (distância entre near e far)
+		# Reduz subdivisões pela metade = 4x menos triângulos
+		var simplified_subdivisions = max(terrain_subdivisions / 2, 4)  # Mínimo 4 subdivisões
+		collision_shape = create_simplified_collision(start_pos, simplified_subdivisions)
+	
+	else:
+		# COLISÃO MUITO SIMPLIFICADA: Chunks distantes (distância > collision_lod_far)
+		# Reduz subdivisões para 1/4 = 16x menos triângulos
+		var very_simplified_subdivisions = max(terrain_subdivisions / 4, 3)  # Mínimo 3 subdivisões
+		collision_shape = create_simplified_collision(start_pos, very_simplified_subdivisions)
+	
+	collision.shape = collision_shape
+	static_body.add_child(collision)
+	add_child(static_body)
+	chunk_data.terrain_collision = static_body
+
+# Atualiza LOD de colisões quando jogador se move (otimização dinâmica)
+func update_collision_lod(player_chunk: Vector2i):
+	if not enable_collision_lod:
+		return
+	
+	# Atualizar apenas alguns chunks por frame para não causar lag
+	var updated_this_frame = 0
+	var max_updates_per_frame = 2
+	
+	for chunk_pos in loaded_chunks.keys():
+		if updated_this_frame >= max_updates_per_frame:
+			break
+		
+		var chunk_data = loaded_chunks[chunk_pos]
+		if not chunk_data or not chunk_data.terrain_collision:
+			continue
+		
+		var chunk_distance = get_chunk_distance_to_player(chunk_pos)
+		var new_lod_level = 0
+		
+		if chunk_distance <= collision_lod_near:
+			new_lod_level = 0
+		elif chunk_distance <= collision_lod_far:
+			new_lod_level = 1
+		else:
+			new_lod_level = 2
+		
+		# Se o LOD mudou, atualizar colisão
+		if chunk_data.collision_lod_level != new_lod_level:
+			var world_pos = chunk_to_world(chunk_pos)
+			
+			# Remover colisão antiga
+			if chunk_data.terrain_collision:
+				chunk_data.terrain_collision.queue_free()
+			
+			# Criar nova colisão com LOD correto
+			chunk_data.collision_lod_level = new_lod_level
+			var static_body = StaticBody3D.new()
+			var collision = CollisionShape3D.new()
+			
+			var collision_shape: Shape3D
+			if new_lod_level == 0:
+				collision_shape = chunk_data.terrain_mesh.mesh.create_trimesh_shape()
+			elif new_lod_level == 1:
+				var simplified_subdivisions = max(terrain_subdivisions / 2, 4)
+				collision_shape = create_simplified_collision(world_pos, simplified_subdivisions)
+			else:
+				var very_simplified_subdivisions = max(terrain_subdivisions / 4, 3)
+				collision_shape = create_simplified_collision(world_pos, very_simplified_subdivisions)
+			
+			collision.shape = collision_shape
+			static_body.add_child(collision)
+			add_child(static_body)
+			chunk_data.terrain_collision = static_body
+			
+			updated_this_frame += 1
+
+# Cria colisão simplificada com menos subdivisões
+func create_simplified_collision(start_pos: Vector3, subdivisions: int) -> Shape3D:
+	var step = float(chunk_size) / subdivisions
+	var surface_tool = SurfaceTool.new()
+	surface_tool.begin(Mesh.PRIMITIVE_TRIANGLES)
+	
+	var vertices = []
+	
+	# Gerar vértices simplificados
+	for z in range(subdivisions + 1):
+		for x in range(subdivisions + 1):
+			var pos_x = start_pos.x + (x * step)
+			var pos_z = start_pos.z + (z * step)
+			var height = get_terrain_height(pos_x, pos_z)
+			vertices.append(Vector3(pos_x, height, pos_z))
+	
+	# Criar triângulos simplificados
+	for z in range(subdivisions):
+		for x in range(subdivisions):
+			var i = z * (subdivisions + 1) + x
+			
+			surface_tool.set_uv(Vector2(0, 0))
+			surface_tool.add_vertex(vertices[i])
+			surface_tool.set_uv(Vector2(1, 0))
+			surface_tool.add_vertex(vertices[i + 1])
+			surface_tool.set_uv(Vector2(0, 1))
+			surface_tool.add_vertex(vertices[i + subdivisions + 1])
+			
+			surface_tool.set_uv(Vector2(1, 0))
+			surface_tool.add_vertex(vertices[i + 1])
+			surface_tool.set_uv(Vector2(1, 1))
+			surface_tool.add_vertex(vertices[i + subdivisions + 2])
+			surface_tool.set_uv(Vector2(0, 1))
+			surface_tool.add_vertex(vertices[i + subdivisions + 1])
+	
+	surface_tool.generate_normals()
+	var simplified_mesh = surface_tool.commit()
+	return simplified_mesh.create_trimesh_shape()
+
+func create_chunk_vegetation(chunk_data, start_pos: Vector3):
+	# Otimização: reduzir vegetação em chunks distantes
+	var chunk_distance = 0
+	var vegetation_density = 1.0
+	
+	if player:
+		chunk_distance = get_chunk_distance_to_player(chunk_data.chunk_pos)
+		# Reduzir densidade de vegetação em chunks distantes
+		if chunk_distance > visual_lod_far:
+			vegetation_density = 0.3  # 70% menos vegetação
+		elif chunk_distance > visual_lod_near:
+			vegetation_density = 0.6  # 40% menos vegetação
+	
 	var biome_cache = {}
+	var height_cache_local = {}  # Cache de alturas para evitar recálculos
 	
 	var x = start_pos.x
 	while x < start_pos.x + chunk_size:
 		var z = start_pos.z
 		while z < start_pos.z + chunk_size:
+			# Pular alguns spawns em chunks distantes (otimização)
+			if vegetation_density < 1.0 and randf() > vegetation_density:
+				z += spawn_spacing
+				continue
+			
 			var pos_x = x + randf_range(-spawn_spacing * 0.4, spawn_spacing * 0.4)
 			var pos_z = z + randf_range(-spawn_spacing * 0.4, spawn_spacing * 0.4)
 			
-			var height = get_terrain_height(pos_x, pos_z)
+			# Cache de altura (evitar recálculos)
+			var height_key = Vector2i(int(pos_x), int(pos_z))
+			var height: float
+			if height_cache_local.has(height_key):
+				height = height_cache_local[height_key]
+			else:
+				height = get_terrain_height(pos_x, pos_z)
+				height_cache_local[height_key] = height
 			
 			if height < beach_level + 1.0:
 				z += spawn_spacing
@@ -479,7 +758,7 @@ func create_chunk_vegetation(chunk_data: ChunkData, start_pos: Vector3):
 			
 			var position = Vector3(pos_x, height, pos_z)
 			
-			# Bioma com cache
+			# Bioma com cache melhorado
 			var cache_key = Vector2i(int(pos_x / 20.0), int(pos_z / 20.0))
 			var current_biome: BiomeData
 			
@@ -495,7 +774,7 @@ func create_chunk_vegetation(chunk_data: ChunkData, start_pos: Vector3):
 			z += spawn_spacing
 		x += spawn_spacing
 
-func spawn_biome_item(biome: BiomeData, position: Vector3, chunk_data: ChunkData):
+func spawn_biome_item(biome: BiomeData, position: Vector3, chunk_data):
 	for item in biome.biome_items:
 		if not item or item.variants.is_empty():
 			continue
@@ -588,7 +867,18 @@ func unload_chunk(chunk_pos: Vector2i):
 	
 	loaded_chunks.erase(chunk_pos)
 
+# Função auxiliar: estima rapidamente se estamos em zona de praia
+func estimate_beach_zone(x: float, z: float) -> float:
+	# Usar apenas o primeiro octave para estimativa rápida
+	var quick_noise = noise.get_noise_2d(x, z)
+	var quick_height = quick_noise * noise_amplitude * 0.6  # Estimativa mais precisa
+	quick_height += 3.0
+	return quick_height
+
 func get_terrain_height(x: float, z: float) -> float:
+	# ========================================
+	# ETAPA 1: Gerar altura base com ruído (SEM modificações)
+	# ========================================
 	var noise_value = noise.get_noise_2d(x, z)
 	var amplitude = noise_amplitude
 	var frequency = 1.0
@@ -599,6 +889,9 @@ func get_terrain_height(x: float, z: float) -> float:
 		amplitude *= persistence
 		height += noise.get_noise_2d(x * frequency, z * frequency) * amplitude
 	
+	# ========================================
+	# ETAPA 2: Redistribuição de altura
+	# ========================================
 	if height > 0:
 		var normalized = height / noise_amplitude
 		normalized = pow(normalized, height_redistribution)
@@ -611,12 +904,96 @@ func get_terrain_height(x: float, z: float) -> float:
 	height += 3.0
 	
 	# ========================================
-	# CORREÇÃO: Limitar profundidade da água
+	# ETAPA 3: SUAVIZAÇÃO DE ÁGUA E PRAIA
+	# Trata tanto áreas profundas quanto próximas à superfície
 	# ========================================
-	# Evita "montanhas invertidas" muito fundas
+	var distance_from_water = height - water_level
+	
+	# Zona expandida: de muito abaixo da água até praia acima
+	# Isso garante que buracos profundos também sejam suavizados
+	var deep_water_zone = -water_depth_limit  # Até o limite de profundidade
+	var beach_zone_top = 15.0  # Expandido para 15m acima da água (praia mais larga e plana)
+	
+	if distance_from_water >= deep_water_zone and distance_from_water <= beach_zone_top:
+		# Calcular fator de suavização baseado na distância da água
+		var smooth_distance = abs(distance_from_water)
+		
+		# Área muito profunda (buracos): suavizar fortemente
+		if distance_from_water < -5.0:
+			# Quanto mais profundo, mais suavizar para eliminar buracos brutos
+			var depth_factor = clamp((abs(distance_from_water) - 5.0) / (water_depth_limit - 5.0), 0.0, 1.0)
+			depth_factor = depth_factor * depth_factor  # Quadrática
+			
+			# Criar fundo suave usando ruído de baixa frequência
+			var deep_noise = noise.get_noise_2d(x * 0.0004, z * 0.0004)
+			# Elevar o fundo gradualmente: quanto mais profundo, mais próximo da superfície
+			var target_depth = water_level - 4.0 + (deep_noise * 2.0)  # Fundo suave a -4m
+			
+			# Suavizar buracos profundos elevando-os gradualmente
+			height = lerp(height, target_depth, depth_factor * 0.8)  # 80% de suavização em buracos profundos
+		
+		# Área próxima à superfície da água (-5m até +15m): suavização de praia
+		elif distance_from_water >= -5.0 and distance_from_water <= beach_zone_top:
+			var max_smooth_distance = 12.0  # Expandido para criar praia mais larga
+			var smooth_strength = 1.0 - clamp(smooth_distance / max_smooth_distance, 0.0, 1.0)
+			smooth_strength = smooth_strength * smooth_strength  # Quadrática
+			
+			# Criar altura alvo usando ruído de baixa frequência
+			var beach_noise = noise.get_noise_2d(x * 0.0006, z * 0.0006)
+			
+			# Altura alvo: rampa MUITO suave da água para terra (praia plana)
+			var target_height: float
+			if distance_from_water > 0:
+				# Acima da água: criar rampa MUITO suave (20% da altura original = praia quase plana)
+				var ramp_factor = 0.2  # Reduzido de 0.5 para 0.2 = rampa muito mais horizontal
+				target_height = water_level + (distance_from_water * ramp_factor) + (beach_noise * 1.2)
+			else:
+				# Abaixo da água: transição suave de fundo para superfície
+				# Quanto mais próximo da superfície, mais próximo do nível da água
+				var depth_t = abs(distance_from_water) / 5.0  # Normalizar de 0 a 1
+				depth_t = depth_t * depth_t  # Curva quadrática
+				target_height = lerp(water_level - 1.0, water_level - 3.0, depth_t) + (beach_noise * 1.2)
+			
+			# Aplicar suavização: quanto mais próximo da água, mais forte
+			height = lerp(height, target_height, smooth_strength * 0.7)  # 70% máximo
+	
+	# ========================================
+	# ETAPA 4: Limitar profundidade da água
+	# ========================================
 	var min_height = water_level - water_depth_limit
 	if height < min_height:
 		height = min_height
+	
+	# ========================================
+	# ETAPA 5: Suavização final para transição água-terra
+	# ========================================
+	distance_from_water = height - water_level
+	# Zona de transição expandida: de -3m até +10m (praia mais larga e plana)
+	if distance_from_water >= -3.0 and distance_from_water <= 10.0:
+		var smooth_noise = noise.get_noise_2d(x * 0.0005, z * 0.0005)
+		var water_proximity = 1.0 - clamp(abs(distance_from_water) / 10.0, 0.0, 1.0)  # Expandido para 10m
+		water_proximity = water_proximity * water_proximity  # Quadrática
+		
+		# Altura suavizada para transição final (praia muito plana)
+		var smooth_height: float
+		if distance_from_water > 0:
+			# Acima: rampa MUITO suave (25% da altura = praia quase horizontal)
+			smooth_height = water_level + (distance_from_water * 0.25) + (smooth_noise * 0.8)
+		else:
+			# Abaixo: manter próximo à superfície
+			smooth_height = water_level - 1.5 + (smooth_noise * 0.8)
+		
+		height = lerp(height, smooth_height, water_proximity * 0.6)  # 60% para praia mais plana
+	
+	# ========================================
+	# ETAPA 6: Garantir fundo suave (eliminar buracos muito brutos)
+	# ========================================
+	if height < water_level - 3.0:
+		# Se ainda estiver muito abaixo, suavizar mais
+		var depth_noise = noise.get_noise_2d(x * 0.0008, z * 0.0008)
+		var depth_factor = clamp((water_level - 3.0 - height) / 5.0, 0.0, 1.0)
+		var smooth_bottom = water_level - 3.0 + (depth_noise * 1.5)
+		height = lerp(height, smooth_bottom, depth_factor * 0.6)
 	
 	return height
 
@@ -680,22 +1057,42 @@ func get_terrain_color(x: float, z: float, height: float) -> Color:
 		if height < w_level - 2.0:
 			return world_theme.deep_water_color
 		
-		# 2. ÁGUA RASA
+		# 2. ÁGUA RASA (transição suave)
 		elif height < w_level:
 			var t = (height - (w_level - 2.0)) / 2.0
+			t = clamp(t, 0.0, 1.0)
+			# Curva suave para transição gradual
+			t = t * t * (3.0 - 2.0 * t)  # Smoothstep
 			return world_theme.deep_water_color.lerp(world_theme.shallow_water_color, t)
 		
-		# 3. PRAIA/AREIA
-		elif height < b_level:
-			var t = (height - w_level) / (b_level - w_level)
-			t = clamp(t, 0.0, 1.0)
-			return world_theme.shallow_water_color.lerp(world_theme.beach_color, t)
+		# 3. PRAIA/AREIA (zona expandida para praia mais suave)
+		# Definir expanded_beach_level antes de usar
+		var expanded_beach_level = b_level + 3.0  # Praia vai até 3m acima do beach_level original
+		if height < expanded_beach_level:
+			var water_to_sand_t = (height - w_level) / (expanded_beach_level - w_level)
+			water_to_sand_t = clamp(water_to_sand_t, 0.0, 1.0)
+			# Curva suave (ease-in-out)
+			water_to_sand_t = water_to_sand_t * water_to_sand_t * (3.0 - 2.0 * water_to_sand_t)
+			
+			# Primeiro: água rasa → areia molhada (primeiros 30%)
+			if water_to_sand_t < 0.3:
+				var t = water_to_sand_t / 0.3
+				t = t * t  # Curva quadrática para suavidade
+				return world_theme.shallow_water_color.lerp(world_theme.beach_color.darkened(0.2), t)
+			# Depois: areia molhada → areia seca (restante 70%)
+			else:
+				var t = (water_to_sand_t - 0.3) / 0.7
+				t = t * t * (3.0 - 2.0 * t)  # Smoothstep
+				var wet_beach = world_theme.beach_color.darkened(0.2)
+				return wet_beach.lerp(world_theme.beach_color, t)
 		
-		# 4. TRANSIÇÃO PRAIA → GRAMA
-		elif height < g_level + 3.0:
-			var t = (height - b_level) / ((g_level + 3.0) - b_level)
+		# 4. TRANSIÇÃO PRAIA → GRAMA (mais suave e gradual)
+		elif height < g_level + 5.0:  # Expandir zona de transição
+			var t = (height - expanded_beach_level) / ((g_level + 5.0) - expanded_beach_level)
 			t = clamp(t, 0.0, 1.0)
-			return world_theme.beach_color.lerp(world_theme.grass_low_color, t * t)
+			# Curva muito suave (ease-in-out cúbica)
+			t = t * t * t * (t * (t * 6.0 - 15.0) + 10.0)
+			return world_theme.beach_color.lerp(world_theme.grass_low_color, t)
 		
 		# 5. GRAMA BAIXA/PLANÍCIE
 		elif height < m_level * 0.5:
@@ -741,24 +1138,51 @@ func get_terrain_color(x: float, z: float, height: float) -> Color:
 	if height < w_level - 2.0:
 		return Color(0.08, 0.15, 0.35)
 	
-	# Água rasa
+	# Água rasa (transição suave de água profunda para rasa)
 	elif height < w_level:
 		var t = (height - (w_level - 2.0)) / 2.0
+		t = clamp(t, 0.0, 1.0)
+		# Curva suave para transição gradual
+		t = t * t * (3.0 - 2.0 * t)  # Smoothstep
 		return Color(0.08, 0.15, 0.35).lerp(Color(0.15, 0.3, 0.5), t)
 	
-	# Praia/Areia
-	elif height < b_level:
-		var t = (height - w_level) / (b_level - w_level)
-		t = clamp(t, 0.0, 1.0)
-		return Color(0.7, 0.65, 0.5).lerp(Color(0.85, 0.8, 0.65), t)
+	# Praia/Areia (zona expandida para praia mais suave)
+	# Expandir a zona de praia para criar transição mais gradual
+	var expanded_beach_level = b_level + 3.0  # Praia vai até 3m acima do beach_level original
+	if height < expanded_beach_level:
+		# Transição água → areia molhada → areia seca
+		var water_to_sand_t = (height - w_level) / (expanded_beach_level - w_level)
+		water_to_sand_t = clamp(water_to_sand_t, 0.0, 1.0)
+		# Curva suave (ease-in-out)
+		water_to_sand_t = water_to_sand_t * water_to_sand_t * (3.0 - 2.0 * water_to_sand_t)
+		
+		# Cor da água rasa (mais clara perto da superfície)
+		var shallow_water = Color(0.15, 0.3, 0.5)
+		# Areia molhada (escura)
+		var wet_sand = Color(0.6, 0.55, 0.45)
+		# Areia seca (clara)
+		var dry_sand = Color(0.85, 0.8, 0.65)
+		
+		# Primeiro: água → areia molhada (primeiros 30%)
+		if water_to_sand_t < 0.3:
+			var t = water_to_sand_t / 0.3
+			t = t * t  # Curva quadrática para suavidade
+			return shallow_water.lerp(wet_sand, t)
+		# Depois: areia molhada → areia seca (restante 70%)
+		else:
+			var t = (water_to_sand_t - 0.3) / 0.7
+			t = t * t * (3.0 - 2.0 * t)  # Smoothstep
+			return wet_sand.lerp(dry_sand, t)
 	
-	# Transição praia → grama
-	elif height < g_level + 3.0:
-		var t = (height - b_level) / ((g_level + 3.0) - b_level)
+	# Transição praia → grama (mais suave e gradual)
+	elif height < g_level + 5.0:  # Expandir zona de transição
+		var t = (height - expanded_beach_level) / ((g_level + 5.0) - expanded_beach_level)
 		t = clamp(t, 0.0, 1.0)
+		# Curva muito suave (ease-in-out cúbica)
+		t = t * t * t * (t * (t * 6.0 - 15.0) + 10.0)
 		var sand = Color(0.85, 0.8, 0.65)
 		var grass = Color(0.4, 0.65, 0.35).lerp(Color(0.35, 0.6, 0.3), moisture)
-		return sand.lerp(grass, t * t)
+		return sand.lerp(grass, t)
 	
 	# Grama baixa
 	elif height < m_level * 0.4:
@@ -1035,7 +1459,7 @@ func check_and_spawn_spawners():
 				continue
 		
 		# Spawnar spawner!
-		var position = Vector3(pos_x, height, pos_z)
+		var position = Vector3(pos_x, height+5, pos_z)
 		var spawner = spawner_data.spawner_scene.instantiate()
 		spawner.position = position
 		add_child(spawner)

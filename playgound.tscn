@@ -1,0 +1,54 @@
+[gd_scene format=3 uid="uid://ch0eejl2qm6lv"]
+
+[ext_resource type="PackedScene" uid="uid://chmt2wxe13a3o" path="res://player.tscn" id="1_o1adr"]
+[ext_resource type="PackedScene" uid="uid://hcqivfg5cedx" path="res://Scenes/Animals/wolf.tscn" id="2_tprpm"]
+[ext_resource type="PackedScene" uid="uid://c1posv7gvsx7i" path="res://enimies/cow/cow.tscn" id="3_h02br"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_h02br"]
+sky_horizon_color = Color(0.53434706, 0.53197336, 0.6919441, 1)
+ground_bottom_color = Color(0.078494854, 4.813075e-08, 0.54388314, 1)
+ground_horizon_color = Color(0.53434706, 0.53197336, 0.6919441, 1)
+
+[sub_resource type="Sky" id="Sky_pvwtc"]
+sky_material = SubResource("ProceduralSkyMaterial_h02br")
+
+[sub_resource type="Environment" id="Environment_xwb8w"]
+background_mode = 2
+sky = SubResource("Sky_pvwtc")
+tonemap_mode = 2
+ssao_enabled = true
+sdfgi_enabled = true
+glow_enabled = true
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_624p1"]
+
+[sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_tprpm"]
+data = PackedVector3Array(1, 0, 1, -1, 0, 1, 1, 0, -1, -1, 0, 1, -1, 0, -1, 1, 0, -1)
+
+[node name="Playgound" type="Node3D" unique_id=2029543445]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=765482683]
+environment = SubResource("Environment_xwb8w")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=62193281]
+transform = Transform3D(-0.8660254, -0.43301278, 0.25, 0, 0.49999997, 0.86602545, -0.50000006, 0.75, -0.43301266, 0, 0, 0)
+light_color = Color(1, 0.8784314, 0.81960785, 1)
+shadow_enabled = true
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1859175482]
+transform = Transform3D(1000, 0, 0, 0, 1000, 0, 0, 0, 1000, 0, -4, 0)
+mesh = SubResource("PlaneMesh_624p1")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="MeshInstance3D" unique_id=1168251287]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshInstance3D/StaticBody3D" unique_id=773813371]
+shape = SubResource("ConcavePolygonShape3D_tprpm")
+
+[node name="Player" parent="." unique_id=267460793 instance=ExtResource("1_o1adr")]
+
+[node name="Cow" parent="." unique_id=1912024952 instance=ExtResource("3_h02br")]
+transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 0, 4.7683716e-07, -29.188768)
+attack_cooldown = 4.0
+
+[node name="Wolf" parent="." unique_id=241850860 instance=ExtResource("2_tprpm")]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, -2.3312626, 0.18051529, -3.4799583)

@@ -1,0 +1,18 @@
+[gd_scene format=3 uid="uid://cft6e51kiwkli"]
+
+[ext_resource type="Script" uid="uid://cge36b4g1dowq" path="res://Scenes/UI/item_viewer.gd" id="1_murqg"]
+
+[node name="ItemViewer" type="Node" unique_id=639964672]
+script = ExtResource("1_murqg")
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="." unique_id=752882731]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="SubViewport" type="SubViewport" parent="SubViewportContainer" unique_id=809918329]
+
+[node name="Camera3D" type="Camera3D" parent="SubViewportContainer/SubViewport" unique_id=706221594]
+
+[node name="Light3D" type="OmniLight3D" parent="SubViewportContainer/SubViewport" unique_id=830644110]
+
+[node name="Holder" type="Node3D" parent="SubViewportContainer/SubViewport" unique_id=2111712834]

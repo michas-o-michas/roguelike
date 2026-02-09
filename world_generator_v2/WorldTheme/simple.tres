@@ -5,11 +5,11 @@
 [resource]
 script = ExtResource("1_tk56k")
 liquid_color = Color(0, 0.38431373, 0.35686275, 0.92941177)
-liquid_metallic = 0.0
-liquid_roughness = 10.0
 use_custom_colors = true
 shallow_water_color = Color(0.2462565, 0.4466853, 0.71049106, 1)
-grass_high_color = Color(0.2141265, 0.39556313, 0.19186252, 1)
+beach_color = Color(0.6137805, 0.5539315, 0.37856546, 1)
+grass_low_color = Color(0.283476, 0.47705537, 0.2441138, 1)
+grass_high_color = Color(0.152681, 0.29153875, 0.13457549, 1)
 custom_mountain_level = 40.0
 enable_custom_fog = true
 enable_custom_lighting = true

@@ -1,0 +1,106 @@
+[gd_scene format=3 uid="uid://dgj57rflji482"]
+
+[ext_resource type="Script" uid="uid://c8li1dwrgxudo" path="res://DayNightCycle/DayNightCycle.gd" id="1_5uv11"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_ulcgi"]
+sky_top_color = Color(0.0366329, 0.0532976, 0.0765334, 1)
+sky_horizon_color = Color(0.00582178, 0, 0.287057, 1)
+ground_bottom_color = Color(0.0352941, 0.054902, 0.0784314, 1)
+ground_horizon_color = Color(0.00392157, 0, 0.286275, 1)
+sun_angle_max = 3.0
+sun_curve = 3.5138004
+
+[sub_resource type="Sky" id="Sky_nxogm"]
+sky_material = SubResource("ProceduralSkyMaterial_ulcgi")
+
+[sub_resource type="Environment" id="Environment_3253y"]
+background_mode = 2
+sky = SubResource("Sky_nxogm")
+tonemap_mode = 4
+fog_enabled = true
+fog_mode = 1
+fog_light_color = Color(0.41568628, 0.5529412, 0.60784316, 1)
+fog_light_energy = 0.11
+fog_density = 0.3365
+fog_sky_affect = 0.125
+fog_depth_end = 833.3
+volumetric_fog_sky_affect = 0.0
+adjustment_enabled = true
+adjustment_brightness = 1.06
+adjustment_saturation = 0.94
+
+[sub_resource type="Animation" id="Animation_3253y"]
+length = 0.56666666
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sun:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(1.8326, 2.61799, 0)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Sun:visible")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [true]
+}
+
+[sub_resource type="Animation" id="Animation_nxogm"]
+resource_name = "day_and_night"
+length = 24.0
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sun:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 23.9874),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector3(1.8326, 2.61799, 0), Vector3(-4.45059, 2.61799, 0)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Sun:visible")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 23.9874),
+"transitions": PackedFloat32Array(1, 1),
+"update": 1,
+"values": [true, false]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_u3cyc"]
+_data = {
+&"RESET": SubResource("Animation_3253y"),
+&"day_and_night": SubResource("Animation_nxogm")
+}
+
+[node name="Day_Night" type="Node3D" unique_id=606555801]
+script = ExtResource("1_5uv11")
+startTime = 10
+
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=161140342]
+transform = Transform3D(-0.86602294, 0.4829652, -0.12941247, 0, -0.25882298, -0.96592486, -0.50000304, -0.83651286, 0.22414699, 0, 0, 0)
+shadow_enabled = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1711404354]
+environment = SubResource("Environment_3253y")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=10428957]
+libraries/ = SubResource("AnimationLibrary_u3cyc")

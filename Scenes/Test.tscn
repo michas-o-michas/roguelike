@@ -12,55 +12,146 @@
 [ext_resource type="Resource" uid="uid://bqpqu6d4gt3re" path="res://world_generator_v2/POIData/temple.tres" id="7_wjxug"]
 [ext_resource type="Script" uid="uid://el3it5rlbpge" path="res://world_generator_v2/animal_spawner_data.gd" id="9_3la1u"]
 [ext_resource type="Resource" uid="uid://ps0uvoii2yph" path="res://world_generator_v2/Spawner/wolf_spawner.tres" id="10_c5xim"]
-[ext_resource type="PackedScene" uid="uid://glpfv0w6b64s" path="res://Assets/LowPoly Environment Pack/Stone_1.fbx" id="11_rarx8"]
 [ext_resource type="Script" uid="uid://dohhu11sesrd6" path="res://Scenes/altura-test.gd" id="13_3la1u"]
+[ext_resource type="Script" uid="uid://bbwcjlccr203h" path="res://Scripts/SkillManager.gd" id="18_fc4x2"]
+[ext_resource type="Script" uid="uid://cwbxmv6ud8e5u" path="res://skill.gd" id="19_r3dg4"]
+[ext_resource type="Resource" uid="uid://qinafm4w04qx" path="res://Skills/hp_level1.tres" id="20_k2w6b"]
+[ext_resource type="Resource" uid="uid://dwag2boybp0ln" path="res://Skills/hp_level2.tres" id="21_oqyyu"]
+[ext_resource type="Texture2D" uid="uid://cx0y8t0wxeqpw" path="res://Skills/hp_level1.png" id="22_5nfnx"]
+[ext_resource type="PackedScene" uid="uid://dgj57rflji482" path="res://DayNightCycle/DayNightCycle.tscn" id="23_2qiau"]
+[ext_resource type="Texture2D" uid="uid://dgq5l3nv6gdqm" path="res://Skills/hp_level4.png" id="23_j3nt6"]
+[ext_resource type="AudioStream" uid="uid://b3m1kt2swv6po" path="res://Assets/sounds/day.wav" id="24_l5fjl"]
+[ext_resource type="AudioStream" uid="uid://dymr761r3u8p6" path="res://Assets/sounds/night.wav" id="25_txpnq"]
+[ext_resource type="AudioStream" uid="uid://dcobdymhcson2" path="res://Assets/sounds/street-corner-jazz-cafe-338559.mp3" id="26_r6o88"]
 
-[node name="Test" type="Node3D" unique_id=1067751182]
+[sub_resource type="Resource" id="Resource_ikiii"]
+script = ExtResource("19_r3dg4")
+name = "+5 HP"
+icon = ExtResource("22_5nfnx")
+bonus_health = 5
+metadata/_custom_type_script = "uid://cwbxmv6ud8e5u"
+
+[sub_resource type="Resource" id="Resource_cbp6q"]
+script = ExtResource("19_r3dg4")
+name = "+5 HP"
+bonus_health = 5
+metadata/_custom_type_script = "uid://cwbxmv6ud8e5u"
+
+[sub_resource type="Resource" id="Resource_26xuy"]
+script = ExtResource("19_r3dg4")
+name = "+5 HP"
+icon = ExtResource("23_j3nt6")
+bonus_health = 5
+metadata/_custom_type_script = "uid://cwbxmv6ud8e5u"
+
+[node name="Level1" type="Node3D" unique_id=1067751182]
 script = ExtResource("1_rxb08")
+auto_start = null
 player_path = NodePath("Player")
 chunk_size = 150
 view_distance = 5
+world_seed = 0
 world_theme = ExtResource("2_wjxug")
+show_layer_debug = null
+chunks_per_frame = null
 unload_distance = 8
+skip_terrain_collision = null
+enable_collision_lod = null
+collision_lod_near = null
+collision_lod_far = null
+enable_visual_lod = null
+visual_lod_near = null
+visual_lod_far = null
+use_shared_material = null
+async_generation = null
+noise_frequency = null
 noise_amplitude = 200.0
+octaves = null
+persistence = null
 lacunarity = 1.8
+height_redistribution = null
+terrain_subdivisions = 100
+reduce_near_subdivisions = null
+near_subdivisions_factor = null
+water_level = null
+water_depth_limit = null
+beach_level = null
+grass_level = null
 mountain_level = 50.0
+enable_rock_layer = null
 rock_start_height = 60.0
 rock_thickness = 40.0
+enable_snow_layer = null
 snow_start_height = 80.0
+snow_transition = null
+spawn_spacing = null
 biomes = Array[ExtResource("2_rxb08")]([ExtResource("4_kq4yt"), ExtResource("3_kq4yt"), ExtResource("5_8d4ee")])
+enable_vegetation = null
+biome_transition_distance = null
+enable_water = null
+water_size = null
+use_animated_water = null
+water_shader_path = null
+enable_pois = null
+poi_check_interval = null
+poi_min_spacing = null
+poi_per_area_chance = null
 pois = Array[ExtResource("6_rarx8")]([ExtResource("7_wjxug")])
+enable_spawners = null
+spawner_check_interval = null
+spawner_min_spacing = null
 spawner_per_area_chance = 1.0
 animal_spawners = Array[ExtResource("9_3la1u")]([ExtResource("10_c5xim")])
 
 [node name="Player" parent="." unique_id=267460793 instance=ExtResource("1_gxb1y")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2710464, 0)
-jump_force = 20.0
-max_jumps = 50
-fly_speed = 50.0
-creative_mode = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2549.5723)
 
-[node name="Label" type="Label" parent="." unique_id=193483811]
-offset_right = 47.0
-offset_bottom = 23.0
-text = "aaaaa"
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=358278969]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Label" type="Label" parent="VBoxContainer" unique_id=193483811]
+layout_mode = 2
+text = "000000"
 script = ExtResource("5_efk68")
 
-[node name="SubViewport" type="SubViewport" parent="." unique_id=49516637]
-
-[node name="Stone_1" parent="." unique_id=929772376 instance=ExtResource("11_rarx8")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 51.378525, 16.331474, 30.70475)
-
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=863272327]
-transform = Transform3D(1, 0, 0, 0, 0.22967605, 0.9732672, 0, -0.9732672, 0.22967605, 0, 0, 0)
-light_energy = 1.2
-shadow_enabled = true
-
-[node name="Label2" type="Label" parent="." unique_id=1618899090 node_paths=PackedStringArray("node_a", "node_b", "label")]
-offset_top = 28.0
-offset_right = 40.0
-offset_bottom = 51.0
+[node name="Label2" type="Label" parent="VBoxContainer" unique_id=1618899090 node_paths=PackedStringArray("node_a", "node_b", "label")]
+layout_mode = 2
+text = "000000"
 script = ExtResource("13_3la1u")
-node_a = NodePath("..")
-node_b = NodePath("../Player")
+node_a = NodePath("../..")
+node_b = NodePath("../../Player")
 label = NodePath(".")
+
+[node name="Label3" type="Label" parent="VBoxContainer" unique_id=85887987 node_paths=PackedStringArray("node_a", "node_b", "label")]
+layout_mode = 2
+text = "000000"
+script = ExtResource("13_3la1u")
+node_a = NodePath("../..")
+node_b = NodePath("../../Player")
+label = NodePath(".")
+
+[node name="SkillManager" type="Node" parent="." unique_id=1525371097]
+script = ExtResource("18_fc4x2")
+common_skills = Array[ExtResource("19_r3dg4")]([ExtResource("20_k2w6b"), ExtResource("21_oqyyu")])
+rare_skills = Array[ExtResource("19_r3dg4")]([SubResource("Resource_ikiii"), SubResource("Resource_cbp6q")])
+epic_skills = Array[ExtResource("19_r3dg4")]([SubResource("Resource_26xuy")])
+
+[node name="DayCycle" type="AudioStreamPlayer2D" parent="." unique_id=1334289533]
+stream = ExtResource("24_l5fjl")
+volume_db = -25.336
+autoplay = true
+max_polyphony = 1294
+
+[node name="NightCycle" type="AudioStreamPlayer2D" parent="." unique_id=154092956]
+stream = ExtResource("25_txpnq")
+volume_db = -12.169
+max_distance = 1293.55
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="." unique_id=1100434845]
+stream = ExtResource("26_r6o88")
+volume_db = -20.756
+autoplay = true
+
+[node name="Day_Night" parent="." unique_id=606555801 instance=ExtResource("23_2qiau")]
+dayLengthInSeconds = 300.0
