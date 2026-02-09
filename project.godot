@@ -10,7 +10,7 @@ config_version=5
 
 [application]
 
-config/name="Muck"
+config/name="Rootfall"
 run/main_scene="uid://b46t585pdw0e"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
