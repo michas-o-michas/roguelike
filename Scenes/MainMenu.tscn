@@ -4,7 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://dlpw7lj4oj750" path="res://Assets/menu/Logo.png" id="2_853f1"]
 [ext_resource type="Texture2D" uid="uid://cyr4aprinui84" path="res://Assets/menu/Bg.png" id="2_df05h"]
 [ext_resource type="Texture2D" uid="uid://bc0sgu2o8lifw" path="res://Assets/menu/Button-bg.png" id="3_8saeu"]
-[ext_resource type="FontFile" uid="uid://d1q5k65w0yrbm" path="res://Assets/aeogo-pxltd-serif-font/AeogoPxltdSerif-gw4vp.ttf" id="4_8um5k"]
+[ext_resource type="FontFile" uid="uid://cfhotyty164nn" path="res://Assets/menu/Cinzel,Poppins,Raleway/Cinzel/Cinzel-VariableFont_wght.ttf" id="4_df05h"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bg"]
 bg_color = Color(0.1, 0.1, 0.15, 0.95)
@@ -95,7 +95,11 @@ custom_minimum_size = Vector2(200, 50)
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 0
-theme_override_fonts/font = ExtResource("4_8um5k")
+theme_override_colors/font_color = Color(0.89411765, 0.8, 0.627451, 1)
+theme_override_colors/font_outline_color = Color(0.6117647, 0.47843137, 0.34901962, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("4_df05h")
+theme_override_font_sizes/font_size = 24
 theme_override_styles/normal = SubResource("StyleBoxTexture_ghw46")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_button")
 theme_override_styles/hover = SubResource("StyleBoxFlat_button")
@@ -107,6 +111,10 @@ custom_minimum_size = Vector2(200, 50)
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 0
-theme_override_fonts/font = ExtResource("4_8um5k")
+theme_override_colors/font_color = Color(0.89411765, 0.8, 0.627451, 1)
+theme_override_colors/font_outline_color = Color(0.6117647, 0.47843137, 0.34901962, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("4_df05h")
+theme_override_font_sizes/font_size = 24
 theme_override_styles/normal = SubResource("StyleBoxTexture_df05h")
 text = "Sair"

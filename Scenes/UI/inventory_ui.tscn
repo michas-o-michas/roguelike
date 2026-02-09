@@ -2,12 +2,16 @@
 
 [ext_resource type="Script" uid="uid://d4iblqgmao3ll" path="res://Scripts/UI/inventory_ui.gd" id="1_p83af"]
 [ext_resource type="PackedScene" uid="uid://bj0fla0h0psld" path="res://Scenes/UI/inventory_slot.tscn" id="2_o62ck"]
-[ext_resource type="FontFile" uid="uid://d1q5k65w0yrbm" path="res://Assets/aeogo-pxltd-serif-font/AeogoPxltdSerif-gw4vp.ttf" id="2_sfqc8"]
+[ext_resource type="Texture2D" uid="uid://cth4pmxx4k7ur" path="res://Assets/menu/Inventory_bg.png" id="2_sxwjb"]
+[ext_resource type="FontFile" uid="uid://cfhotyty164nn" path="res://Assets/menu/Cinzel,Poppins,Raleway/Cinzel/Cinzel-VariableFont_wght.ttf" id="3_sxwjb"]
 [ext_resource type="Script" uid="uid://cdnjxp74inlvk" path="res://Scripts/UI/crafting_ui.gd" id="4_kyjlm"]
 [ext_resource type="Texture2D" uid="uid://dy20vbvd557ls" path="res://Assets/icons/placeholder.png" id="4_sfqc8"]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sxwjb"]
+bg_color = Color(0, 0, 0, 1)
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sfqc8"]
-bg_color = Color(0.19076231, 0.19076234, 0.19076231, 0.9647059)
+bg_color = Color(0, 0, 0, 0.5686275)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kyjlm"]
 bg_color = Color(0.039215688, 0.039215688, 0.039215688, 0.33333334)
@@ -38,6 +42,26 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_p83af")
+
+[node name="Overlay2" type="Panel" parent="." unique_id=790931196]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_sxwjb")
+
+[node name="Background" type="TextureRect" parent="." unique_id=1851905752]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_sxwjb")
+stretch_mode = 3
+flip_h = true
 
 [node name="Overlay" type="Panel" parent="." unique_id=1456517709]
 layout_mode = 1
@@ -86,7 +110,7 @@ offset_top = -11.5
 offset_right = 41.0
 offset_bottom = 11.5
 grow_vertical = 2
-theme_override_fonts/font = ExtResource("2_sfqc8")
+theme_override_fonts/font = ExtResource("3_sxwjb")
 text = "coins"
 
 [node name="Title" type="Label" parent="PanelContainer/Window/Header" unique_id=615366502]
@@ -102,7 +126,7 @@ offset_right = 37.5
 offset_bottom = 11.5
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_fonts/font = ExtResource("2_sfqc8")
+theme_override_fonts/font = ExtResource("3_sxwjb")
 text = "Inventory"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -132,13 +156,13 @@ grow_horizontal = 2
 
 [node name="InventoryTab" type="Button" parent="PanelContainer/Window/Tabs" unique_id=481761105]
 layout_mode = 2
-theme_override_fonts/font = ExtResource("2_sfqc8")
+theme_override_fonts/font = ExtResource("3_sxwjb")
 text = "Inventory
 "
 
 [node name="CraftingTab" type="Button" parent="PanelContainer/Window/Tabs" unique_id=2116311981]
 layout_mode = 2
-theme_override_fonts/font = ExtResource("2_sfqc8")
+theme_override_fonts/font = ExtResource("3_sxwjb")
 text = "Crafting"
 
 [node name="InventoryContent" type="Control" parent="PanelContainer/Window" unique_id=1124085328]
