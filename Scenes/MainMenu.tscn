@@ -105,6 +105,22 @@ theme_override_styles/pressed = SubResource("StyleBoxFlat_button")
 theme_override_styles/hover = SubResource("StyleBoxFlat_button")
 text = "Iniciar Jogo"
 
+[node name="SettingsButton" type="Button" parent="Control/Panel/VBoxContainer" unique_id=123456789]
+process_mode = 4
+custom_minimum_size = Vector2(200, 50)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 0
+theme_override_colors/font_color = Color(0.89411765, 0.8, 0.627451, 1)
+theme_override_colors/font_outline_color = Color(0.6117647, 0.47843137, 0.34901962, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("4_df05h")
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("StyleBoxTexture_df05h")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_button")
+theme_override_styles/hover = SubResource("StyleBoxFlat_button")
+text = "Configurações"
+
 [node name="QuitButton" type="Button" parent="Control/Panel/VBoxContainer" unique_id=648513488]
 process_mode = 4
 custom_minimum_size = Vector2(200, 50)

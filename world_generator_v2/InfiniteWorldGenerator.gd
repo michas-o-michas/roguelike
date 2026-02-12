@@ -80,10 +80,45 @@ class_name InfiniteWorldGenerator
 @export var spawner_per_area_chance: float = 0.5 ## 🎲 Chance de spawnar ao entrar em nova área (0.0-1.0)
 @export var animal_spawners: Array[AnimalSpawnerData] = [] ## 🐺 Spawners com difficulty_tier! Tier 1 = animais fracos, Tier 3+ = bosses
 
+@export_group("🎮 Instanciação")
+@export var player_scene: PackedScene ## 🎮 Cena do player para instanciar após colisão estar pronta
+@export var player_spawn_position: Vector3 = Vector3.ZERO ## 📍 Posição inicial do player (será ajustada para altura do terreno)
+
+# ========================================
+# SISTEMA DE PROGRESSO
+# ========================================
+enum GenerationStage {
+	IDLE,           # Aguardando início
+	TERRAIN,        # Gerando terreno
+	COLLISION,      # Criando colisões
+	VEGETATION,     # Gerando vegetação
+	PLAYER,         # Instanciando player
+	MOBS,           # Instanciando mobs
+	COMPLETE        # Completo
+}
+
+var current_stage: GenerationStage = GenerationStage.IDLE
+var generation_progress: float = 0.0  # 0.0 a 100.0
+var stage_progress: float = 0.0      # Progresso dentro da etapa atual (0.0 a 1.0)
+
+# Sinais de progresso
+signal progress_updated(percent: float, stage: GenerationStage, message: String)
+signal stage_changed(stage: GenerationStage, message: String)
+signal generation_complete()
+
 # Dicionários de chunks
 var loaded_chunks = {} ## {Vector2i: ChunkData}
 var chunks_to_generate = [] ## Fila de chunks para gerar
 var chunks_generating = {} ## Chunks sendo gerados agora
+var chunks_with_collision = {} ## Chunks com colisão pronta {Vector2i: bool}
+var initial_chunks_needed: int = 0 ## Chunks necessários para carregamento inicial
+var initial_chunks_loaded: int = 0 ## Chunks carregados no carregamento inicial
+var initial_chunks_with_collision: int = 0 ## Chunks com colisão no carregamento inicial
+var mobs_instantiation_attempts: int = 0 ## Contador para evitar loops infinitos na instanciação de mobs
+var last_update_chunks_frame: int = -1 ## Evitar chamar update_chunks múltiplas vezes no mesmo frame
+var terrain_complete_transition_attempted: bool = false ## Flag para evitar múltiplas tentativas de transição TERRAIN->COLLISION
+var last_collision_progress_update_frame: int = -1 ## Evitar chamar update_collision_progress múltiplas vezes no mesmo frame
+var collision_complete_transition_attempted: bool = false ## Flag para evitar múltiplas tentativas de transição COLLISION->VEGETATION
 
 # Noises
 var noise: FastNoiseLite
@@ -120,7 +155,11 @@ class ChunkData:
 	var collision_lod_level: int = 0  # 0 = detalhada, 1 = simplificada, 2 = muito simplificada
 
 func _ready():
+	print("🎬 InfiniteWorldGenerator._ready() chamado!")
 	setup_noise()
+	
+	# Adicionar a grupo para facilitar busca por outros scripts
+	add_to_group("world_generator")
 	
 	# Criar material compartilhado para otimização
 	if use_shared_material:
@@ -137,21 +176,146 @@ func _ready():
 	if not player:
 		push_warning("⚠️ Player não encontrado! Procurando automaticamente...")
 		player = get_tree().get_first_node_in_group("player")
+	
+	print("🎮 Player encontrado: ", player != null)
+	print("🔄 Process mode: ", process_mode)
+	
+	# Garantir que está processando
+	set_process(true)
+	set_physics_process(true)
+	
+	# Se foi carregado do MainMenu, configurar automaticamente após alguns frames
+	# Aguardar para garantir que a cena está totalmente carregada
+	call_deferred("_setup_after_scene_load")
+
+func _setup_after_scene_load():
+	# Aguardar alguns frames para garantir que a cena está totalmente carregada
+	await get_tree().process_frame
+	await get_tree().process_frame
+	await get_tree().process_frame  # Mais um frame para garantir
+	
+	# Verificar se há tela de loading na raiz (indicando que veio do MainMenu)
+	var loading_screen = get_tree().root.get_node_or_null("LoadingScreen")
+	
+	if loading_screen:
+		print("📊 Tela de loading encontrada! Configurando...")
+		
+		# Garantir que está visível e configurada
+		loading_screen.visible = true
+		if loading_screen.has_method("update_progress"):
+			loading_screen.update_progress(0.0, "Iniciando geração do mundo...")
+		
+		# Conectar sinais diretamente à tela de loading
+		if has_signal("progress_updated"):
+			if not progress_updated.is_connected(_on_direct_progress_update):
+				progress_updated.connect(_on_direct_progress_update.bind(loading_screen))
+		if has_signal("generation_complete"):
+			if not generation_complete.is_connected(_on_direct_generation_complete):
+				generation_complete.connect(_on_direct_generation_complete.bind(loading_screen))
+		
+		# Procurar GameManager
+		var game_manager = get_tree().get_first_node_in_group("game_manager")
+		if not game_manager:
+			game_manager = get_node_or_null("/root/GameManager")
+			if not game_manager:
+				# Criar GameManager se não existir
+				var GameManagerScript = load("res://Scripts/GameManager.gd")
+				game_manager = GameManagerScript.new()
+				game_manager.name = "GameManager"
+				get_tree().root.add_child(game_manager)
+				game_manager.add_to_group("game_manager")
+				print("✅ GameManager criado")
+		
+		# Configurar GameManager
+		if game_manager and game_manager.has_method("set_world_generator"):
+			game_manager.set_world_generator(self)
+			if game_manager.has_method("set_loading_screen"):
+				game_manager.set_loading_screen(loading_screen)
+			print("✅ GameManager configurado")
+		
+		# Iniciar geração automaticamente (sempre iniciar quando vem do MainMenu)
+		print("🌍 Iniciando geração do mundo...")
+		start_world_generation()
+	else:
+		print("⚠️ Tela de loading não encontrada. Iniciando normalmente...")
+		# Se não tem tela de loading, iniciar normalmente se auto_start estiver ativo
+		if auto_start:
+			start_world_generation()
+
+func _on_direct_progress_update(percent: float, stage: GenerationStage, message: String, loading_screen: Control):
+	if loading_screen and loading_screen.has_method("update_progress"):
+		loading_screen.update_progress(percent, message)
+
+func _on_direct_generation_complete(loading_screen: Control):
+	if loading_screen and loading_screen.has_method("hide_loading"):
+		loading_screen.hide_loading()
+	else:
+		print("⚠️ Tela de loading não encontrada. Iniciando normalmente...")
+		# Se não tem tela de loading, iniciar normalmente se auto_start estiver ativo
+		if auto_start:
+			start_world_generation()
 
 # Iniciar geração do mundo manualmente
-func start_world_generation():
-	if not player:
+func start_world_generation(player_to_instantiate: Node3D = null):
+	# Resetar progresso e contadores
+	current_stage = GenerationStage.TERRAIN
+	generation_progress = 0.0
+	stage_progress = 0.0
+	initial_chunks_loaded = 0
+	initial_chunks_with_collision = 0
+	mobs_instantiation_attempts = 0  # Resetar contador de tentativas
+	terrain_complete_transition_attempted = false  # Resetar flag de transição
+	collision_complete_transition_attempted = false  # Resetar flag de transição COLLISION->VEGETATION
+	last_collision_progress_update_frame = -1  # Resetar frame de atualização
+	chunks_with_collision.clear()  # Limpar dicionário de colisões
+	chunks_to_generate.clear()  # Limpar fila
+	chunks_generating.clear()  # Limpar chunks sendo gerados
+	
+	# Se player foi passado, usar ele; senão procurar
+	if player_to_instantiate:
+		player = player_to_instantiate
+	elif not player:
 		player = get_tree().get_first_node_in_group("player")
 	
-	if player:
+	# Se ainda não tem player e tem player_scene, instanciar depois
+	if not player and player_scene:
+		print("🌍 Player será instanciado após colisão estar pronta")
+	elif player:
 		print("🌍 Iniciando geração do mundo! Player: ", player.name)
-		set_process(true)
-		set_physics_process(true)
-		update_chunks()
-		return true
 	else:
-		push_error("❌ Player não encontrado!")
-		return false
+		print("⚠️ Player não encontrado e player_scene não configurado. Continuando sem player...")
+	
+	# Calcular chunks necessários
+	if player:
+		var player_chunk = world_to_chunk(player.global_position)
+		initial_chunks_needed = 0
+		for x in range(-view_distance, view_distance + 1):
+			for z in range(-view_distance, view_distance + 1):
+				initial_chunks_needed += 1
+	else:
+		# Se não tem player ainda, usar posição padrão
+		initial_chunks_needed = (view_distance * 2 + 1) * (view_distance * 2 + 1)
+	
+	print("🌍 Chunks necessários: ", initial_chunks_needed)
+	print("🌍 View distance: ", view_distance)
+	
+	# Emitir sinal de início
+	print("🚀 start_world_generation chamado!")
+	print("   current_stage: ", current_stage)
+	print("   initial_chunks_needed: ", initial_chunks_needed)
+	print("   view_distance: ", view_distance)
+	print("   player_spawn_position: ", player_spawn_position)
+	
+	emit_signal("stage_changed", GenerationStage.TERRAIN, "Gerando terreno...")
+	emit_signal("progress_updated", 0.0, GenerationStage.TERRAIN, "Iniciando geração do mundo...")
+	
+	print("✅ Sinais emitidos, ativando processamento...")
+	set_process(true)
+	set_physics_process(true)
+	print("✅ Processamento ativado! Chamando update_chunks()...")
+	update_chunks()
+	print("✅ update_chunks() chamado! Fila tem ", chunks_to_generate.size(), " chunks")
+	return true
 
 # Obter número de chunks carregados
 func get_loaded_chunks_count() -> int:
@@ -187,7 +351,155 @@ func is_initial_load_complete() -> bool:
 	# Considerar completo quando pelo menos 80% dos chunks estão carregados
 	return chunks_loaded >= (chunks_needed * 0.8)
 
+# Verificar se o mundo está completamente gerado (para EnemySpawners)
+func is_world_complete() -> bool:
+	return current_stage == GenerationStage.COMPLETE
+
 func _process(_delta):
+	# NÃO gerar chunks se já completou o carregamento inicial E ainda não tem player
+	if current_stage >= GenerationStage.COMPLETE:
+		# Apenas fazer tracking normal após completo
+		if player:
+			var current_chunk = world_to_chunk(player.global_position)
+			if current_chunk != last_player_chunk:
+				last_player_chunk = current_chunk
+				update_chunks()
+		return
+	
+	# VERIFICAÇÃO DE SEGURANÇA: Se colisões estão completas mas ainda não avançou
+	if current_stage == GenerationStage.COLLISION and initial_chunks_needed > 0:
+		var current_frame = Engine.get_process_frames()
+		# Evitar verificação múltiplas vezes no mesmo frame
+		if last_collision_progress_update_frame == current_frame:
+			pass  # Já verificou neste frame
+		else:
+			last_collision_progress_update_frame = current_frame
+			
+			var player_chunk = Vector2i.ZERO
+			if player:
+				player_chunk = world_to_chunk(player.global_position)
+			else:
+				player_chunk = world_to_chunk(player_spawn_position)
+			
+			# Contar colisões REAIS dos chunks carregados e identificar chunks faltantes
+			var real_collisions = 0
+			var missing_collisions = []
+			for x in range(-view_distance, view_distance + 1):
+				for z in range(-view_distance, view_distance + 1):
+					var chunk_pos = player_chunk + Vector2i(x, z)
+					if loaded_chunks.has(chunk_pos):
+						var chunk_data = loaded_chunks[chunk_pos]
+						if chunk_data and chunk_data.terrain_collision != null:
+							real_collisions += 1
+						else:
+							# Chunk carregado mas sem colisão - problema!
+							missing_collisions.append(chunk_pos)
+					else:
+						# Chunk nem foi carregado ainda
+						missing_collisions.append(chunk_pos)
+			
+			# Se todas as colisões estão prontas mas contador não reflete isso, atualizar
+			if real_collisions >= initial_chunks_needed and initial_chunks_with_collision < initial_chunks_needed:
+				print("🔧 SEGURANÇA: Todas as colisões prontas mas contador não reflete! Reais: ", real_collisions, "/", initial_chunks_needed)
+				initial_chunks_with_collision = real_collisions
+				update_collision_progress()
+			elif missing_collisions.size() > 0 and missing_collisions.size() <= 3:
+				# Se há poucos chunks faltando colisão, logar para debug
+				print("⚠️ Chunks faltando colisão: ", missing_collisions.size(), " - ", missing_collisions)
+	
+	# VERIFICAÇÃO DE SEGURANÇA: Se terreno está completo mas ainda não mudou de estágio
+	if current_stage == GenerationStage.TERRAIN and initial_chunks_needed > 0:
+		# Verificar se realmente tem todos os chunks carregados
+		var player_chunk = Vector2i.ZERO
+		if player:
+			player_chunk = world_to_chunk(player.global_position)
+		else:
+			player_chunk = world_to_chunk(player_spawn_position)
+		
+		# Contar chunks REAIS na área inicial
+		var real_loaded_count = 0
+		for x in range(-view_distance, view_distance + 1):
+			for z in range(-view_distance, view_distance + 1):
+				var chunk_pos = player_chunk + Vector2i(x, z)
+				if loaded_chunks.has(chunk_pos):
+					real_loaded_count += 1
+		
+		# Se está próximo do fim mas ainda faltam chunks, forçar atualização
+		if initial_chunks_loaded >= initial_chunks_needed - 1 and real_loaded_count < initial_chunks_needed:
+			print("🔧 SEGURANÇA: Próximo do fim mas faltam chunks! Carregados: ", real_loaded_count, "/", initial_chunks_needed, " | Contador: ", initial_chunks_loaded)
+			# Forçar atualização de chunks para garantir que todos sejam adicionados à fila
+			if last_update_chunks_frame != Engine.get_process_frames():
+				last_update_chunks_frame = Engine.get_process_frames()
+				update_chunks()
+		
+		# Se terreno completo mas ainda em TERRAIN - forçar transição
+		if real_loaded_count >= initial_chunks_needed and not terrain_complete_transition_attempted:
+			# Sincronizar contador com realidade ANTES de transicionar
+			initial_chunks_loaded = real_loaded_count
+			print("🔧 SEGURANÇA: Terreno completo detectado mas ainda em TERRAIN. Forçando transição...")
+			print("   Chunks reais carregados: ", real_loaded_count, "/", initial_chunks_needed)
+			print("   Contador sincronizado: ", initial_chunks_loaded, "/", initial_chunks_needed)
+			terrain_complete_transition_attempted = true
+			# Atualizar progresso final antes de transicionar
+			update_terrain_progress()
+			# Se ainda não transicionou após atualizar progresso, forçar diretamente
+			if current_stage == GenerationStage.TERRAIN:
+				call_deferred("_advance_to_collision_stage")
+	
+	# Gerar chunks da fila (pode funcionar mesmo sem player durante carregamento inicial)
+	if chunks_to_generate.size() > 0:
+		if async_generation:
+			# Em modo assíncrono, gerar chunks conforme configurado
+			generate_queued_chunks()
+		else:
+			# Modo síncrono: gerar múltiplos chunks conforme configurado
+			generate_queued_chunks()
+	else:
+		# Se não tem chunks na fila e ainda não completou, tentar atualizar chunks
+		# MAS só uma vez por frame para evitar loop E só se realmente precisa
+		var current_frame = Engine.get_process_frames()
+		if current_stage < GenerationStage.COMPLETE and initial_chunks_needed > 0:
+			# Verificar chunks REAIS na área inicial (não apenas contadores)
+			var player_chunk = Vector2i.ZERO
+			if player:
+				player_chunk = world_to_chunk(player.global_position)
+			else:
+				player_chunk = world_to_chunk(player_spawn_position)
+			
+			var real_loaded_count = 0
+			var missing_chunks = []
+			for x in range(-view_distance, view_distance + 1):
+				for z in range(-view_distance, view_distance + 1):
+					var chunk_pos = player_chunk + Vector2i(x, z)
+					if loaded_chunks.has(chunk_pos):
+						real_loaded_count += 1
+					else:
+						# Chunk faltando - adicionar à lista
+						if not chunks_generating.has(chunk_pos):
+							# Verificar se já está na fila
+							var in_queue = false
+							for queued_pos in chunks_to_generate:
+								if queued_pos == chunk_pos:
+									in_queue = true
+									break
+							if not in_queue:
+								missing_chunks.append(chunk_pos)
+			
+			# Se ainda faltam chunks, atualizar OU adicionar diretamente à fila
+			if real_loaded_count < initial_chunks_needed:
+				if missing_chunks.size() > 0:
+					# Adicionar chunks faltantes diretamente à fila
+					print("🔧 Adicionando ", missing_chunks.size(), " chunks faltantes diretamente à fila!")
+					for chunk_pos in missing_chunks:
+						chunks_to_generate.append(chunk_pos)
+					print("✅ Fila agora tem ", chunks_to_generate.size(), " chunks")
+				elif last_update_chunks_frame != current_frame:
+					last_update_chunks_frame = current_frame
+					print("🔄 Fila vazia mas faltam chunks! Reais: ", real_loaded_count, "/", initial_chunks_needed, " - Atualizando...")
+					update_chunks()
+			# Se já tem todos os chunks necessários, não precisa atualizar mais
+	
+	# Só fazer tracking do player se ele existir
 	if not player:
 		return
 	
@@ -201,16 +513,11 @@ func _process(_delta):
 	# Player mudou de chunk?
 	if current_chunk != last_player_chunk:
 		last_player_chunk = current_chunk
-		update_chunks()
-	
-	# Gerar chunks da fila (com otimização assíncrona)
-	if chunks_to_generate.size() > 0:
-		if async_generation:
-			# Em modo assíncrono, gerar apenas 1 chunk por frame para manter FPS
-			generate_queued_chunks()
-		else:
-			# Modo síncrono: gerar múltiplos chunks conforme configurado
-			generate_queued_chunks()
+		# Resetar frame para permitir update quando player muda de chunk
+		last_update_chunks_frame = -1
+		# Só atualizar se ainda não completou carregamento inicial
+		if current_stage < GenerationStage.COMPLETE:
+			update_chunks()
 	
 	# Verificar se precisa spawnar POIs (otimizado: menos frequente)
 	if enable_pois and player.global_position.distance_to(last_poi_check_pos) > poi_check_interval:
@@ -423,73 +730,815 @@ func chunk_to_world(chunk_pos: Vector2i) -> Vector3:
 	)
 
 func update_chunks():
-	if not player:
+	# Evitar chamar múltiplas vezes no mesmo frame
+	var current_frame = Engine.get_process_frames()
+	if last_update_chunks_frame == current_frame:
+		return
+	last_update_chunks_frame = current_frame
+	
+	print("🔄 update_chunks chamado - current_stage: ", current_stage, ", initial_chunks_needed: ", initial_chunks_needed, ", fila: ", chunks_to_generate.size(), ", carregados: ", loaded_chunks.size())
+	
+	# NÃO atualizar chunks durante carregamento inicial se já completou
+	if current_stage == GenerationStage.COMPLETE:
+		# Apenas fazer tracking normal do player após carregamento inicial
+		if player:
+			var player_chunk = world_to_chunk(player.global_position)
+			
+			# Chunks que devem estar carregados
+			var chunks_needed = []
+			for x in range(-view_distance, view_distance + 1):
+				for z in range(-view_distance, view_distance + 1):
+					var chunk_pos = player_chunk + Vector2i(x, z)
+					chunks_needed.append(chunk_pos)
+					
+					# Adicionar à fila se não existe
+					if not loaded_chunks.has(chunk_pos) and not chunks_generating.has(chunk_pos):
+						# Verificar se já está na fila (arrays não têm .has(), usar busca manual)
+						var already_in_queue = false
+						for queued_pos in chunks_to_generate:
+							if queued_pos == chunk_pos:
+								already_in_queue = true
+								break
+						
+						if not already_in_queue:
+							chunks_to_generate.append(chunk_pos)
+			
+			# Descarregar chunks distantes
+			var chunks_to_unload = []
+			for chunk_pos in loaded_chunks.keys():
+				var dist = max(abs(chunk_pos.x - player_chunk.x), abs(chunk_pos.y - player_chunk.y))
+				if dist > unload_distance:
+					chunks_to_unload.append(chunk_pos)
+			
+			for chunk_pos in chunks_to_unload:
+				unload_chunk(chunk_pos)
+			
+			# Atualizar LOD de colisões se habilitado
+			if enable_collision_lod:
+				update_collision_lod(player_chunk)
 		return
 	
-	var player_chunk = world_to_chunk(player.global_position)
+	# Durante carregamento inicial, pode não ter player ainda
+	var player_chunk: Vector2i
+	if player:
+		player_chunk = world_to_chunk(player.global_position)
+		print("📍 Player encontrado, chunk: ", player_chunk)
+	else:
+		# Usar posição de spawn como referência
+		player_chunk = world_to_chunk(player_spawn_position)
+		print("📍 Usando spawn position, chunk: ", player_chunk, " spawn: ", player_spawn_position)
+	
+	print("📐 View distance: ", view_distance, " - Range: ", -view_distance, " até ", view_distance)
 	
 	# Chunks que devem estar carregados
 	var chunks_needed = []
+	var chunks_added = 0
+	var chunks_already_loaded = 0
+	var chunks_already_in_queue = 0
+	
 	for x in range(-view_distance, view_distance + 1):
 		for z in range(-view_distance, view_distance + 1):
 			var chunk_pos = player_chunk + Vector2i(x, z)
 			chunks_needed.append(chunk_pos)
 			
-			# Adicionar à fila se não existe
-			if not loaded_chunks.has(chunk_pos) and not chunks_generating.has(chunk_pos):
-				if not chunks_to_generate.has(chunk_pos):
-					chunks_to_generate.append(chunk_pos)
+			# Se já está carregado, contar mas não adicionar
+			if loaded_chunks.has(chunk_pos):
+				chunks_already_loaded += 1
+				continue
+			
+			# Se já está sendo gerado, não adicionar
+			if chunks_generating.has(chunk_pos):
+				continue
+			
+			# Verificar se já está na fila (arrays não têm .has(), usar busca manual)
+			var already_in_queue = false
+			for queued_pos in chunks_to_generate:
+				if queued_pos == chunk_pos:
+					already_in_queue = true
+					chunks_already_in_queue += 1
+					break
+			
+			if not already_in_queue:
+				chunks_to_generate.append(chunk_pos)
+				chunks_added += 1
 	
-	# Descarregar chunks distantes
-	var chunks_to_unload = []
-	for chunk_pos in loaded_chunks.keys():
-		var dist = max(abs(chunk_pos.x - player_chunk.x), abs(chunk_pos.y - player_chunk.y))
-		if dist > unload_distance:
-			chunks_to_unload.append(chunk_pos)
+	if chunks_added > 0:
+		print("✅ Chunks adicionados: ", chunks_added, " | Já carregados: ", chunks_already_loaded, " | Já na fila: ", chunks_already_in_queue, " | Fila total: ", chunks_to_generate.size())
+	elif chunks_to_generate.size() == 0:
+		if chunks_already_loaded < initial_chunks_needed:
+			print("⚠️ Nenhum chunk adicionado! Carregados: ", chunks_already_loaded, "/", initial_chunks_needed, " | Fila: ", chunks_to_generate.size(), " | Gerando: ", chunks_generating.size())
+		else:
+			print("✅ Todos os chunks necessários já estão carregados: ", chunks_already_loaded, "/", initial_chunks_needed)
 	
-	for chunk_pos in chunks_to_unload:
-		unload_chunk(chunk_pos)
-	
-	# Atualizar LOD de colisões se habilitado
-	if enable_collision_lod:
-		update_collision_lod(player_chunk)
+	# Descarregar chunks distantes (apenas após carregamento inicial completo)
+	if current_stage >= GenerationStage.COMPLETE:
+		var chunks_to_unload = []
+		for chunk_pos in loaded_chunks.keys():
+			var dist = max(abs(chunk_pos.x - player_chunk.x), abs(chunk_pos.y - player_chunk.y))
+			if dist > unload_distance:
+				chunks_to_unload.append(chunk_pos)
+		
+		for chunk_pos in chunks_to_unload:
+			unload_chunk(chunk_pos)
+		
+		# Atualizar LOD de colisões se habilitado
+		if enable_collision_lod:
+			update_collision_lod(player_chunk)
 
 func generate_queued_chunks():
+	# NÃO gerar chunks se já completou o carregamento inicial
+	if current_stage == GenerationStage.COMPLETE:
+		return
+	
+	if chunks_to_generate.size() == 0:
+		print("⚠️ Nenhum chunk na fila para gerar! current_stage: ", current_stage, ", initial_chunks_needed: ", initial_chunks_needed)
+		return
+	
+	print("🔨 Gerando chunks da fila... (", chunks_to_generate.size(), " na fila)")
+	
 	var generated = 0
 	var max_chunks = chunks_per_frame
 	
-	# Em modo assíncrono, limitar a 1 chunk por frame para manter FPS suave
-	if async_generation:
-		max_chunks = 1
+	# Permitir múltiplos chunks por frame para acelerar geração inicial
+	# Durante carregamento inicial, processar mais chunks simultaneamente
+	if current_stage <= GenerationStage.COLLISION and initial_chunks_needed > 0:
+		# Processar até 3 chunks por frame durante carregamento inicial
+		max_chunks = max(chunks_per_frame, 3)
 	
-	while generated < max_chunks and chunks_to_generate.size() > 0:
+	# Em modo assíncrono, ainda limitar mas permitir mais durante carregamento inicial
+	if async_generation:
+		if current_stage <= GenerationStage.COLLISION and initial_chunks_needed > 0:
+			max_chunks = 2  # Permitir 2 chunks durante carregamento inicial
+		else:
+			max_chunks = 1  # Normalmente 1 chunk por frame
+	
+	# Proteção: não gerar mais chunks do que o necessário durante carregamento inicial
+	if initial_chunks_needed > 0 and current_stage <= GenerationStage.COLLISION:
+		var chunks_already_loaded = loaded_chunks.size()
+		if chunks_already_loaded >= initial_chunks_needed * 2:  # Limite de segurança
+			print("⚠️ Muitos chunks gerados! Parando geração para evitar loop infinito.")
+			return
+	
+	var max_iterations = chunks_to_generate.size() + 10  # Proteção contra loop infinito
+	var iterations = 0
+	
+	while generated < max_chunks and chunks_to_generate.size() > 0 and iterations < max_iterations:
+		iterations += 1
+		
+		# Verificar novamente se completou
+		if current_stage == GenerationStage.COMPLETE:
+			break
+		
+		# SEMPRE remover da fila PRIMEIRO (evita loop infinito)
 		var chunk_pos = chunks_to_generate.pop_front()
 		
-		if not loaded_chunks.has(chunk_pos):
-			chunks_generating[chunk_pos] = true
-			generate_chunk(chunk_pos)
+		# Se já está carregado, pular
+		if loaded_chunks.has(chunk_pos):
+			print("⏭️ Chunk já carregado, pulando: ", chunk_pos)
+			chunks_generating.erase(chunk_pos)  # Limpar marcação se existir
+			continue
+		
+		# Se já está sendo gerado, limpar marcação e pular
+		if chunks_generating.has(chunk_pos):
+			print("⏭️ Chunk já sendo gerado, limpando marcação e pulando: ", chunk_pos)
 			chunks_generating.erase(chunk_pos)
-			generated += 1
-			
-			# Yield após cada chunk se async estiver ativado
-			if async_generation:
+			continue
+		
+		# Marcar como sendo gerado ANTES de gerar
+		chunks_generating[chunk_pos] = true
+		
+		# Gerar chunk
+		generate_chunk(chunk_pos)
+		
+		# SEMPRE remover da marcação após gerar (mesmo se deu erro)
+		chunks_generating.erase(chunk_pos)
+		generated += 1
+		
+		# Yield após cada chunk se async estiver ativado (mas menos durante carregamento inicial)
+		if async_generation:
+			if current_stage > GenerationStage.COLLISION or initial_chunks_needed == 0:
 				await get_tree().process_frame
+			elif generated % 2 == 0:  # Yield a cada 2 chunks durante carregamento inicial
+				await get_tree().process_frame
+	
+	if iterations >= max_iterations:
+		print("⚠️ Loop infinito detectado! Limpando fila e marcações...")
+		chunks_to_generate.clear()
+		chunks_generating.clear()
 
 func generate_chunk(chunk_pos: Vector2i):
+	print("🏗️ Gerando chunk: ", chunk_pos)
+	
+	# Verificar se já está carregado (evitar duplicatas)
+	if loaded_chunks.has(chunk_pos):
+		print("⚠️ Chunk já carregado: ", chunk_pos)
+		# Garantir que não está marcado como sendo gerado
+		chunks_generating.erase(chunk_pos)
+		return
+	
+	# Esta verificação não deveria ser necessária aqui (já foi feita antes)
+	# Mas deixamos como proteção extra - se chegou aqui com marcação, limpar
+	if chunks_generating.has(chunk_pos):
+		print("⚠️ ERRO: Chunk já marcado como sendo gerado! Limpando e continuando...")
+		chunks_generating.erase(chunk_pos)
+	
 	var chunk_data = ChunkData.new()
 	chunk_data.chunk_pos = chunk_pos
 	
 	var world_pos = chunk_to_world(chunk_pos)
 	
-	# Gerar terreno
+	# ETAPA 1: Gerar terreno (sempre fazer primeiro)
+	print("🌍 Criando terreno para chunk: ", chunk_pos)
 	create_chunk_terrain(chunk_data, world_pos)
+	print("✅ Terreno criado para chunk: ", chunk_pos)
 	
-	# Gerar vegetação
+	# Atualizar progresso de terreno (se estamos no carregamento inicial)
+	var is_initial_chunk = initial_chunks_needed > 0 and current_stage <= GenerationStage.TERRAIN
+	if is_initial_chunk:
+		# Verificar se este chunk está na área inicial
+		var player_chunk = Vector2i.ZERO
+		if player:
+			player_chunk = world_to_chunk(player.global_position)
+		else:
+			# Se não tem player, usar posição padrão
+			player_chunk = world_to_chunk(player_spawn_position)
+		
+		var dist_x = abs(chunk_pos.x - player_chunk.x)
+		var dist_z = abs(chunk_pos.y - player_chunk.y)
+		if dist_x <= view_distance and dist_z <= view_distance:
+			# Proteção: nunca exceder o total
+			if initial_chunks_loaded < initial_chunks_needed:
+				initial_chunks_loaded += 1
+				print("📊 Chunk carregado: ", initial_chunks_loaded, "/", initial_chunks_needed, " (chunk: ", chunk_pos, ")")
+				update_terrain_progress()
+			elif initial_chunks_loaded > initial_chunks_needed:
+				# Se por algum motivo excedeu, corrigir
+				initial_chunks_loaded = initial_chunks_needed
+				print("⚠️ Contagem de terreno corrigida: ", initial_chunks_loaded, "/", initial_chunks_needed)
+	
+	# ETAPA 2: Criar colisão (já é criada dentro de create_chunk_terrain)
+	# A marcação de colisão pronta é feita dentro de create_chunk_collision
+	
+	# ETAPA 3: Gerar vegetação (pode ser feito em paralelo, mas só após terreno estar pronto)
 	if enable_vegetation:
 		create_chunk_vegetation(chunk_data, world_pos)
 	
 	chunk_data.is_loaded = true
 	loaded_chunks[chunk_pos] = chunk_data
+	
+	# Garantir que não está mais marcado como sendo gerado
+	chunks_generating.erase(chunk_pos)
+	print("✅ Chunk gerado e marcado como carregado: ", chunk_pos)
+
+# ========================================
+# SISTEMA DE PROGRESSO
+# ========================================
+
+func update_terrain_progress():
+	# Proteção: não atualizar se já avançou de etapa
+	if current_stage != GenerationStage.TERRAIN:
+		print("⚠️ update_terrain_progress chamado mas current_stage é ", current_stage, " (não TERRAIN)")
+		return
+	
+	if initial_chunks_needed > 0:
+		# Limitar para não exceder o total - CORRIGIR se excedeu
+		if initial_chunks_loaded > initial_chunks_needed:
+			initial_chunks_loaded = initial_chunks_needed
+			print("⚠️ Contagem de terreno corrigida: ", initial_chunks_loaded, "/", initial_chunks_needed)
+		
+		var counted = initial_chunks_loaded
+		stage_progress = float(counted) / float(initial_chunks_needed)
+		generation_progress = stage_progress * 20.0  # Terreno = 0-20%
+		print("📊 Progresso terreno: ", generation_progress, "% (", counted, "/", initial_chunks_needed, ")")
+		emit_signal("progress_updated", generation_progress, GenerationStage.TERRAIN, "Gerando terreno... (" + str(counted) + "/" + str(initial_chunks_needed) + ")")
+		
+		# Quando terreno completo, mudar para colisão
+		if counted >= initial_chunks_needed and not terrain_complete_transition_attempted:
+			print("✅ Terreno completo detectado! (", counted, "/", initial_chunks_needed, ") - Chamando transição...")
+			terrain_complete_transition_attempted = true
+			# Usar call_deferred para garantir que a transição aconteça no frame correto
+			# e evitar condições de corrida
+			call_deferred("_advance_to_collision_stage")
+	else:
+		print("⚠️ initial_chunks_needed é 0! Não pode atualizar progresso.")
+
+func _advance_to_collision_stage():
+	# Garantir que ainda estamos em TERRAIN (proteção contra múltiplas chamadas)
+	if current_stage != GenerationStage.TERRAIN:
+		print("⚠️ _advance_to_collision_stage chamado mas stage é ", current_stage, " (esperado: TERRAIN)")
+		return
+	
+	print("🔄 Executando _advance_to_collision_stage()...")
+	print("   Terreno carregado: ", initial_chunks_loaded, "/", initial_chunks_needed)
+	
+	current_stage = GenerationStage.COLLISION
+	emit_signal("stage_changed", GenerationStage.COLLISION, "Criando colisões...")
+	print("✅ Terreno completo! Mudando para colisões...")
+	
+	# CRÍTICO: Contar todas as colisões que já foram criadas durante a geração do terreno
+	# (muitos chunks já têm colisão pronta, mas não foram contados porque estávamos em TERRAIN)
+	var player_chunk = Vector2i.ZERO
+	if player:
+		player_chunk = world_to_chunk(player.global_position)
+	else:
+		player_chunk = world_to_chunk(player_spawn_position)
+	
+	var collisions_already_created = 0
+	var missing_collisions = []
+	for x in range(-view_distance, view_distance + 1):
+		for z in range(-view_distance, view_distance + 1):
+			var chunk_pos = player_chunk + Vector2i(x, z)
+			if chunks_with_collision.has(chunk_pos):
+				collisions_already_created += 1
+			elif loaded_chunks.has(chunk_pos):
+				# Chunk carregado mas sem colisão marcada - pode ser um problema
+				missing_collisions.append(chunk_pos)
+	
+	# Se há chunks carregados sem colisão marcada, verificar se realmente têm colisão
+	if missing_collisions.size() > 0:
+		print("⚠️ Detectados ", missing_collisions.size(), " chunks carregados sem colisão marcada!")
+		for chunk_pos in missing_collisions:
+			var chunk_data = loaded_chunks.get(chunk_pos)
+			if chunk_data and chunk_data.terrain_collision != null:
+				# Chunk tem colisão mas não está marcado - corrigir
+				if not chunks_with_collision.has(chunk_pos):
+					chunks_with_collision[chunk_pos] = true
+					collisions_already_created += 1
+					print("🔧 Corrigido: Chunk ", chunk_pos, " tem colisão mas não estava marcado!")
+	
+	# Atualizar contador de colisões com o valor real
+	initial_chunks_with_collision = min(collisions_already_created, initial_chunks_needed)
+	print("📊 Colisões já criadas durante terreno: ", initial_chunks_with_collision, "/", initial_chunks_needed)
+	
+	# Se ainda faltam colisões mas todos os chunks estão carregados, verificar novamente
+	if initial_chunks_with_collision < initial_chunks_needed and loaded_chunks.size() >= initial_chunks_needed:
+		print("⚠️ Todos os chunks carregados mas faltam colisões! Verificando novamente...")
+		# Recontar todas as colisões dos chunks carregados
+		var real_collisions = 0
+		for x in range(-view_distance, view_distance + 1):
+			for z in range(-view_distance, view_distance + 1):
+				var chunk_pos = player_chunk + Vector2i(x, z)
+				if loaded_chunks.has(chunk_pos):
+					var chunk_data = loaded_chunks[chunk_pos]
+					if chunk_data and chunk_data.terrain_collision != null:
+						# Garantir que está marcado
+						if not chunks_with_collision.has(chunk_pos):
+							chunks_with_collision[chunk_pos] = true
+						real_collisions += 1
+		
+		initial_chunks_with_collision = min(real_collisions, initial_chunks_needed)
+		print("📊 Colisões reais verificadas: ", initial_chunks_with_collision, "/", initial_chunks_needed)
+	
+	# Atualizar progresso imediatamente
+	update_collision_progress()
+
+func update_collision_progress():
+	# Proteção: não atualizar se já avançou de etapa
+	if current_stage != GenerationStage.COLLISION:
+		return
+	
+	# Proteção: evitar chamadas múltiplas no mesmo frame
+	var current_frame = Engine.get_process_frames()
+	if last_collision_progress_update_frame == current_frame:
+		return
+	last_collision_progress_update_frame = current_frame
+	
+	if initial_chunks_needed > 0:
+		# VERIFICAÇÃO DETERMINÍSTICA: Contar colisões reais dos chunks carregados
+		# Isso garante que não dependemos apenas de contadores que podem estar dessincronizados
+		var player_chunk = Vector2i.ZERO
+		if player:
+			player_chunk = world_to_chunk(player.global_position)
+		else:
+			player_chunk = world_to_chunk(player_spawn_position)
+		
+		var real_collisions_count = 0
+		var chunks_without_collision = []
+		for x in range(-view_distance, view_distance + 1):
+			for z in range(-view_distance, view_distance + 1):
+				var chunk_pos = player_chunk + Vector2i(x, z)
+				# Verificar chunks carregados diretamente (fonte da verdade)
+				if loaded_chunks.has(chunk_pos):
+					var chunk_data = loaded_chunks[chunk_pos]
+					if chunk_data and chunk_data.terrain_collision != null:
+						# Chunk tem colisão - garantir que está marcado
+						if not chunks_with_collision.has(chunk_pos):
+							chunks_with_collision[chunk_pos] = true
+							print("🔧 Corrigido em update_collision_progress: Chunk ", chunk_pos, " tem colisão mas não estava marcado!")
+						real_collisions_count += 1
+					else:
+						# Chunk carregado mas sem colisão - adicionar à lista de problemas
+						chunks_without_collision.append(chunk_pos)
+				elif chunks_with_collision.has(chunk_pos):
+					# Está marcado mas chunk não está carregado - remover marcação incorreta
+					chunks_with_collision.erase(chunk_pos)
+					print("🔧 Removida marcação incorreta de colisão para chunk não carregado: ", chunk_pos)
+		
+		# Se há chunks sem colisão mas carregados, tentar criar colisão para eles
+		if chunks_without_collision.size() > 0 and chunks_without_collision.size() <= 5:
+			print("⚠️ Detectados ", chunks_without_collision.size(), " chunks carregados sem colisão: ", chunks_without_collision)
+			# Tentar criar colisão para chunks faltantes (pode ter sido pulado por algum motivo)
+			for chunk_pos in chunks_without_collision:
+				if loaded_chunks.has(chunk_pos):
+					var chunk_data = loaded_chunks[chunk_pos]
+					if chunk_data and chunk_data.terrain_mesh and chunk_data.terrain_collision == null:
+						print("🔨 Tentando criar colisão para chunk faltante: ", chunk_pos)
+						var world_pos = chunk_to_world(chunk_pos)
+						# Recriar colisão usando o mesh existente
+						if chunk_data.terrain_mesh.mesh:
+							var static_body = StaticBody3D.new()
+							var collision = CollisionShape3D.new()
+							var collision_shape = chunk_data.terrain_mesh.mesh.create_trimesh_shape()
+							collision.shape = collision_shape
+							static_body.add_child(collision)
+							add_child(static_body)
+							chunk_data.terrain_collision = static_body
+							chunks_with_collision[chunk_pos] = true
+							real_collisions_count += 1
+							print("✅ Colisão criada para chunk faltante: ", chunk_pos)
+		
+		# Sincronizar contador com realidade
+		initial_chunks_with_collision = min(real_collisions_count, initial_chunks_needed)
+		
+		# Limitar para não exceder o total - CORRIGIR se excedeu
+		if initial_chunks_with_collision > initial_chunks_needed:
+			initial_chunks_with_collision = initial_chunks_needed
+			print("⚠️ Contagem de colisões corrigida: ", initial_chunks_with_collision, "/", initial_chunks_needed)
+		
+		var counted = initial_chunks_with_collision
+		stage_progress = float(counted) / float(initial_chunks_needed)
+		generation_progress = 20.0 + (stage_progress * 30.0)  # Colisão = 20-50%
+		emit_signal("progress_updated", generation_progress, GenerationStage.COLLISION, "Criando colisões... (" + str(counted) + "/" + str(initial_chunks_needed) + ")")
+		
+		# Quando todas as colisões estão prontas, mudar para vegetação (NÃO instanciar player ainda)
+		if counted >= initial_chunks_needed and not collision_complete_transition_attempted:
+			# Garantir que não avance múltiplas vezes - usar call_deferred para garantir ordem
+			if current_stage == GenerationStage.COLLISION:
+				print("✅ Todas as colisões verificadas e prontas! (", counted, "/", initial_chunks_needed, ")")
+				collision_complete_transition_attempted = true
+				call_deferred("_advance_to_vegetation_stage")
+
+func _advance_to_vegetation_stage():
+	# Garantir que ainda estamos em COLLISION (proteção contra múltiplas chamadas)
+	if current_stage != GenerationStage.COLLISION:
+		print("⚠️ _advance_to_vegetation_stage chamado mas stage é ", current_stage)
+		return
+	
+	# Verificação final: garantir que realmente temos todas as colisões
+	var player_chunk = Vector2i.ZERO
+	if player:
+		player_chunk = world_to_chunk(player.global_position)
+	else:
+		player_chunk = world_to_chunk(player_spawn_position)
+	
+	var final_collision_count = 0
+	for x in range(-view_distance, view_distance + 1):
+		for z in range(-view_distance, view_distance + 1):
+			var chunk_pos = player_chunk + Vector2i(x, z)
+			if loaded_chunks.has(chunk_pos):
+				var chunk_data = loaded_chunks[chunk_pos]
+				if chunk_data and chunk_data.terrain_collision != null:
+					final_collision_count += 1
+	
+	if final_collision_count < initial_chunks_needed:
+		print("⚠️ Verificação final falhou! Colisões: ", final_collision_count, "/", initial_chunks_needed, " - Aguardando...")
+		collision_complete_transition_attempted = false  # Permitir nova tentativa
+		return
+	
+	print("✅ Verificação final passou! Colisões: ", final_collision_count, "/", initial_chunks_needed)
+	current_stage = GenerationStage.VEGETATION
+	emit_signal("stage_changed", GenerationStage.VEGETATION, "Gerando vegetação...")
+	generation_progress = 50.0
+	emit_signal("progress_updated", 50.0, GenerationStage.VEGETATION, "Gerando vegetação...")
+	print("✅ Mudando para vegetação...")
+	
+	# Aguardar alguns frames para vegetação ser gerada, depois instanciar player
+	call_deferred("_advance_to_player_after_vegetation")
+
+func _advance_to_player_after_vegetation():
+	# Garantir que ainda estamos em VEGETATION
+	if current_stage != GenerationStage.VEGETATION:
+		print("⚠️ _advance_to_player_after_vegetation chamado mas stage é ", current_stage)
+		return
+	
+	# Aguardar alguns frames para vegetação ser gerada
+	await get_tree().process_frame
+	await get_tree().process_frame
+	await get_tree().create_timer(0.3).timeout
+	
+	# Verificação final antes de avançar
+	if current_stage == GenerationStage.VEGETATION:
+		start_player_instantiation()
+
+func start_player_instantiation():
+	# Só instanciar player quando TODAS as etapas anteriores estiverem completas
+	if current_stage < GenerationStage.PLAYER:
+		# Verificar se realmente está tudo pronto
+		var all_collisions_ready = initial_chunks_with_collision >= initial_chunks_needed
+		var all_terrain_ready = initial_chunks_loaded >= initial_chunks_needed
+		
+		if not (all_collisions_ready and all_terrain_ready):
+			print("⚠️ Aguardando todas as etapas completarem antes de instanciar player...")
+			print("   Terreno: ", initial_chunks_loaded, "/", initial_chunks_needed)
+			print("   Colisões: ", initial_chunks_with_collision, "/", initial_chunks_needed)
+			# Tentar novamente após um delay
+			await get_tree().create_timer(0.5).timeout
+			if current_stage < GenerationStage.PLAYER:
+				start_player_instantiation()
+			return
+		
+		current_stage = GenerationStage.PLAYER
+		generation_progress = 70.0
+		emit_signal("stage_changed", GenerationStage.PLAYER, "Instanciando player...")
+		emit_signal("progress_updated", 70.0, GenerationStage.PLAYER, "Instanciando player...")
+		
+		# Aguardar alguns frames para garantir que tudo está estável
+		await get_tree().process_frame
+		await get_tree().process_frame
+		
+			# CRÍTICO: Aguardar mais alguns frames para garantir que TODAS as colisões estão realmente ativas
+		await get_tree().process_frame
+		await get_tree().process_frame
+		await get_tree().create_timer(0.5).timeout  # Aguardar 0.5s para garantir que física está estável
+		
+		# Verificar se realmente temos todas as colisões antes de instanciar player
+		var player_chunk = Vector2i.ZERO
+		if player:
+			player_chunk = world_to_chunk(player.global_position)
+		else:
+			player_chunk = world_to_chunk(player_spawn_position if player_spawn_position != Vector3.ZERO else chunk_to_world(Vector2i(0, 0)))
+		
+		var final_collision_check = 0
+		for x in range(-view_distance, view_distance + 1):
+			for z in range(-view_distance, view_distance + 1):
+				var chunk_pos = player_chunk + Vector2i(x, z)
+				if loaded_chunks.has(chunk_pos):
+					var chunk_data = loaded_chunks[chunk_pos]
+					if chunk_data and chunk_data.terrain_collision != null:
+						final_collision_check += 1
+		
+		print("🔍 Verificação final antes de instanciar player:")
+		print("   Colisões prontas: ", final_collision_check, "/", initial_chunks_needed)
+		print("   Chunk do player: ", player_chunk)
+		
+		if final_collision_check < initial_chunks_needed:
+			print("⚠️ Ainda faltam colisões! Aguardando mais...")
+			await get_tree().create_timer(0.5).timeout
+		
+		# Instanciar player se necessário
+		if not player and player_scene:
+			instantiate_player()
+		elif player:
+			# Se player já existe, desabilitar temporariamente e posicionar corretamente
+			if player.has_method("set_process"):
+				player.set_process(false)
+			if player.has_method("set_physics_process"):
+				player.set_physics_process(false)
+			if player.has_method("set_process_mode"):
+				player.set_process_mode(Node.PROCESS_MODE_DISABLED)
+			
+			# Aguardar alguns frames para garantir que está na árvore
+			await get_tree().process_frame
+			await get_tree().process_frame
+			
+			# Agora posicionar
+			position_player_on_terrain()
+			print("🎮 Player existente desabilitado até mundo estar completo")
+		
+		# Após player instanciado, instanciar mobs
+		await get_tree().process_frame
+		start_mobs_instantiation()
+
+func instantiate_player():
+	if not player_scene:
+		push_error("❌ player_scene não configurado!")
+		return
+	
+	print("🎮 Instanciando player...")
+	player = player_scene.instantiate()
+	
+	# Desabilitar player temporariamente até o mundo estar 100% completo
+	if player.has_method("set_process"):
+		player.set_process(false)
+	if player.has_method("set_physics_process"):
+		player.set_physics_process(false)
+	if player.has_method("set_process_mode"):
+		player.set_process_mode(Node.PROCESS_MODE_DISABLED)
+	
+	# CRÍTICO: Adicionar à cena PRIMEIRO antes de tentar posicionar
+	# Adicionar ao grupo player
+	player.add_to_group("player")
+	
+	# Adicionar à cena
+	get_tree().root.add_child(player)
+	
+	# Aguardar alguns frames para garantir que está na árvore da cena
+	await get_tree().process_frame
+	await get_tree().process_frame
+	await get_tree().create_timer(0.1).timeout  # Aguardar um pouco mais para garantir que física está ativa
+	
+	# AGORA posicionar player (já está na árvore)
+	# Tentar posicionar múltiplas vezes se necessário
+	var positioning_success = false
+	for attempt in range(3):
+		position_player_on_terrain()
+		await get_tree().process_frame
+		
+		# Verificar se foi posicionado corretamente (Y não deve ser 0 ou muito baixo)
+		if player.global_position.y > -10.0:  # Altura razoável (não está no fundo do mundo)
+			positioning_success = true
+			print("✅ Player posicionado com sucesso na tentativa ", attempt + 1)
+			break
+		else:
+			print("⚠️ Tentativa ", attempt + 1, " falhou. Y=", player.global_position.y, " - Tentando novamente...")
+			await get_tree().create_timer(0.2).timeout
+	
+	if not positioning_success:
+		push_error("❌ Falha ao posicionar player após 3 tentativas! Posição final: ", player.global_position)
+	
+	print("✅ Player instanciado em: ", player.global_position, " (aguardando mundo estar completo)")
+	
+	# Atualizar progresso
+	generation_progress = 70.0
+	emit_signal("progress_updated", 70.0, GenerationStage.PLAYER, "Player instanciado!")
+
+func position_player_on_terrain():
+	if not player:
+		push_error("❌ Player é null! Não é possível posicionar.")
+		return
+	
+	# CRÍTICO: Verificar se player está na árvore antes de acessar global_position
+	if not player.is_inside_tree():
+		push_error("⚠️ Player não está na árvore da cena! Não é possível posicionar.")
+		return
+	
+	# Determinar posição de spawn
+	var spawn_pos = player_spawn_position
+	
+	# Se player_spawn_position está em (0,0,0), usar o centro do chunk (0,0) convertido para mundo
+	if spawn_pos == Vector3.ZERO:
+		# Converter chunk (0,0) para coordenadas do mundo
+		spawn_pos = chunk_to_world(Vector2i(0, 0))
+		spawn_pos.y = 0  # Será ajustado pelo raycast
+		print("🔍 player_spawn_position estava em (0,0,0), usando centro do chunk (0,0): ", spawn_pos)
+	else:
+		print("🔍 Posição de spawn configurada: ", spawn_pos)
+	
+	if player.is_inside_tree():
+		var current_pos = player.global_position
+		print("🔍 Posição atual do player: ", current_pos)
+		# Se player já tem uma posição válida (não zero), usar ela
+		if current_pos != Vector3.ZERO and current_pos.length() > 0.1:
+			spawn_pos.x = current_pos.x
+			spawn_pos.z = current_pos.z
+			spawn_pos.y = 0  # Será ajustado pelo raycast
+			print("🔍 Usando posição X/Z atual do player: ", spawn_pos)
+	
+	print("🎯 Tentando posicionar player em X=", spawn_pos.x, " Z=", spawn_pos.z, " Y será calculado")
+	
+	# CRÍTICO: Usar raycast para encontrar a altura REAL do terreno (com colisões)
+	# IMPORTANTE: Usar o mundo do player, não do InfiniteWorldGenerator
+	var world_3d = player.get_world_3d()
+	if not world_3d:
+		# Fallback: tentar usar o mundo da raiz
+		world_3d = get_tree().root.get_world_3d()
+	
+	if not world_3d:
+		# Fallback: usar cálculo de altura se não conseguir acessar mundo
+		var terrain_height = get_terrain_height(spawn_pos.x, spawn_pos.z)
+		spawn_pos.y = terrain_height + 2.0
+		player.global_position = spawn_pos
+		print("⚠️ World3D não disponível! Usando altura calculada: ", spawn_pos, " (altura: ", terrain_height, ")")
+		return
+	
+	var space_state = world_3d.direct_space_state
+	if not space_state:
+		# Fallback: usar cálculo de altura se não conseguir acessar space_state
+		var terrain_height = get_terrain_height(spawn_pos.x, spawn_pos.z)
+		spawn_pos.y = terrain_height + 2.0
+		player.global_position = spawn_pos
+		print("⚠️ SpaceState não disponível! Usando altura calculada: ", spawn_pos, " (altura: ", terrain_height, ")")
+		return
+	
+	# Tentar raycast múltiplas vezes com diferentes pontos de partida
+	var ray_start = spawn_pos + Vector3(0, 100, 0)  # Começar bem acima
+	var ray_end = spawn_pos + Vector3(0, -200, 0)   # Ir bem abaixo
+	
+	print("🔍 Executando raycast de ", ray_start, " até ", ray_end)
+	
+	var query = PhysicsRayQueryParameters3D.create(ray_start, ray_end)
+	query.collision_mask = 0xFFFFFFFF  # Todas as camadas de colisão
+	var result = space_state.intersect_ray(query)
+	
+	if result:
+		# Encontrou colisão - usar altura do terreno + offset
+		spawn_pos.y = result.position.y + 2.0  # 2 metros acima do terreno
+		print("✅ Raycast encontrou colisão!")
+		print("📍 Player posicionado via raycast em: ", spawn_pos)
+		print("   Altura do terreno: ", result.position.y)
+		print("   Colisão encontrada em: ", result.position)
+		if result.has("collider"):
+			print("   Collider: ", result.collider)
+	else:
+		# Fallback: usar cálculo de altura se raycast falhar
+		print("⚠️ Raycast não encontrou colisão! Tentando fallback...")
+		var terrain_height = get_terrain_height(spawn_pos.x, spawn_pos.z)
+		spawn_pos.y = terrain_height + 2.0
+		print("⚠️ Usando altura calculada: ", spawn_pos, " (altura calculada: ", terrain_height, ")")
+		
+		# Tentar novamente com raycast usando a altura calculada como referência
+		ray_start = Vector3(spawn_pos.x, terrain_height + 50, spawn_pos.z)
+		ray_end = Vector3(spawn_pos.x, terrain_height - 50, spawn_pos.z)
+		query = PhysicsRayQueryParameters3D.create(ray_start, ray_end)
+		query.collision_mask = 0xFFFFFFFF
+		result = space_state.intersect_ray(query)
+		
+		if result:
+			spawn_pos.y = result.position.y + 2.0
+			print("✅ Segundo raycast encontrou colisão! Nova posição: ", spawn_pos)
+		else:
+			# Se ainda falhou, garantir que pelo menos temos uma altura válida
+			if spawn_pos.y <= -100.0 or spawn_pos.y >= 1000.0:
+				# Altura inválida, usar altura calculada como último recurso
+				spawn_pos.y = terrain_height + 2.0
+				print("⚠️ Altura inválida detectada! Corrigindo para altura calculada: ", spawn_pos.y)
+	
+	# Garantir que a posição final é válida
+	if spawn_pos.y <= -100.0:
+		var terrain_height = get_terrain_height(spawn_pos.x, spawn_pos.z)
+		spawn_pos.y = terrain_height + 2.0
+		print("⚠️ Altura final muito baixa! Corrigindo para: ", spawn_pos.y)
+	
+	player.global_position = spawn_pos
+	print("✅ Player posicionado FINAL em: ", player.global_position)
+
+func start_mobs_instantiation():
+	# Proteção contra loops infinitos
+	mobs_instantiation_attempts += 1
+	if mobs_instantiation_attempts > 10:
+		push_error("❌ Muitas tentativas de instanciar mobs! Forçando conclusão...")
+		current_stage = GenerationStage.COMPLETE
+		generation_progress = 100.0
+		emit_signal("stage_changed", GenerationStage.COMPLETE, "Mundo gerado!")
+		emit_signal("progress_updated", 100.0, GenerationStage.COMPLETE, "Mundo gerado!")
+		emit_signal("generation_complete")
+		return
+	
+	if current_stage < GenerationStage.MOBS:
+		current_stage = GenerationStage.MOBS
+		generation_progress = 85.0
+		emit_signal("stage_changed", GenerationStage.MOBS, "Finalizando...")
+		emit_signal("progress_updated", 85.0, GenerationStage.MOBS, "Finalizando...")
+		
+		# Aguardar alguns frames para garantir que tudo está estável
+		await get_tree().process_frame
+		await get_tree().process_frame
+		await get_tree().process_frame
+		
+		# Verificar se realmente está tudo completo
+		# Garantir que contagens não excedam
+		var terrain_ready = min(initial_chunks_loaded, initial_chunks_needed) >= initial_chunks_needed
+		var collisions_ready = min(initial_chunks_with_collision, initial_chunks_needed) >= initial_chunks_needed
+		var all_ready = terrain_ready and collisions_ready and player != null
+		
+		if not all_ready:
+			print("⚠️ Aguardando todas as etapas completarem...")
+			print("   Terreno: ", initial_chunks_loaded, "/", initial_chunks_needed, " (ready: ", terrain_ready, ")")
+			print("   Colisões: ", initial_chunks_with_collision, "/", initial_chunks_needed, " (ready: ", collisions_ready, ")")
+			print("   Player: ", "existe" if player != null else "não existe")
+			# Tentar novamente após um delay
+			await get_tree().create_timer(0.5).timeout
+			if current_stage == GenerationStage.MOBS:
+				start_mobs_instantiation()
+			return
+		
+		# CRÍTICO: Reposicionar player usando raycast para garantir altura correta
+		# (pode ter mudado durante a geração)
+		if player:
+			position_player_on_terrain()
+			print("📍 Player reposicionado após mundo completo")
+		
+		# Ativar player agora que o mundo está 100% completo
+		if player:
+			if player.has_method("set_process"):
+				player.set_process(true)
+			if player.has_method("set_physics_process"):
+				player.set_physics_process(true)
+			if player.has_method("set_process_mode"):
+				player.set_process_mode(Node.PROCESS_MODE_INHERIT)
+			print("🎮 Player ativado!")
+		
+		# CRÍTICO: Ativar todos os EnemySpawners agora que o mundo está completo
+		# Isso garante que os mobs só spawnem após todas as colisões estarem prontas
+		activate_all_enemy_spawners()
+		
+		# Marcar como completo - MUNDO 100% PRONTO
+		current_stage = GenerationStage.COMPLETE
+		generation_progress = 100.0
+		emit_signal("stage_changed", GenerationStage.COMPLETE, "Mundo gerado!")
+		emit_signal("progress_updated", 100.0, GenerationStage.COMPLETE, "Mundo gerado!")
+		emit_signal("generation_complete")
+		print("✅ Geração do mundo completa! Player pronto para jogar!")
 
 # ========================================
 # FUNÇÃO CORRIGIDA - SEM GAPS!
@@ -618,6 +1667,41 @@ func create_chunk_collision(chunk_data, start_pos: Vector3, vertices: Array):
 	static_body.add_child(collision)
 	add_child(static_body)
 	chunk_data.terrain_collision = static_body
+	
+	# Marcar como tendo colisão pronta (para progresso)
+	if not chunks_with_collision.has(chunk_data.chunk_pos):
+		chunks_with_collision[chunk_data.chunk_pos] = true
+		# Se estamos no carregamento inicial, atualizar progresso APENAS se o chunk está na área inicial
+		if initial_chunks_needed > 0 and current_stage <= GenerationStage.COLLISION:
+			# Verificar se este chunk está na área inicial
+			var player_chunk = Vector2i.ZERO
+			if player:
+				player_chunk = world_to_chunk(player.global_position)
+			else:
+				player_chunk = world_to_chunk(player_spawn_position)
+			
+			var dist_x = abs(chunk_data.chunk_pos.x - player_chunk.x)
+			var dist_z = abs(chunk_data.chunk_pos.y - player_chunk.y)
+			
+			# Só contar se está dentro da área inicial E não exceder o total
+			# IMPORTANTE: Contar mesmo se ainda estamos em TERRAIN (colisões são criadas junto com terreno)
+			if dist_x <= view_distance and dist_z <= view_distance:
+				# Proteção: nunca exceder o total
+				if initial_chunks_with_collision < initial_chunks_needed:
+					initial_chunks_with_collision += 1
+					# Só atualizar progresso se já estamos na etapa de colisão
+					# (se ainda estamos em TERRAIN, será contado quando mudar para COLLISION)
+					if current_stage == GenerationStage.COLLISION:
+						update_collision_progress()
+					else:
+						print("📊 Colisão criada (ainda em TERRAIN): ", initial_chunks_with_collision, "/", initial_chunks_needed)
+				elif initial_chunks_with_collision > initial_chunks_needed:
+					# Se por algum motivo excedeu, corrigir
+					initial_chunks_with_collision = initial_chunks_needed
+					print("⚠️ Contagem de colisões corrigida: ", initial_chunks_with_collision, "/", initial_chunks_needed)
+					# Se ainda estamos na etapa de colisão e agora está correto, atualizar progresso
+					if current_stage == GenerationStage.COLLISION:
+						update_collision_progress()
 
 # Atualiza LOD de colisões quando jogador se move (otimização dinâmica)
 func update_collision_lod(player_chunk: Vector2i):
@@ -673,6 +1757,9 @@ func update_collision_lod(player_chunk: Vector2i):
 			static_body.add_child(collision)
 			add_child(static_body)
 			chunk_data.terrain_collision = static_body
+			
+			# NÃO contar novamente no progresso - esta é apenas uma atualização de LOD
+			# O chunk já foi contado quando foi criado inicialmente
 			
 			updated_this_frame += 1
 
@@ -1479,3 +2566,46 @@ func check_spawner_spacing(pos: Vector2) -> bool:
 		if pos.distance_to(spawner_pos) < spawner_min_spacing:
 			return false
 	return true
+
+# Ativar todos os EnemySpawners após o mundo estar completo
+func activate_all_enemy_spawners():
+	print("🔓 Ativando todos os EnemySpawners...")
+	var spawners_found = 0
+	var spawners_activated = 0
+	
+	# Procurar todos os EnemySpawners na cena usando o grupo
+	var all_nodes = get_tree().get_nodes_in_group("enemy_spawners")
+	if all_nodes.is_empty():
+		# Tentar encontrar por tipo recursivamente
+		all_nodes = find_all_enemy_spawners_recursive(get_tree().root)
+	
+	for node in all_nodes:
+		if node is EnemySpawner:
+			spawners_found += 1
+			var spawner = node as EnemySpawner
+			# Ativar spawner apenas se ainda não estiver ativo
+			if not spawner.is_spawning:
+				spawner.start_spawning()
+				spawners_activated += 1
+				var spawner_name = spawner.name if spawner.name != "" else "sem nome"
+				print("✅ EnemySpawner ativado: ", spawner_name, " em ", spawner.global_position)
+			else:
+				print("ℹ️ EnemySpawner já estava ativo: ", spawner.name if spawner.name != "" else "sem nome")
+	
+	print("📊 EnemySpawners encontrados: ", spawners_found, " | Ativados: ", spawners_activated)
+	
+	# Se não encontrou nenhum, avisar (pode ser normal se não há spawners configurados)
+	if spawners_found == 0:
+		print("ℹ️ Nenhum EnemySpawner encontrado na cena (pode ser normal)")
+
+# Função auxiliar para encontrar todos os EnemySpawners recursivamente
+func find_all_enemy_spawners_recursive(node: Node) -> Array:
+	var result = []
+	
+	if node is EnemySpawner:
+		result.append(node)
+	
+	for child in node.get_children():
+		result.append_array(find_all_enemy_spawners_recursive(child))
+	
+	return result

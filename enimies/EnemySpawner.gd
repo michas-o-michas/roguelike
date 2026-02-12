@@ -36,10 +36,52 @@ func _ready():
 		push_error("❌ EnemySpawner sem enemy_scene definido!")
 		return
 	
-	# Iniciar
+	# Adicionar a grupo para facilitar busca
+	add_to_group("enemy_spawners")
+	
+	# CRÍTICO: Verificar se o mundo está completo antes de iniciar spawns
+	# Procurar InfiniteWorldGenerator para verificar se está completo
+	var world_generator = get_tree().get_first_node_in_group("world_generator")
+	if not world_generator:
+		# Tentar encontrar por tipo (método característico)
+		world_generator = find_world_generator_recursive(get_tree().root)
+	
+	if world_generator:
+		# Verificar se o mundo está completo
+		if world_generator.has_method("is_world_complete"):
+			if not world_generator.is_world_complete():
+				# Mundo não está completo - aguardar sinal de conclusão
+				print("⏳ EnemySpawner '", name, "' aguardando mundo estar completo...")
+				if world_generator.has_signal("generation_complete"):
+					if not world_generator.generation_complete.is_connected(_on_world_complete):
+						world_generator.generation_complete.connect(_on_world_complete)
+				# NÃO iniciar spawns ainda - será ativado quando mundo estiver completo
+				return
+	
+	# Se não encontrou world generator ou mundo já está completo, iniciar normalmente
 	if auto_start:
 		start_spawning()
 	
+	if spawn_on_ready:
+		spawn_enemy()
+
+# Função auxiliar para encontrar InfiniteWorldGenerator
+func find_world_generator_recursive(node: Node):
+	if node.has_method("get_loaded_chunks_count"):  # Método característico do InfiniteWorldGenerator
+		return node
+	
+	for child in node.get_children():
+		var result = find_world_generator_recursive(child)
+		if result:
+			return result
+	
+	return null
+
+# Chamado quando o mundo está completo
+func _on_world_complete():
+	print("✅ Mundo completo! Ativando EnemySpawner...")
+	if auto_start and not is_spawning:
+		start_spawning()
 	if spawn_on_ready:
 		spawn_enemy()
 
@@ -86,16 +128,24 @@ func spawn_enemy() -> Enemy:
 	
 	enemy.position = global_position + offset
 	
-	# Ajustar Y para ficar no chão (raycast)
+	# CRÍTICO: Ajustar Y para ficar no chão usando raycast
+	# Isso garante que o inimigo está na altura correta do terreno
 	var space_state = get_world_3d().direct_space_state
 	var query = PhysicsRayQueryParameters3D.create(
-		enemy.position + Vector3(0, 10, 0),
-		enemy.position + Vector3(0, -100, 0)
+		enemy.position + Vector3(0, 100, 0),  # Começar bem acima
+		enemy.position + Vector3(0, -200, 0)  # Ir bem abaixo
 	)
+	query.collision_mask = 1  # Camada padrão de colisão
 	var result = space_state.intersect_ray(query)
 	
 	if result:
-		enemy.position.y = result.position.y
+		enemy.position.y = result.position.y + 0.5  # Pequeno offset para não ficar dentro do terreno
+		print("✅ Inimigo posicionado em Y=", enemy.position.y, " via raycast")
+	else:
+		# Se raycast falhar, usar altura calculada como fallback
+		# (não deveria acontecer se colisões estão prontas)
+		push_warning("⚠️ Raycast falhou para posicionar inimigo em ", enemy.position, " - usando altura padrão")
+		enemy.position.y = 1.0  # Altura padrão mínima
 	
 	# Aplicar variante
 	var variant = select_variant()
