@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://b78jp2kr0j5w" path="res://world_generator_v2/biome_item.gd" id="1_m4fq0"]
 [ext_resource type="Resource" uid="uid://r6hfknveshwy" path="res://world_generator_v2/biomes/BiomeItem/fall_tree.tres" id="2_ea8ul"]
+[ext_resource type="Resource" uid="uid://bed86835h6cwg" path="res://world_generator_v2/biomes/BiomeItem/stone.tres" id="3_stone"]
 [ext_resource type="Script" uid="uid://b21qcx74inoxd" path="res://world_generator_v2/biome_data.gd" id="2_txbdv"]
 
 [resource]
@@ -9,5 +10,5 @@ script = ExtResource("2_txbdv")
 min_height = 30.0
 max_height = 150.0
 biome_noise_value = 0.304
-biome_items = Array[ExtResource("1_m4fq0")]([ExtResource("2_ea8ul")])
+biome_items = Array[ExtResource("1_m4fq0")]([ExtResource("2_ea8ul"), ExtResource("3_stone")])
 metadata/_custom_type_script = "uid://b21qcx74inoxd"
