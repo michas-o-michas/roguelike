@@ -2,6 +2,8 @@ extends Control
 
 ## Tela de Loading - Mostra progresso da geração do mundo
 
+@export var delay_before_hide: float = 1.5 ## Tempo em segundos para manter a tela visível após "Pronto!" antes de sumir
+
 @onready var loading_label = $VBoxContainer/LoadingLabel
 @onready var progress_bar = $VBoxContainer/ProgressBar
 
@@ -74,7 +76,7 @@ func _on_generator_progress(percent: float, stage: int, message: String):
 
 func _on_world_generation_complete():
 	update_progress(100.0, "Mundo gerado!")
-	await get_tree().create_timer(0.5).timeout
+	await get_tree().create_timer(delay_before_hide).timeout
 	hide_loading()
 
 func monitor_loading():
@@ -112,14 +114,14 @@ func monitor_loading():
 		if world_generator.has_method("is_initial_load_complete"):
 			if world_generator.is_initial_load_complete():
 				update_progress(100.0, "Pronto!")
-				await get_tree().create_timer(0.5).timeout
+				await get_tree().create_timer(delay_before_hide).timeout
 				hide_loading()
 				return
 		else:
 			# Fallback: aguardar alguns chunks serem carregados ou tempo mínimo
 			if loaded_count >= 10 and check_count >= 30:  # Pelo menos 10 chunks e 30 frames
 				update_progress(100.0, "Pronto!")
-				await get_tree().create_timer(0.5).timeout
+				await get_tree().create_timer(delay_before_hide).timeout
 				hide_loading()
 				return
 

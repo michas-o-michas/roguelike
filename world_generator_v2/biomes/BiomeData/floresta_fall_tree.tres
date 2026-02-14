@@ -2,13 +2,21 @@
 
 [ext_resource type="Script" uid="uid://b78jp2kr0j5w" path="res://world_generator_v2/biome_item.gd" id="1_m4fq0"]
 [ext_resource type="Resource" uid="uid://r6hfknveshwy" path="res://world_generator_v2/biomes/BiomeItem/fall_tree.tres" id="2_ea8ul"]
-[ext_resource type="Resource" uid="uid://bed86835h6cwg" path="res://world_generator_v2/biomes/BiomeItem/stone.tres" id="3_stone"]
 [ext_resource type="Script" uid="uid://b21qcx74inoxd" path="res://world_generator_v2/biome_data.gd" id="2_txbdv"]
+[ext_resource type="Resource" uid="uid://bed86835h6cwg" path="res://world_generator_v2/biomes/BiomeItem/stone.tres" id="3_stone"]
+[ext_resource type="Resource" uid="uid://c2lptrees01" path="res://world_generator_v2/biomes/BiomeItem/lowpoly/lowpoly_trees.tres" id="4_lpt"]
+[ext_resource type="Resource" uid="uid://c2lprocks01" path="res://world_generator_v2/biomes/BiomeItem/lowpoly/lowpoly_rocks.tres" id="5_lpr"]
+[ext_resource type="Resource" uid="uid://c2lpbush01" path="res://world_generator_v2/biomes/BiomeItem/lowpoly/lowpoly_bushes.tres" id="6_lpb"]
+[ext_resource type="Resource" uid="uid://c2lpplant01" path="res://world_generator_v2/biomes/BiomeItem/lowpoly/lowpoly_plants.tres" id="7_lpp"]
+[ext_resource type="Resource" uid="uid://c2lpgrass01" path="res://world_generator_v2/biomes/BiomeItem/lowpoly/lowpoly_grass.tres" id="8_lpg"]
+[ext_resource type="Resource" uid="uid://c2lplogs01" path="res://world_generator_v2/biomes/BiomeItem/lowpoly/lowpoly_logs.tres" id="9_lpl"]
+[ext_resource type="Script" uid="uid://cckc1eka3ujni" path="res://world_generator_v2/poi_data.gd" id="10_6k0ea"]
+[ext_resource type="Script" uid="uid://el3it5rlbpge" path="res://world_generator_v2/animal_spawner_data.gd" id="11_37emf"]
 
 [resource]
 script = ExtResource("2_txbdv")
 min_height = 30.0
 max_height = 150.0
 biome_noise_value = 0.304
-biome_items = Array[ExtResource("1_m4fq0")]([ExtResource("2_ea8ul"), ExtResource("3_stone")])
+biome_items = Array[ExtResource("1_m4fq0")]([ExtResource("2_ea8ul"), ExtResource("3_stone"), ExtResource("4_lpt"), ExtResource("5_lpr"), ExtResource("6_lpb"), ExtResource("7_lpp"), ExtResource("8_lpg"), ExtResource("9_lpl")])
 metadata/_custom_type_script = "uid://b21qcx74inoxd"

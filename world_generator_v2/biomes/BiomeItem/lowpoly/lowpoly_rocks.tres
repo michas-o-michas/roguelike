@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="BiomeItem" format=3 uid="uid://c2lprocks01"]
+
+[ext_resource type="Script" uid="uid://b78jp2kr0j5w" path="res://world_generator_v2/biome_item.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://okens1wa1haa" path="res://world_generator_v2/item_variant.gd" id="2_var"]
+[ext_resource type="Resource" uid="uid://c2lp1rock01" path="res://world_generator_v2/biomes/ItemVariant/lowpoly/rock_1.tres" id="r1"]
+[ext_resource type="Resource" uid="uid://c2lp2rock02" path="res://world_generator_v2/biomes/ItemVariant/lowpoly/rock_2.tres" id="r2"]
+[ext_resource type="Resource" uid="uid://c2lp3rock03" path="res://world_generator_v2/biomes/ItemVariant/lowpoly/rock_3.tres" id="r3"]
+[ext_resource type="Resource" uid="uid://c2lp4rock04" path="res://world_generator_v2/biomes/ItemVariant/lowpoly/rock_4.tres" id="r4"]
+[ext_resource type="Resource" uid="uid://c2lp5rock05" path="res://world_generator_v2/biomes/ItemVariant/lowpoly/rock_5.tres" id="r5"]
+[ext_resource type="Resource" uid="uid://c2lp6rock06" path="res://world_generator_v2/biomes/ItemVariant/lowpoly/rock_6.tres" id="r6"]
+[ext_resource type="Resource" uid="uid://c2lp1stone01" path="res://world_generator_v2/biomes/ItemVariant/lowpoly/stone_1.tres" id="s1"]
+
+[resource]
+script = ExtResource("1_script")
+item_name = "LowPoly Rocks"
+spawn_chance = 0.25
+min_scale = 0.6
+max_scale = 1.5
+variants = Array[ExtResource("2_var")]([ExtResource("r1"), ExtResource("r2"), ExtResource("r3"), ExtResource("r4"), ExtResource("r5"), ExtResource("r6"), ExtResource("s1")])
+metadata/_custom_type_script = "uid://b78jp2kr0j5w"

@@ -89,6 +89,7 @@ const TERRAIN_BOTTOM_SMOOTH_ZONE := 3.0
 @export_group("Vegetação")
 @export var spawn_spacing: float = 5.0
 @export var biomes: Array[BiomeData] = []
+@export_range(0.002, 0.04, 0.001) var biome_noise_frequency: float = 0.008 ## Densidade de biomas: menor = regiões maiores; maior = regiões menores (mais misturado)
 @export var biome_transition_distance: float = 200.0
 @export var max_vegetation_points_per_chunk: int = 150 ## 0 = ilimitado; ~150 acelera muito o carregamento
 
@@ -1195,7 +1196,7 @@ func setup_noise():
 	biome_noise = FastNoiseLite.new()
 	biome_noise.seed = world_seed + 1000
 	biome_noise.noise_type = FastNoiseLite.TYPE_CELLULAR
-	biome_noise.frequency = 0.008
+	biome_noise.frequency = biome_noise_frequency
 
 	moisture_noise = FastNoiseLite.new()
 	moisture_noise.seed = world_seed + 2000
@@ -1580,52 +1581,65 @@ func _create_chunk_vegetation(chunk_data: ChunkData, start_pos: Vector3):
 			vegetation_density = 0.6
 
 	var biome_cache := {}
-	var x := start_pos.x
 	var end_x := start_pos.x + chunk_size
 	var end_z := start_pos.z + chunk_size
-	var points_done := 0
 	var max_points := max_vegetation_points_per_chunk
 
+	# Montar lista de células do grid e embaralhar para não criar fileiras vazias
+	var cells: Array[Vector2] = []
+	var x := start_pos.x
 	while x < end_x:
 		var z := start_pos.z
 		while z < end_z:
-			if max_points > 0 and points_done >= max_points:
-				break
-			if vegetation_density < 1.0 and randf() > vegetation_density:
-				z += spawn_spacing
-				continue
-
-			var pos_x := x + randf_range(-spawn_spacing * 0.4, spawn_spacing * 0.4)
-			var pos_z := z + randf_range(-spawn_spacing * 0.4, spawn_spacing * 0.4)
-			var height := get_terrain_height(pos_x, pos_z)
-
-			if height < beach_level + 1.0:
-				z += spawn_spacing
-				continue
-
-			var position := Vector3(pos_x, height, pos_z)
-			var cache_key := Vector2i(int(pos_x / 20.0), int(pos_z / 20.0))
-			var current_biome: BiomeData
-
-			if biome_cache.has(cache_key):
-				current_biome = biome_cache[cache_key]
-			else:
-				current_biome = get_biome_at_position(pos_x, pos_z, height)
-				biome_cache[cache_key] = current_biome
-
-			if current_biome:
-				_spawn_biome_item(current_biome, position, chunk_data)
-			points_done += 1
+			cells.append(Vector2(x, z))
 			z += spawn_spacing
+		x += spawn_spacing
+	cells.shuffle()
+
+	var points_done := 0
+	for cell in cells:
 		if max_points > 0 and points_done >= max_points:
 			break
-		x += spawn_spacing
+		if vegetation_density < 1.0 and randf() > vegetation_density:
+			continue
+
+		var pos_x := cell.x + randf_range(0.0, spawn_spacing)
+		var pos_z := cell.y + randf_range(0.0, spawn_spacing)
+		var height := get_terrain_height(pos_x, pos_z)
+
+		if height < beach_level + 1.0:
+			continue
+
+		var position := Vector3(pos_x, height, pos_z)
+		var cache_key := Vector2i(int(pos_x / 20.0), int(pos_z / 20.0))
+		var current_biome: BiomeData
+
+		if biome_cache.has(cache_key):
+			current_biome = biome_cache[cache_key]
+		else:
+			current_biome = get_biome_at_position(pos_x, pos_z, height)
+			biome_cache[cache_key] = current_biome
+
+		if current_biome:
+			_spawn_biome_item(current_biome, position, chunk_data)
+		points_done += 1
 
 func _spawn_biome_item(biome: BiomeData, position: Vector3, chunk_data: ChunkData):
+	# Um único item por posição para evitar árvores em cima de pedras etc.
+	var total_weight := 1.0  # peso "não spawnar nada"
+	for item in biome.biome_items:
+		if item and not item.variants.is_empty():
+			total_weight += item.spawn_chance
+
+	var roll := randf() * total_weight
+	if roll < 1.0:
+		return  # não coloca nada neste ponto
+	roll -= 1.0
+
 	for item in biome.biome_items:
 		if not item or item.variants.is_empty():
 			continue
-		if randf() < item.spawn_chance:
+		if roll < item.spawn_chance:
 			var variant := get_random_variant(item.variants)
 			if variant and variant.scene:
 				var obj := variant.scene.instantiate()
@@ -1655,6 +1669,8 @@ func _spawn_biome_item(biome: BiomeData, position: Vector3, chunk_data: ChunkDat
 						sub_obj.scale = Vector3(sub_s, sub_s, sub_s)
 						add_child(sub_obj)
 						chunk_data.objects.append(sub_obj)
+			return
+		roll -= item.spawn_chance
 
 func get_random_variant(variants: Array[ItemVariant]) -> ItemVariant:
 	if variants.is_empty():

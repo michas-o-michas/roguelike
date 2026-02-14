@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="ItemVariant" format=3 uid="uid://c2lp1log01"]
+
+[ext_resource type="Script" uid="uid://okens1wa1haa" path="res://world_generator_v2/item_variant.gd" id="1_script"]
+[ext_resource type="PackedScene" uid="uid://b5ac55ssjr6yp" path="res://Assets/LowPoly Environment Pack/Log_1.fbx" id="2_scene"]
+
+[resource]
+script = ExtResource("1_script")
+variant_name = "LowPoly Log 1"
+scene = ExtResource("2_scene")
+metadata/_custom_type_script = "uid://okens1wa1haa"

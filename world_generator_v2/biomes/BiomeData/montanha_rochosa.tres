@@ -3,11 +3,19 @@
 [ext_resource type="Script" uid="uid://b78jp2kr0j5w" path="res://world_generator_v2/biome_item.gd" id="1_h4kd2"]
 [ext_resource type="Script" uid="uid://b21qcx74inoxd" path="res://world_generator_v2/biome_data.gd" id="2_hfggp"]
 [ext_resource type="Resource" uid="uid://bed86835h6cwg" path="res://world_generator_v2/biomes/BiomeItem/stone.tres" id="2_sga6u"]
+[ext_resource type="Resource" uid="uid://c2lptrees01" path="res://world_generator_v2/biomes/BiomeItem/lowpoly/lowpoly_trees.tres" id="3_lpt"]
+[ext_resource type="Resource" uid="uid://c2lprocks01" path="res://world_generator_v2/biomes/BiomeItem/lowpoly/lowpoly_rocks.tres" id="4_lpr"]
+[ext_resource type="Resource" uid="uid://c2lpbush01" path="res://world_generator_v2/biomes/BiomeItem/lowpoly/lowpoly_bushes.tres" id="5_lpb"]
+[ext_resource type="Resource" uid="uid://c2lpplant01" path="res://world_generator_v2/biomes/BiomeItem/lowpoly/lowpoly_plants.tres" id="6_lpp"]
+[ext_resource type="Resource" uid="uid://c2lpgrass01" path="res://world_generator_v2/biomes/BiomeItem/lowpoly/lowpoly_grass.tres" id="7_lpg"]
+[ext_resource type="Resource" uid="uid://c2lplogs01" path="res://world_generator_v2/biomes/BiomeItem/lowpoly/lowpoly_logs.tres" id="8_lpl"]
+[ext_resource type="Script" uid="uid://cckc1eka3ujni" path="res://world_generator_v2/poi_data.gd" id="9_ntxb3"]
+[ext_resource type="Script" uid="uid://el3it5rlbpge" path="res://world_generator_v2/animal_spawner_data.gd" id="10_llkaf"]
 
 [resource]
 script = ExtResource("2_hfggp")
 biome_name = "Montanha Rochosa"
 min_height = 20.0
 biome_noise_value = 0.172
-biome_items = Array[ExtResource("1_h4kd2")]([ExtResource("2_sga6u")])
+biome_items = Array[ExtResource("1_h4kd2")]([ExtResource("2_sga6u"), ExtResource("3_lpt"), ExtResource("4_lpr"), ExtResource("5_lpb"), ExtResource("6_lpp"), ExtResource("7_lpg"), ExtResource("8_lpl")])
 metadata/_custom_type_script = "uid://b21qcx74inoxd"
