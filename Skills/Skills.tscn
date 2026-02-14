@@ -1,0 +1,29 @@
+[gd_scene format=3 uid="uid://db54lynof5voa"]
+
+[ext_resource type="Script" uid="uid://3leeiu233f0e" path="res://Player/player_ui.gd" id="1_5vy1b"]
+[ext_resource type="Script" uid="uid://ct72gtn45tgvj" path="res://Skills/skills_hud.gd" id="2_btox2"]
+[ext_resource type="PackedScene" uid="uid://ctqdtdmcbil64" path="res://Skills/SkillIcon.tscn" id="3_f1rrp"]
+
+[node name="UI" type="CanvasLayer" unique_id=704400542]
+script = ExtResource("1_5vy1b")
+
+[node name="SkillsHUD" type="MarginContainer" parent="." unique_id=1164417152]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 4
+script = ExtResource("2_btox2")
+skill_icon_scene = ExtResource("3_f1rrp")
+
+[node name="SkillGrid" type="GridContainer" parent="SkillsHUD" unique_id=1398146374]
+layout_mode = 2
+theme_override_constants/h_separation = 16
+theme_override_constants/v_separation = 16
+columns = 10

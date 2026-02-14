@@ -1,9 +1,0 @@
-[gd_scene format=3 uid="uid://cgmk7pcokjcao"]
-
-[node name="HealthBar" type="Node3D" unique_id=1868713337]
-
-[node name="ProgressBar" type="ProgressBar" parent="." unique_id=445063441]
-offset_right = 313.0
-offset_bottom = 27.0
-step = 1.0
-value = 37.0

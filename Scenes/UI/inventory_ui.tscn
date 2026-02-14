@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://d4iblqgmao3ll" path="res://Scripts/UI/inventory_ui.gd" id="1_p83af"]
 [ext_resource type="PackedScene" uid="uid://bj0fla0h0psld" path="res://Scenes/UI/inventory_slot.tscn" id="2_o62ck"]
-[ext_resource type="Texture2D" uid="uid://cth4pmxx4k7ur" path="res://Assets/menu/Inventory_bg.png" id="2_sxwjb"]
+[ext_resource type="Texture2D" uid="uid://8hjc0pesurwa" path="res://Assets/menu/Inventory_bg.png" id="2_sxwjb"]
 [ext_resource type="FontFile" uid="uid://cfhotyty164nn" path="res://Assets/menu/Cinzel,Poppins,Raleway/Cinzel/Cinzel-VariableFont_wght.ttf" id="3_sxwjb"]
 [ext_resource type="Script" uid="uid://cdnjxp74inlvk" path="res://Scripts/UI/crafting_ui.gd" id="4_kyjlm"]
 [ext_resource type="Texture2D" uid="uid://dy20vbvd557ls" path="res://Assets/icons/placeholder.png" id="4_sfqc8"]
@@ -60,7 +60,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("2_sxwjb")
-stretch_mode = 3
+stretch_mode = 6
 flip_h = true
 
 [node name="Overlay" type="Panel" parent="." unique_id=1456517709]

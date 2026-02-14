@@ -1,4 +1,6 @@
-[gd_scene format=4 uid="uid://doio2gydtmfuy"]
+[gd_scene format=4 uid="uid://cv7xrvawqq1pt"]
+
+[ext_resource type="PackedScene" uid="uid://vy0s3cvvkb8r" path="res://Assets/Tools/Machado1.fbx" id="1_goa0h"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_qjh14"]
 resource_name = "Steel"
@@ -166,4 +168,8 @@ transform = Transform3D(0.9673237, -0.13365078, -0.21545894, 0.2365916, 0.170287
 
 [node name="Sword" type="MeshInstance3D" parent="." unique_id=1408177132]
 transform = Transform3D(100, 0, 0, 0, -1.1920929e-05, 99.99999, 0, -99.99999, -1.1920929e-05, 0, 0, 0)
+visible = false
 mesh = SubResource("ArrayMesh_q0j2e")
+
+[node name="Machado1" parent="." unique_id=1637528621 instance=ExtResource("1_goa0h")]
+transform = Transform3D(-0.99735385, 0.03698434, 0.062587634, 0.047375318, 0.983663, 0.17367312, -0.05514189, 0.17617863, -0.98281235, 0.12589875, -0.4662439, 0.05186123)

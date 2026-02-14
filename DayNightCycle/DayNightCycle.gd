@@ -83,7 +83,6 @@ func _day_change_animation():
 
 func _process(delta: float) -> void:
 	_refresh_day_state()
-	print(currentDayState)
 	if currentDayState in [0,1] and sun.shadow_enabled == false:
 		var tween = create_tween()
 		tween.tween_property(sun, "light_energy", .8, durationMultiplier*2)

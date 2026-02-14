@@ -2,9 +2,11 @@
 
 [ext_resource type="Script" uid="uid://dqdilvnju1yuj" path="res://Scenes/main_menu_standalone.gd" id="1_main"]
 [ext_resource type="Texture2D" uid="uid://dlpw7lj4oj750" path="res://Assets/menu/Logo.png" id="2_853f1"]
-[ext_resource type="Texture2D" uid="uid://cyr4aprinui84" path="res://Assets/menu/Bg.png" id="2_df05h"]
-[ext_resource type="Texture2D" uid="uid://bc0sgu2o8lifw" path="res://Assets/menu/Button-bg.png" id="3_8saeu"]
+[ext_resource type="Texture2D" uid="uid://dq50q0v6txvlf" path="res://Assets/menu/bg-menu.png" id="2_df05h"]
 [ext_resource type="FontFile" uid="uid://cfhotyty164nn" path="res://Assets/menu/Cinzel,Poppins,Raleway/Cinzel/Cinzel-VariableFont_wght.ttf" id="4_df05h"]
+[ext_resource type="StyleBox" uid="uid://86wbxar6gxav" path="res://Interface/btn-normal.tres" id="5_xim88"]
+[ext_resource type="StyleBox" uid="uid://b2x8a2uu5145i" path="res://Interface/btn-pressed.tres" id="6_koqhg"]
+[ext_resource type="StyleBox" uid="uid://bk66fuuyv7wp5" path="res://Interface/bnt-hover.tres" id="7_cmrfp"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bg"]
 bg_color = Color(0.1, 0.1, 0.15, 0.95)
@@ -16,24 +18,6 @@ expand_margin_left = 8.0
 expand_margin_top = 8.0
 expand_margin_right = 8.0
 expand_margin_bottom = 8.0
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_ghw46"]
-texture = ExtResource("3_8saeu")
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button"]
-bg_color = Color(0.2, 0.4, 0.6, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.3, 0.5, 0.7, 1)
-corner_radius_top_left = 5
-corner_radius_top_right = 5
-corner_radius_bottom_right = 5
-corner_radius_bottom_left = 5
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_df05h"]
-texture = ExtResource("3_8saeu")
 
 [node name="MainMenu" type="Control" unique_id=1957786304]
 process_mode = 4
@@ -48,9 +32,10 @@ script = ExtResource("1_main")
 [node name="Control" type="Control" parent="." unique_id=1175456227]
 process_mode = 4
 layout_mode = 1
-anchors_preset = 9
+anchors_preset = 15
+anchor_right = 1.0
 anchor_bottom = 1.0
-offset_right = 722.0
+grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Background" type="TextureRect" parent="Control" unique_id=326122966]
@@ -58,27 +43,38 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_right = 1198.0
+offset_left = -5.0
+offset_top = -184.0
+offset_right = -2.0
+offset_bottom = 92.0
 grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("2_df05h")
+stretch_mode = 5
 
 [node name="Panel" type="Panel" parent="Control" unique_id=2066524708]
 process_mode = 4
 layout_mode = 1
-anchors_preset = 4
+anchors_preset = 8
+anchor_left = 0.5
 anchor_top = 0.5
+anchor_right = 0.5
 anchor_bottom = 0.5
+grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_bg")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="Control/Panel" unique_id=1250541185]
 layout_mode = 1
-anchors_preset = 9
-anchor_bottom = 1.0
-offset_top = -537.0
-offset_right = 727.0
-offset_bottom = 537.0
+anchors_preset = 14
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -306.0
+offset_top = -474.0
+offset_right = 306.0
+offset_bottom = 144.0
+grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 20
 alignment = 1
@@ -86,51 +82,54 @@ alignment = 1
 [node name="TextureRect" type="TextureRect" parent="Control/Panel/VBoxContainer" unique_id=142195582]
 custom_minimum_size = Vector2(100, 200)
 layout_mode = 2
+size_flags_vertical = 0
 texture = ExtResource("2_853f1")
 stretch_mode = 5
 
 [node name="StartButton" type="Button" parent="Control/Panel/VBoxContainer" unique_id=310697569]
 process_mode = 4
-custom_minimum_size = Vector2(200, 50)
+custom_minimum_size = Vector2(420, 90)
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 0
-theme_override_colors/font_color = Color(0.89411765, 0.8, 0.627451, 1)
+theme_override_colors/font_color = Color(0.9371171, 0.87513644, 0.76249474, 1)
 theme_override_colors/font_outline_color = Color(0.6117647, 0.47843137, 0.34901962, 1)
 theme_override_constants/outline_size = 4
 theme_override_fonts/font = ExtResource("4_df05h")
-theme_override_font_sizes/font_size = 24
-theme_override_styles/normal = SubResource("StyleBoxTexture_ghw46")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_button")
-theme_override_styles/hover = SubResource("StyleBoxFlat_button")
+theme_override_font_sizes/font_size = 40
+theme_override_styles/normal = ExtResource("5_xim88")
+theme_override_styles/pressed = ExtResource("6_koqhg")
+theme_override_styles/hover = ExtResource("7_cmrfp")
 text = "Iniciar Jogo"
 
 [node name="SettingsButton" type="Button" parent="Control/Panel/VBoxContainer" unique_id=123456789]
 process_mode = 4
-custom_minimum_size = Vector2(200, 50)
+custom_minimum_size = Vector2(520, 90)
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 0
-theme_override_colors/font_color = Color(0.89411765, 0.8, 0.627451, 1)
+theme_override_colors/font_color = Color(0.9371171, 0.87513644, 0.76249474, 1)
 theme_override_colors/font_outline_color = Color(0.6117647, 0.47843137, 0.34901962, 1)
 theme_override_constants/outline_size = 4
 theme_override_fonts/font = ExtResource("4_df05h")
-theme_override_font_sizes/font_size = 24
-theme_override_styles/normal = SubResource("StyleBoxTexture_df05h")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_button")
-theme_override_styles/hover = SubResource("StyleBoxFlat_button")
+theme_override_font_sizes/font_size = 40
+theme_override_styles/normal = ExtResource("5_xim88")
+theme_override_styles/pressed = ExtResource("6_koqhg")
+theme_override_styles/hover = ExtResource("7_cmrfp")
 text = "Configurações"
 
 [node name="QuitButton" type="Button" parent="Control/Panel/VBoxContainer" unique_id=648513488]
 process_mode = 4
-custom_minimum_size = Vector2(200, 50)
+custom_minimum_size = Vector2(190.06, 90)
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 0
-theme_override_colors/font_color = Color(0.89411765, 0.8, 0.627451, 1)
+theme_override_colors/font_color = Color(0.9371171, 0.87513644, 0.76249474, 1)
 theme_override_colors/font_outline_color = Color(0.6117647, 0.47843137, 0.34901962, 1)
 theme_override_constants/outline_size = 4
 theme_override_fonts/font = ExtResource("4_df05h")
-theme_override_font_sizes/font_size = 24
-theme_override_styles/normal = SubResource("StyleBoxTexture_df05h")
+theme_override_font_sizes/font_size = 40
+theme_override_styles/normal = ExtResource("5_xim88")
+theme_override_styles/pressed = ExtResource("6_koqhg")
+theme_override_styles/hover = ExtResource("7_cmrfp")
 text = "Sair"

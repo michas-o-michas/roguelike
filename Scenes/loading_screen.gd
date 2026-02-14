@@ -3,7 +3,6 @@ extends Control
 ## Tela de Loading - Mostra progresso da geração do mundo
 
 @onready var loading_label = $VBoxContainer/LoadingLabel
-@onready var progress_label = $VBoxContainer/ProgressLabel
 @onready var progress_bar = $VBoxContainer/ProgressBar
 
 var world_generator: Node = null
@@ -18,8 +17,6 @@ func _ready():
 		# Inicializar valores
 		if progress_bar:
 			progress_bar.value = 0.0
-		if progress_label:
-			progress_label.text = "0%"
 		if loading_label:
 			loading_label.text = "Carregando Mundo..."
 	else:
@@ -50,7 +47,6 @@ func start_loading(generator: Node):
 	world_generator = generator
 	visible = true
 	progress_bar.value = 0.0
-	progress_label.text = "0%"
 	loading_label.text = "Carregando Mundo..."
 	
 	# Conectar sinais diretamente do generator se não tiver GameManager
@@ -67,7 +63,6 @@ func start_loading(generator: Node):
 
 func update_progress(percent: float, message: String = ""):
 	progress_bar.value = percent
-	progress_label.text = str(int(percent)) + "%"
 	if message != "":
 		loading_label.text = message
 

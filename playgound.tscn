@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://ch0eejl2qm6lv"]
 
-[ext_resource type="PackedScene" uid="uid://chmt2wxe13a3o" path="res://player.tscn" id="1_o1adr"]
+[ext_resource type="PackedScene" uid="uid://chmt2wxe13a3o" path="res://Player/player.tscn" id="1_o1adr"]
 [ext_resource type="PackedScene" uid="uid://hcqivfg5cedx" path="res://Scenes/Animals/wolf.tscn" id="2_tprpm"]
 [ext_resource type="PackedScene" uid="uid://c1posv7gvsx7i" path="res://enimies/cow/cow.tscn" id="3_h02br"]
 

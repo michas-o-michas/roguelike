@@ -66,8 +66,9 @@ func _on_start_game_direct():
 		push_error("❌ Árvore de cena não disponível!")
 		return
 	
+	
 	# Carregar cena do jogo
-	var game_scene_path = "res://Scenes/Test.tscn"
+	var game_scene_path = "res://Scenes/Level1.tscn"
 	var error = tree.change_scene_to_file(game_scene_path)
 	if error != OK:
 		push_error("❌ Erro ao carregar cena do jogo: " + str(error))

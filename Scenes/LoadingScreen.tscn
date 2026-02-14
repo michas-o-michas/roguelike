@@ -1,8 +1,10 @@
-[gd_scene load_steps=2 format=3 uid="uid://loading_screen_001"]
+[gd_scene format=3 uid="uid://dl56l0i62utv8"]
 
-[ext_resource type="Script" path="res://Scenes/loading_screen.gd" id="1_loading"]
+[ext_resource type="Script" uid="uid://c1sdwfj56kjol" path="res://Scenes/loading_screen.gd" id="1_loading"]
+[ext_resource type="Texture2D" uid="uid://rbmckrkehlkq" path="res://Assets/menu/loading-1.png" id="2_xoop3"]
 
-[node name="LoadingScreen" type="Control"]
+[node name="LoadingScreen" type="Control" unique_id=356165075]
+process_mode = 4
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -10,19 +12,19 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-process_mode = 4
 script = ExtResource("1_loading")
 
-[node name="Background" type="ColorRect" parent="."]
+[node name="Background" type="TextureRect" parent="." unique_id=521447069]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.05, 0.05, 0.1, 1)
+texture = ExtResource("2_xoop3")
+stretch_mode = 6
 
-[node name="VBoxContainer" type="VBoxContainer" parent="."]
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1351387856]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -37,22 +39,13 @@ grow_horizontal = 2
 grow_vertical = 2
 alignment = 1
 
-[node name="LoadingLabel" type="Label" parent="VBoxContainer"]
+[node name="LoadingLabel" type="Label" parent="VBoxContainer" unique_id=1637508999]
 layout_mode = 2
+theme_override_font_sizes/font_size = 32
 text = "Carregando Mundo..."
 horizontal_alignment = 1
 vertical_alignment = 1
-theme_override_font_sizes/font_size = 32
 
-[node name="ProgressLabel" type="Label" parent="VBoxContainer"]
-layout_mode = 2
-text = "0%"
-horizontal_alignment = 1
-vertical_alignment = 1
-theme_override_font_sizes/font_size = 24
-
-[node name="ProgressBar" type="ProgressBar" parent="VBoxContainer"]
-layout_mode = 2
+[node name="ProgressBar" type="ProgressBar" parent="VBoxContainer" unique_id=303392384]
 custom_minimum_size = Vector2(400, 30)
-max_value = 100.0
-value = 0.0
+layout_mode = 2

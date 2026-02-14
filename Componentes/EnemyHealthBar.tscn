@@ -10,13 +10,15 @@ script = ExtResource("1_i0h0i")
 offset = Vector3(0, 1.5, 0)
 
 [node name="Background" type="Sprite3D" parent="." unique_id=746872443]
+billboard = 1
 texture = ExtResource("1_xrr6h")
 
 [node name="Fill" type="Sprite3D" parent="." unique_id=1856967046]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.51, -0.603, 0.2)
-centered = false
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.2)
+billboard = 1
 texture = ExtResource("2_yxic0")
 
 [node name="Icon" type="Sprite3D" parent="." unique_id=1830391402]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.268263, 0, 0)
+billboard = 1
 texture = ExtResource("3_22im1")

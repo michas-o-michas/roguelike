@@ -140,7 +140,7 @@ func _register_items():
 # ================= CARREGAR RECIPES =================
 
 func _load_recipes_from_json():
-	var file = FileAccess.open("res://recipes.json", FileAccess.READ)
+	var file = FileAccess.open("res://Recipes/recipes.json", FileAccess.READ)
 	if not file:
 		push_error("recipes.json não encontrado!")
 		return
