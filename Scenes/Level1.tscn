@@ -63,6 +63,7 @@ view_distance = 5
 world_theme = ExtResource("2_wjxug")
 unload_distance = 7
 origin_rebase_threshold = 100.0
+enable_collision_lod = false
 noise_amplitude = 200.0
 lacunarity = 1.8
 terrain_subdivisions = 100

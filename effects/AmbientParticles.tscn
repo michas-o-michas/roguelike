@@ -1,0 +1,37 @@
+[gd_scene format=3 uid="uid://bqambient01"]
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_ambient"]
+emission_shape = 3
+emission_box_extents = Vector3(100, 100, 100)
+direction = Vector3(0, 0.5, 0)
+initial_velocity_min = 0.05
+initial_velocity_max = 0.2
+gravity = Vector3(0, -0.2, 0)
+scale_min = 0.08
+scale_max = 0.2
+color = Color(0.33579952, 0.23056754, 1.973361e-06, 0.4)
+hue_variation_min = -0.64
+hue_variation_max = 0.99999994
+turbulence_enabled = true
+turbulence_noise_strength = 0.2
+turbulence_noise_scale = 0.938
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8j5k6"]
+transparency = 1
+albedo_color = Color(0.6627451, 0.3137255, 0.015686275, 0.5058824)
+metallic = 0.99
+emission_enabled = true
+emission = Color(1.279503, 0.62839586, 0, 1)
+distance_fade_mode = 3
+
+[sub_resource type="BoxMesh" id="BoxMesh_66yxe"]
+material = SubResource("StandardMaterial3D_8j5k6")
+
+[node name="AmbientParticles" type="Node3D" unique_id=651571352]
+
+[node name="GPUParticles3D" type="GPUParticles3D" parent="." unique_id=1392112347]
+amount = 50
+lifetime = 12.0
+transform_align = 1
+process_material = SubResource("ParticleProcessMaterial_ambient")
+draw_pass_1 = SubResource("BoxMesh_66yxe")

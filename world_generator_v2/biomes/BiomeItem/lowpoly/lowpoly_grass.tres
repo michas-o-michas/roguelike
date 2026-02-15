@@ -1,6 +1,7 @@
 [gd_resource type="Resource" script_class="BiomeItem" format=3 uid="uid://c2lpgrass01"]
 
 [ext_resource type="Script" uid="uid://b78jp2kr0j5w" path="res://world_generator_v2/biome_item.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://bhgcthxjxafoq" path="res://world_generator_v2/sub_biome_item.gd" id="2_i4tvw"]
 [ext_resource type="Script" uid="uid://okens1wa1haa" path="res://world_generator_v2/item_variant.gd" id="2_var"]
 [ext_resource type="Resource" uid="uid://c2lp1grass01" path="res://world_generator_v2/biomes/ItemVariant/lowpoly/grass_1.tres" id="g1"]
 [ext_resource type="Resource" uid="uid://c2lp2grass02" path="res://world_generator_v2/biomes/ItemVariant/lowpoly/grass_2.tres" id="g2"]
@@ -8,8 +9,7 @@
 [resource]
 script = ExtResource("1_script")
 item_name = "LowPoly Grass"
-spawn_chance = 0.35
-min_scale = 0.8
+spawn_chance = 0.55
 max_scale = 1.3
 variants = Array[ExtResource("2_var")]([ExtResource("g1"), ExtResource("g2")])
 metadata/_custom_type_script = "uid://b78jp2kr0j5w"

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="BiomeItem" format=3 uid="uid://hitqgkgbxddr"]
+
+[ext_resource type="Script" uid="uid://b78jp2kr0j5w" path="res://world_generator_v2/biome_item.gd" id="1_tehjf"]
+[ext_resource type="Script" uid="uid://bhgcthxjxafoq" path="res://world_generator_v2/sub_biome_item.gd" id="2_syoh7"]
+[ext_resource type="Resource" uid="uid://dgk8y4v08vl0o" path="res://world_generator_v2/biomes/subbiome/gress.tres" id="3_c2j7d"]
+[ext_resource type="Script" uid="uid://okens1wa1haa" path="res://world_generator_v2/item_variant.gd" id="3_m1a2q"]
+[ext_resource type="Resource" uid="uid://mh6e1dk8cuj3" path="res://world_generator_v2/biomes/ItemVariant/gress/gress.tres" id="5_3d3gp"]
+
+[resource]
+script = ExtResource("1_tehjf")
+item_name = "gress"
+spawn_chance = 1.0
+max_scale = 3.0
+variants = Array[ExtResource("3_m1a2q")]([ExtResource("5_3d3gp")])
+sub_items = Array[ExtResource("2_syoh7")]([ExtResource("3_c2j7d")])
+metadata/_custom_type_script = "uid://b78jp2kr0j5w"

@@ -2,16 +2,9 @@
 
 [ext_resource type="Script" uid="uid://d4iblqgmao3ll" path="res://Scripts/UI/inventory_ui.gd" id="1_p83af"]
 [ext_resource type="PackedScene" uid="uid://bj0fla0h0psld" path="res://Scenes/UI/inventory_slot.tscn" id="2_o62ck"]
-[ext_resource type="Texture2D" uid="uid://8hjc0pesurwa" path="res://Assets/menu/Inventory_bg.png" id="2_sxwjb"]
 [ext_resource type="FontFile" uid="uid://cfhotyty164nn" path="res://Assets/menu/Cinzel,Poppins,Raleway/Cinzel/Cinzel-VariableFont_wght.ttf" id="3_sxwjb"]
 [ext_resource type="Script" uid="uid://cdnjxp74inlvk" path="res://Scripts/UI/crafting_ui.gd" id="4_kyjlm"]
 [ext_resource type="Texture2D" uid="uid://dy20vbvd557ls" path="res://Assets/icons/placeholder.png" id="4_sfqc8"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sxwjb"]
-bg_color = Color(0, 0, 0, 1)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sfqc8"]
-bg_color = Color(0, 0, 0, 0.5686275)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kyjlm"]
 bg_color = Color(0.039215688, 0.039215688, 0.039215688, 0.33333334)
@@ -19,17 +12,15 @@ border_width_left = 8
 border_width_top = 8
 border_width_right = 8
 border_width_bottom = 8
+border_color = Color(0.33333334, 0.22745098, 0.16078432, 1)
 corner_radius_top_left = 8
 corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
-expand_margin_left = 4.0
-expand_margin_top = 4.0
-expand_margin_right = 4.0
-expand_margin_bottom = 4.0
+shadow_color = Color(0.043039158, 0.04303915, 0.04303915, 0.6)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hcmni"]
-bg_color = Color(0.6, 0.6, 0.6, 0)
+bg_color = Color(0.16470589, 0.09803922, 0.043137256, 0.92156863)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_o62ck"]
 bg_color = Color(0, 0, 0, 0.21176471)
@@ -42,35 +33,6 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_p83af")
-
-[node name="Overlay2" type="Panel" parent="." unique_id=790931196]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_sxwjb")
-
-[node name="Background" type="TextureRect" parent="." unique_id=1851905752]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-texture = ExtResource("2_sxwjb")
-stretch_mode = 6
-flip_h = true
-
-[node name="Overlay" type="Panel" parent="." unique_id=1456517709]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_sfqc8")
 
 [node name="PanelContainer" type="PanelContainer" parent="." unique_id=459632903]
 layout_mode = 1
@@ -92,6 +54,11 @@ z_index = 1
 custom_minimum_size = Vector2(800, 500)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_hcmni")
+
+[node name="Placeholder" type="Sprite2D" parent="PanelContainer/Window" unique_id=2021623543]
+position = Vector2(563, 243)
+scale = Vector2(0.45, 0.45)
+texture = ExtResource("4_sfqc8")
 
 [node name="Header" type="Panel" parent="PanelContainer/Window" unique_id=371865553]
 layout_mode = 1
@@ -397,8 +364,3 @@ grow_vertical = 2
 
 [node name="RecipesList" type="VBoxContainer" parent="PanelContainer/Window/CraftingContent/ScrollContainer" unique_id=1122965751]
 layout_mode = 2
-
-[node name="Placeholder" type="Sprite2D" parent="PanelContainer" unique_id=2021623543]
-position = Vector2(571, 251)
-scale = Vector2(0.45, 0.45)
-texture = ExtResource("4_sfqc8")

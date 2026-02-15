@@ -69,7 +69,6 @@ var _attack_end_time := 0.0
 
 @export var creative_mode := false
 var flying := false
-@onready var animation_player: AnimationPlayer = $Character/AnimationPlayer
 
 
 func _ready():
@@ -92,7 +91,7 @@ func set_animation(anim_name: String) -> void:
 		playback.travel(anim_name)
 
 ## Chamado pelo PlayerCombat ao atacar — evita que Idle/Walk/Run sobrescrevam a animação
-func play_attack_animation(anim_state_name: String = "Slash") -> void:
+func play_attack_animation(anim_state_name: String = "Attack") -> void:
 	set_animation(anim_state_name)
 	is_attacking = true
 	_attack_end_time = Time.get_ticks_msec() / 1000.0 + attack_anim_duration
@@ -192,7 +191,7 @@ func _physics_process(delta):
 		if velocity.y < 0:
 			velocity.y = 0
 	if Input.is_action_just_pressed("attack") or Input.is_action_just_pressed("mb1"):
-		play_attack_animation("Slash")
+		play_attack_animation("Attack")
 
 	var current_speed := speed
 	var step_current := step_interval

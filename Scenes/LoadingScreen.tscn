@@ -1,7 +1,15 @@
 [gd_scene format=3 uid="uid://dl56l0i62utv8"]
 
 [ext_resource type="Script" uid="uid://c1sdwfj56kjol" path="res://Scenes/loading_screen.gd" id="1_loading"]
-[ext_resource type="Texture2D" uid="uid://rbmckrkehlkq" path="res://Assets/menu/loading-1.png" id="2_xoop3"]
+[ext_resource type="Texture2D" uid="uid://ddodjc8gwacjk" path="res://Assets/menu/progress-bg.png" id="2_qjj4j"]
+[ext_resource type="FontFile" uid="uid://c1g1ihmpdq7h0" path="res://Assets/menu/Cinzel,Poppins,Raleway/Cinzel/static/Cinzel-Bold.ttf" id="3_dq85b"]
+[ext_resource type="Texture2D" uid="uid://66fd6yfcuvrj" path="res://Assets/menu/progress-bar.png" id="4_ffghy"]
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_kddo8"]
+load_path = "res://.godot/imported/loading-1.png-1c11d5a606b8d43f8369d6ca70dbdbc8.ctex"
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_68uam"]
+texture = ExtResource("4_ffghy")
 
 [node name="LoadingScreen" type="Control" unique_id=356165075]
 process_mode = 4
@@ -21,7 +29,8 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-texture = ExtResource("2_xoop3")
+texture = SubResource("CompressedTexture2D_kddo8")
+expand_mode = 2
 stretch_mode = 6
 
 [node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1351387856]
@@ -32,9 +41,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -200.0
-offset_top = -100.0
+offset_top = 179.0
 offset_right = 200.0
-offset_bottom = 100.0
+offset_bottom = 379.0
 grow_horizontal = 2
 grow_vertical = 2
 alignment = 1
@@ -46,6 +55,22 @@ text = "Carregando Mundo..."
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ProgressBar" type="ProgressBar" parent="VBoxContainer" unique_id=303392384]
-custom_minimum_size = Vector2(400, 30)
+[node name="TextureProgressBar" type="TextureProgressBar" parent="VBoxContainer" unique_id=687274465]
 layout_mode = 2
+value = 55.0
+texture_under = ExtResource("2_qjj4j")
+
+[node name="ProgressBar" type="ProgressBar" parent="VBoxContainer/TextureProgressBar" unique_id=303392384]
+custom_minimum_size = Vector2(970, 70)
+layout_mode = 0
+offset_left = 190.0
+offset_top = 63.0
+offset_right = 1160.0
+offset_bottom = 133.0
+size_flags_horizontal = 4
+size_flags_vertical = 8
+theme_override_colors/font_color = Color(2.416956, 2.1792908, 0.83885884, 1)
+theme_override_fonts/font = ExtResource("3_dq85b")
+theme_override_font_sizes/font_size = 46
+theme_override_styles/fill = SubResource("StyleBoxTexture_68uam")
+step = 1.0

@@ -20,7 +20,6 @@ extends Control
 
 @export var is_open: bool = false
 
-@onready var overlay = $Overlay
 @onready var window = $PanelContainer/Window
 @onready var close_button = $PanelContainer/Window/Header/CloseButton
 @onready var inv_tab = $PanelContainer/Window/Tabs/InventoryTab
@@ -33,10 +32,6 @@ var current_tab: String = "inventory"
 
 func _ready():
 	visible = is_open
-	
-	# IMPORTANTE: bloqueia cliques no jogo por trás
-	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
-	window.mouse_filter = Control.MOUSE_FILTER_STOP
 	
 	# Conecta botões
 	close_button.pressed.connect(_toggle)

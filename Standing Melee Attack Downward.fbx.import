@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://clabur2s8201t"
-path="res://.godot/imported/Grass_2.fbx-9ed3851e2551cebf6dd72f0054e5082d.scn"
+uid="uid://r0yorigm607u"
+path="res://.godot/imported/Standing Melee Attack Downward.fbx-9d3b41276660f9dd433c0a221843fa42.scn"
 
 [deps]
 
-source_file="res://Assets/LowPoly Environment Pack/Grass_2.fbx"
-dest_files=["res://.godot/imported/Grass_2.fbx-9ed3851e2551cebf6dd72f0054e5082d.scn"]
+source_file="res://Standing Melee Attack Downward.fbx"
+dest_files=["res://.godot/imported/Standing Melee Attack Downward.fbx-9d3b41276660f9dd433c0a221843fa42.scn"]
 
 [params]
 
@@ -37,19 +37,7 @@ import_script/path=""
 materials/extract=0
 materials/extract_format=0
 materials/extract_path=""
-_subresources={
-"meshes": {
-"Plane": {
-"generate/lightmap_uv": 0,
-"generate/lods": 0,
-"generate/shadow_meshes": 0,
-"lods/normal_merge_angle": 20.0,
-"save_to_file/enabled": true,
-"save_to_file/fallback_path": "res://grass2.tres",
-"save_to_file/path": "uid://d0wjnmf3sea5a"
-}
-}
-}
+_subresources={}
 fbx/importer=0
 fbx/allow_geometry_helper_nodes=false
 fbx/embedded_image_handling=1

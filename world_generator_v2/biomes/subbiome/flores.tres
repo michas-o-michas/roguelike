@@ -6,7 +6,8 @@
 
 [resource]
 script = ExtResource("1_ai6fv")
-spawn_chance = 1.0
-spawn_radius = 10.0
+spawn_chance = 0.85
+spawn_count = 6
+spawn_radius = 2.5
 variants = Array[ExtResource("2_ttqf0")]([ExtResource("3_ttqf0")])
 metadata/_custom_type_script = "uid://bhgcthxjxafoq"

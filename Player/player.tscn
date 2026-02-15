@@ -2,11 +2,12 @@
 
 [ext_resource type="Script" uid="uid://bmenc71ft7rot" path="res://Player/Player.gd" id="1_4flbx"]
 [ext_resource type="PackedScene" uid="uid://bdkw73jxvmhn0" path="res://Scenes/UI/inventory_ui.tscn" id="5_1jxqw"]
-[ext_resource type="AudioStream" uid="uid://dlwho3fc72yxj" path="res://mixkit-footsteps-in-woods-loop-533 (mp3cut.net).wav" id="5_2hs0m"]
 [ext_resource type="Script" uid="uid://dh8cw2d6nnl6u" path="res://Scenes/fps-test.gd" id="5_dw050"]
 [ext_resource type="PackedScene" uid="uid://db54lynof5voa" path="res://Skills/Skills.tscn" id="5_sweqy"]
 [ext_resource type="PackedScene" uid="uid://k5kw063o8n6i" path="res://Scenes/UI/hotbar.tscn" id="6_2hs0m"]
+[ext_resource type="AudioStream" uid="uid://b3ta1gunljg3b" path="res://Assets/sounds/WASD Sound Grass Run 06.wav" id="6_od3ui"]
 [ext_resource type="Script" uid="uid://dlpnngrlkw3a5" path="res://Scripts/player/weapon_handler.gd" id="8_dw050"]
+[ext_resource type="PackedScene" uid="uid://cv7xrvawqq1pt" path="res://Scenes/sword.tscn" id="8_od3ui"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_4flbx"]
 radius = 0.2915039
@@ -6603,6 +6604,7 @@ tracks/38/keys = PackedFloat32Array(0, 1, -0.62014806, -0.08527078, -0.03272131,
 [sub_resource type="Animation" id="Animation_0smvx"]
 resource_name = "Run"
 length = 0.875
+loop_mode = 1
 tracks/0/type = "position_3d"
 tracks/0/imported = true
 tracks/0/enabled = true
@@ -7182,27 +7184,86 @@ _data = {
 &"Walk": SubResource("Animation_ufc3f")
 }
 
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_od3ui"]
+animation = &"Dagger_Attack2"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_5htga"]
+animation = &"Attacking_Idle"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_p5o4e"]
+animation = &"Roll"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_gu6f8"]
+animation = &"Run"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_dkpta"]
+animation = &"Walk"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_lfmf2"]
+advance_mode = 2
+advance_condition = &"Run"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_pisgm"]
+advance_mode = 2
+advance_condition = &"Walk"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_o28un"]
+advance_mode = 2
+advance_condition = &"Jump"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_od3ui"]
+advance_mode = 2
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_n471f"]
+xfade_time = 0.5
+switch_mode = 2
+advance_mode = 2
+advance_condition = &"Idle"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_b1ygp"]
+xfade_time = 0.5
+advance_mode = 2
+advance_condition = &"Attack"
+
+[sub_resource type="AnimationNodeStateMachine" id="AnimationNodeStateMachine_7emwf"]
+states/Attack/node = SubResource("AnimationNodeAnimation_od3ui")
+states/Attack/position = Vector2(290, 34)
+states/Idle/node = SubResource("AnimationNodeAnimation_5htga")
+states/Idle/position = Vector2(290, 135)
+states/Jump/node = SubResource("AnimationNodeAnimation_p5o4e")
+states/Jump/position = Vector2(290, 231)
+states/Run/node = SubResource("AnimationNodeAnimation_gu6f8")
+states/Run/position = Vector2(611, 127)
+states/Start/position = Vector2(127, 153)
+states/Walk/node = SubResource("AnimationNodeAnimation_dkpta")
+states/Walk/position = Vector2(487, 135)
+transitions = ["Walk", "Run", SubResource("AnimationNodeStateMachineTransition_lfmf2"), "Idle", "Walk", SubResource("AnimationNodeStateMachineTransition_pisgm"), "Idle", "Jump", SubResource("AnimationNodeStateMachineTransition_o28un"), "Start", "Idle", SubResource("AnimationNodeStateMachineTransition_od3ui"), "Attack", "Idle", SubResource("AnimationNodeStateMachineTransition_n471f"), "Idle", "Attack", SubResource("AnimationNodeStateMachineTransition_b1ygp")]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_od3ui"]
+
 [node name="Player" type="CharacterBody3D" unique_id=267460793 groups=["player"]]
 script = ExtResource("1_4flbx")
-animation_tree_path = NodePath("")
+cam_follow_speed = 5.0
+cam_distance = 3.0
+animation_tree_path = NodePath("Character/AnimationTree")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=2024708969]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.80841064, 0.1001389)
 shape = SubResource("CapsuleShape3D_4flbx")
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=1102373799]
-transform = Transform3D(1, 0, 0, 0, 0.99588597, 0.09061518, 0, -0.09061518, 0.99588597, 0, 1.2610327, 2.2629714)
+transform = Transform3D(0.9832613, 0.016510196, -0.18145165, 0, 0.995886, 0.0906152, 0.1822012, -0.08909841, 0.97921616, -1.0440241, 1.2610327, 1.1572158)
 
-[node name="RayCast3D" type="RayCast3D" parent="Camera3D" unique_id=615003587]
+[node name="RayCast3D" type="RayCast3D" parent="Camera3D" unique_id=84854149]
 target_position = Vector3(0, 0, -4)
 
-[node name="MagicPoint" type="Marker3D" parent="Camera3D" unique_id=904332960]
+[node name="MagicPoint" type="Marker3D" parent="Camera3D" unique_id=485879385]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.50008714, -0.7505561)
 
-[node name="AttackPoint" type="Marker3D" parent="Camera3D" unique_id=812434931]
+[node name="AttackPoint" type="Marker3D" parent="Camera3D" unique_id=1274675329]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.50008714, -0.74833083)
 
-[node name="HandMarker" type="Marker3D" parent="Camera3D" unique_id=95477628]
+[node name="HandMarker" type="Marker3D" parent="Camera3D" unique_id=1806334939]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.40712833, -0.4052465, -0.859625)
 
 [node name="UI" parent="." unique_id=704400542 instance=ExtResource("5_sweqy")]
@@ -7220,18 +7281,14 @@ script = ExtResource("5_dw050")
 metadata/_edit_use_anchors_ = true
 
 [node name="StepAudio" type="AudioStreamPlayer3D" parent="." unique_id=663968099]
-stream = ExtResource("5_2hs0m")
+stream = ExtResource("6_od3ui")
 volume_db = -29.58
 max_db = -8.848
 autoplay = true
 
-[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=2042603797]
-
-[node name="WeaponHandler" type="Node3D" parent="." unique_id=1527871926 node_paths=PackedStringArray("attack_raycast", "hand_marker")]
+[node name="WeaponHandler" type="Node3D" parent="." unique_id=1527871926]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.80339676)
 script = ExtResource("8_dw050")
-attack_raycast = NodePath("../Camera3D/RayCast3D")
-hand_marker = NodePath("../Camera3D/HandMarker")
 swing_angle = 90.0
 
 [node name="AttackAudio" type="AudioStreamPlayer3D" parent="WeaponHandler" unique_id=328879155]
@@ -7339,7 +7396,7 @@ bones/12/parent = 11
 bones/12/rest = Transform3D(0.9970742, 0.038409423, 0.06608705, -0.040025868, 0.9989267, 0.023311222, -0.06512074, -0.025888212, 0.99754167, -1.6622277e-10, 0.0039223344, -2.0747816e-10)
 bones/12/enabled = true
 bones/12/position = Vector3(2.0489097e-10, 0.003922334, 1.4901161e-10)
-bones/12/rotation = Quaternion(-0.20479238, 0.099594615, -0.21215552, 0.9503321)
+bones/12/rotation = Quaternion(-0.20479237, 0.09959461, -0.2121555, 0.95033205)
 bones/12/scale = Vector3(1.0000001, 1.0000002, 1.0000005)
 bones/13/name = "Fist.L"
 bones/13/parent = 12
@@ -7422,9 +7479,9 @@ bones/24/name = "Fist1.R"
 bones/24/parent = 23
 bones/24/rest = Transform3D(0.9992895, -0.0047132247, 0.037392348, -9.778886e-09, 0.9921495, 0.12505849, -0.03768823, -0.12496969, 0.9914443, -6.805606e-11, 0.0012674957, -5.5786403e-10)
 bones/24/enabled = true
-bones/24/position = Vector3(-1.11758706e-10, 0.0012674931, 2.537854e-10)
+bones/24/position = Vector3(-0.000218492, 0.001236679, 0.00029212423)
 bones/24/rotation = Quaternion(-0.062641226, 0.018810429, 0.0011808198, 0.9978582)
-bones/24/scale = Vector3(1, 1, 0.99999994)
+bones/24/scale = Vector3(0.99999994, 1.0000001, 0.9999997)
 bones/25/name = "Fist2.R"
 bones/25/parent = 24
 bones/25/rest = Transform3D(1, 8.138431e-08, -5.2476985e-08, -6.278839e-08, 0.9574961, 0.288446, 7.372149e-08, -0.28844598, 0.95749617, 9.241699e-11, 0.0010797235, -8.411031e-10)
@@ -7564,6 +7621,28 @@ mesh = SubResource("ArrayMesh_x3vf3")
 skin = SubResource("Skin_apopc")
 skeleton = NodePath("..")
 
-[node name="AnimationPlayer2" type="AnimationPlayer" parent="Character" unique_id=68795366]
-root_node = NodePath("../..")
+[node name="BoneAttachment3D" type="BoneAttachment3D" parent="Character/CharacterArmature/Skeleton3D" unique_id=985645510]
+transform = Transform3D(-0.6774611, 0.6071457, -0.4152351, -0.38546997, -0.7738366, -0.50258297, -0.62646526, -0.18041974, 0.7582805, -0.0010836932, -0.010421928, 0.015018262)
+bone_name = "Fist1.R"
+bone_idx = 24
+
+[node name="Sword" parent="Character/CharacterArmature/Skeleton3D/BoneAttachment3D" unique_id=1113955345 instance=ExtResource("8_od3ui")]
+transform = Transform3D(0.0030931667, 0.0017565701, -0.004831851, -0.0043427306, 0.0039109965, -0.0013582467, 0.002751916, 0.0041974513, 0.0032876125, 0.001967221, 0.0051719337, 0.0034223124)
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Character" unique_id=68795366]
 libraries/ = SubResource("AnimationLibrary_5htga")
+
+[node name="AnimationTree" type="AnimationTree" parent="Character" unique_id=113451121]
+tree_root = SubResource("AnimationNodeStateMachine_7emwf")
+anim_player = NodePath("../AnimationPlayer")
+parameters/conditions/Attack = false
+parameters/conditions/Idle = false
+parameters/conditions/Jump = false
+parameters/conditions/Run = false
+parameters/conditions/Walk = false
+
+[node name="AttackArea" type="Area3D" parent="." unique_id=1762792518]
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 0, 0.93284756, -0.55426896)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="AttackArea" unique_id=1018189811]
+shape = SubResource("SphereShape3D_od3ui")

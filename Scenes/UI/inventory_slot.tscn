@@ -1,25 +1,14 @@
 [gd_scene format=3 uid="uid://bj0fla0h0psld"]
 
 [ext_resource type="Script" uid="uid://bcfiidggh5q4o" path="res://Scripts/UI/inventory_slot.gd" id="1_brh76"]
-[ext_resource type="Texture2D" uid="uid://5mgrmmjtbqwa" path="res://Assets/menu/slot.png" id="2_nxjtc"]
+[ext_resource type="Texture2D" uid="uid://cuaor831o8s2d" path="res://Assets/menu/slot.png" id="2_nxjtc"]
 [ext_resource type="FontFile" uid="uid://cfhotyty164nn" path="res://Assets/menu/Cinzel,Poppins,Raleway/Cinzel/Cinzel-VariableFont_wght.ttf" id="3_tmbq5"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_brh76"]
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-corner_radius_top_left = 2
-corner_radius_top_right = 2
-corner_radius_bottom_right = 2
-corner_radius_bottom_left = 2
 
 [node name="inventory_slot" type="Panel" unique_id=12331941]
 custom_minimum_size = Vector2(64, 64)
 offset_right = 64.0
 offset_bottom = 64.0
 tooltip_text = "Slot"
-theme_override_styles/panel = SubResource("StyleBoxFlat_brh76")
 script = ExtResource("1_brh76")
 
 [node name="PanelContainer" type="TextureRect" parent="." unique_id=1545098077]

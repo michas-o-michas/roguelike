@@ -1,12 +1,13 @@
-[gd_scene format=3 uid="uid://settings_scene"]
+[gd_scene format=3 uid="uid://5ns8nwe6cnax"]
 
-[ext_resource type="Script" path="res://Scenes/settings.gd" id="1_settings"]
-[ext_resource type="Texture2D" uid="uid://cyr4aprinui84" path="res://Assets/menu/Bg.png" id="2_bg"]
-[ext_resource type="Texture2D" uid="uid://bc0sgu2o8lifw" path="res://Assets/menu/Button-bg.png" id="3_button"]
+[ext_resource type="Script" uid="uid://cvpaavd8hrnis" path="res://Scenes/settings.gd" id="1_settings"]
+[ext_resource type="Texture2D" uid="uid://d2jj2alnavot1" path="res://Assets/menu/Button-bg.png" id="3_button"]
 [ext_resource type="FontFile" uid="uid://cfhotyty164nn" path="res://Assets/menu/Cinzel,Poppins,Raleway/Cinzel/Cinzel-VariableFont_wght.ttf" id="4_font"]
+[ext_resource type="StyleBox" uid="uid://b2x8a2uu5145i" path="res://Interface/btn-pressed.tres" id="4_mjqtt"]
+[ext_resource type="StyleBox" uid="uid://bk66fuuyv7wp5" path="res://Interface/bnt-hover.tres" id="5_ppjuv"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
-bg_color = Color(0.1, 0.1, 0.15, 0.98)
+bg_color = Color(0, 0, 0, 0.7019608)
 corner_radius_top_left = 10
 corner_radius_top_right = 10
 corner_radius_bottom_right = 10
@@ -19,19 +20,7 @@ expand_margin_bottom = 8.0
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button"]
 texture = ExtResource("3_button")
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_hover"]
-bg_color = Color(0.2, 0.4, 0.6, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.3, 0.5, 0.7, 1)
-corner_radius_top_left = 5
-corner_radius_top_right = 5
-corner_radius_bottom_right = 5
-corner_radius_bottom_left = 5
-
-[node name="Settings" type="Control"]
+[node name="Settings" type="Control" unique_id=1597631124]
 process_mode = 4
 layout_mode = 3
 anchors_preset = 15
@@ -41,17 +30,17 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_settings")
 
-[node name="Background" type="ColorRect" parent="."]
+[node name="Background" type="ColorRect" parent="." unique_id=2033068123]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0, 0, 0, 0.7)
 mouse_filter = 2
+color = Color(0, 0, 0, 0.69411767)
 
-[node name="Panel" type="Panel" parent="."]
+[node name="Panel" type="Panel" parent="." unique_id=758395521]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -66,20 +55,20 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="Panel"]
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel" unique_id=392305370]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
 offset_left = 20.0
 offset_top = 20.0
 offset_right = -20.0
 offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_constants/separation = 15
 
-[node name="Title" type="Label" parent="Panel/VBoxContainer"]
+[node name="Title" type="Label" parent="Panel/VBoxContainer" unique_id=1329320257]
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_colors/font_color = Color(0.89411765, 0.8, 0.627451, 1)
@@ -90,25 +79,25 @@ theme_override_font_sizes/font_size = 32
 text = "Configurações"
 horizontal_alignment = 1
 
-[node name="HSeparator" type="HSeparator" parent="Panel/VBoxContainer"]
+[node name="HSeparator" type="HSeparator" parent="Panel/VBoxContainer" unique_id=1449779514]
 layout_mode = 2
 size_flags_horizontal = 4
 
-[node name="ScrollContainer" type="ScrollContainer" parent="Panel/VBoxContainer"]
+[node name="ScrollContainer" type="ScrollContainer" parent="Panel/VBoxContainer" unique_id=1343318636]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="SettingsContent" type="VBoxContainer" parent="Panel/VBoxContainer/ScrollContainer"]
+[node name="SettingsContent" type="VBoxContainer" parent="Panel/VBoxContainer/ScrollContainer" unique_id=2040268305]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 20
 
-[node name="AudioSection" type="VBoxContainer" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent"]
+[node name="AudioSection" type="VBoxContainer" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent" unique_id=1985445408]
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_constants/separation = 10
 
-[node name="AudioTitle" type="Label" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/AudioSection"]
+[node name="AudioTitle" type="Label" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/AudioSection" unique_id=1780892537]
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_colors/font_color = Color(0.89411765, 0.8, 0.627451, 1)
@@ -116,105 +105,93 @@ theme_override_fonts/font = ExtResource("4_font")
 theme_override_font_sizes/font_size = 20
 text = "Áudio"
 
-[node name="MasterVolumeContainer" type="HBoxContainer" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/AudioSection"]
+[node name="MasterVolumeContainer" type="VBoxContainer" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/AudioSection" unique_id=623092642]
 layout_mode = 2
 size_flags_horizontal = 4
 
-[node name="MasterVolumeLabel" type="Label" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/AudioSection/MasterVolumeContainer"]
+[node name="MasterVolumeLabel" type="Label" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/AudioSection/MasterVolumeContainer" unique_id=1903475446]
 layout_mode = 2
-size_flags_vertical = 4
 theme_override_colors/font_color = Color(0.89411765, 0.8, 0.627451, 1)
 theme_override_fonts/font = ExtResource("4_font")
 theme_override_font_sizes/font_size = 16
 text = "Volume Geral:"
 vertical_alignment = 1
 
-[node name="MasterVolumeSlider" type="HSlider" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/AudioSection/MasterVolumeContainer"]
+[node name="MasterVolumeSlider" type="HSlider" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/AudioSection/MasterVolumeContainer" unique_id=120999710]
 layout_mode = 2
 size_flags_horizontal = 3
-min_value = 0.0
-max_value = 100.0
-step = 1.0
 value = 100.0
 
-[node name="MasterVolumeValue" type="Label" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/AudioSection/MasterVolumeContainer"]
-layout_mode = 2
+[node name="MasterVolumeValue" type="Label" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/AudioSection/MasterVolumeContainer" unique_id=2101769300]
 custom_minimum_size = Vector2(40, 0)
-size_flags_vertical = 4
+layout_mode = 2
 theme_override_colors/font_color = Color(0.89411765, 0.8, 0.627451, 1)
 theme_override_fonts/font = ExtResource("4_font")
 theme_override_font_sizes/font_size = 16
 text = "100%"
+horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="MusicVolumeContainer" type="HBoxContainer" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/AudioSection"]
+[node name="MusicVolumeContainer" type="VBoxContainer" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/AudioSection" unique_id=1008856298]
 layout_mode = 2
 size_flags_horizontal = 4
 
-[node name="MusicVolumeLabel" type="Label" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/AudioSection/MusicVolumeContainer"]
+[node name="MusicVolumeLabel" type="Label" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/AudioSection/MusicVolumeContainer" unique_id=247347295]
 layout_mode = 2
-size_flags_vertical = 4
 theme_override_colors/font_color = Color(0.89411765, 0.8, 0.627451, 1)
 theme_override_fonts/font = ExtResource("4_font")
 theme_override_font_sizes/font_size = 16
 text = "Volume Música:"
 vertical_alignment = 1
 
-[node name="MusicVolumeSlider" type="HSlider" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/AudioSection/MusicVolumeContainer"]
+[node name="MusicVolumeSlider" type="HSlider" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/AudioSection/MusicVolumeContainer" unique_id=881363209]
 layout_mode = 2
 size_flags_horizontal = 3
-min_value = 0.0
-max_value = 100.0
-step = 1.0
 value = 80.0
 
-[node name="MusicVolumeValue" type="Label" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/AudioSection/MusicVolumeContainer"]
-layout_mode = 2
+[node name="MusicVolumeValue" type="Label" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/AudioSection/MusicVolumeContainer" unique_id=760546113]
 custom_minimum_size = Vector2(40, 0)
-size_flags_vertical = 4
+layout_mode = 2
 theme_override_colors/font_color = Color(0.89411765, 0.8, 0.627451, 1)
 theme_override_fonts/font = ExtResource("4_font")
 theme_override_font_sizes/font_size = 16
 text = "80%"
+horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="SFXVolumeContainer" type="HBoxContainer" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/AudioSection"]
+[node name="SFXVolumeContainer" type="VBoxContainer" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/AudioSection" unique_id=489977810]
 layout_mode = 2
 size_flags_horizontal = 4
 
-[node name="SFXVolumeLabel" type="Label" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/AudioSection/SFXVolumeContainer"]
+[node name="SFXVolumeLabel" type="Label" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/AudioSection/SFXVolumeContainer" unique_id=763933095]
 layout_mode = 2
-size_flags_vertical = 4
 theme_override_colors/font_color = Color(0.89411765, 0.8, 0.627451, 1)
 theme_override_fonts/font = ExtResource("4_font")
 theme_override_font_sizes/font_size = 16
 text = "Volume Efeitos:"
 vertical_alignment = 1
 
-[node name="SFXVolumeSlider" type="HSlider" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/AudioSection/SFXVolumeContainer"]
+[node name="SFXVolumeSlider" type="HSlider" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/AudioSection/SFXVolumeContainer" unique_id=1782511270]
 layout_mode = 2
 size_flags_horizontal = 3
-min_value = 0.0
-max_value = 100.0
-step = 1.0
 value = 100.0
 
-[node name="SFXVolumeValue" type="Label" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/AudioSection/SFXVolumeContainer"]
-layout_mode = 2
+[node name="SFXVolumeValue" type="Label" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/AudioSection/SFXVolumeContainer" unique_id=1852333108]
 custom_minimum_size = Vector2(40, 0)
-size_flags_vertical = 4
+layout_mode = 2
 theme_override_colors/font_color = Color(0.89411765, 0.8, 0.627451, 1)
 theme_override_fonts/font = ExtResource("4_font")
 theme_override_font_sizes/font_size = 16
 text = "100%"
+horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="GraphicsSection" type="VBoxContainer" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent"]
+[node name="GraphicsSection" type="VBoxContainer" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent" unique_id=1711649857]
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_constants/separation = 10
 
-[node name="GraphicsTitle" type="Label" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/GraphicsSection"]
+[node name="GraphicsTitle" type="Label" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/GraphicsSection" unique_id=1774141541]
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_colors/font_color = Color(0.89411765, 0.8, 0.627451, 1)
@@ -222,20 +199,19 @@ theme_override_fonts/font = ExtResource("4_font")
 theme_override_font_sizes/font_size = 20
 text = "Gráficos"
 
-[node name="FullscreenContainer" type="HBoxContainer" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/GraphicsSection"]
+[node name="FullscreenContainer" type="HBoxContainer" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/GraphicsSection" unique_id=275615428]
 layout_mode = 2
 size_flags_horizontal = 4
 
-[node name="FullscreenLabel" type="Label" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/GraphicsSection/FullscreenContainer"]
+[node name="FullscreenLabel" type="Label" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/GraphicsSection/FullscreenContainer" unique_id=727826278]
 layout_mode = 2
-size_flags_vertical = 4
 theme_override_colors/font_color = Color(0.89411765, 0.8, 0.627451, 1)
 theme_override_fonts/font = ExtResource("4_font")
 theme_override_font_sizes/font_size = 16
 text = "Tela Cheia:"
 vertical_alignment = 1
 
-[node name="FullscreenCheckBox" type="CheckBox" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/GraphicsSection/FullscreenContainer"]
+[node name="FullscreenCheckBox" type="CheckBox" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/GraphicsSection/FullscreenContainer" unique_id=225823453]
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_colors/font_color = Color(0.89411765, 0.8, 0.627451, 1)
@@ -243,81 +219,82 @@ theme_override_fonts/font = ExtResource("4_font")
 theme_override_font_sizes/font_size = 16
 text = "Ativar"
 
-[node name="QualityContainer" type="HBoxContainer" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/GraphicsSection"]
+[node name="QualityContainer" type="HBoxContainer" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/GraphicsSection" unique_id=1083004485]
 layout_mode = 2
 size_flags_horizontal = 4
 
-[node name="QualityLabel" type="Label" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/GraphicsSection/QualityContainer"]
+[node name="QualityLabel" type="Label" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/GraphicsSection/QualityContainer" unique_id=548577654]
 layout_mode = 2
-size_flags_vertical = 4
 theme_override_colors/font_color = Color(0.89411765, 0.8, 0.627451, 1)
 theme_override_fonts/font = ExtResource("4_font")
 theme_override_font_sizes/font_size = 16
 text = "Qualidade:"
 vertical_alignment = 1
 
-[node name="QualityOptionButton" type="OptionButton" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/GraphicsSection/QualityContainer"]
+[node name="QualityOptionButton" type="OptionButton" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/GraphicsSection/QualityContainer" unique_id=2081156066]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_fonts/font = ExtResource("4_font")
 theme_override_font_sizes/font_size = 16
 selected = 2
-text = "Baixa"
-items = ["Muito Baixa", "Baixa", "Média", "Alta", "Muito Alta"]
+item_count = 3
+popup/item_0/text = "Baixa"
+popup/item_0/id = 0
+popup/item_1/text = "Media"
+popup/item_1/id = 1
+popup/item_2/text = "Alta"
+popup/item_2/id = 2
 
-[node name="VSyncContainer" type="HBoxContainer" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/GraphicsSection"]
+[node name="VSyncContainer" type="HBoxContainer" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/GraphicsSection" unique_id=1876524230]
 layout_mode = 2
 size_flags_horizontal = 4
 
-[node name="VSyncLabel" type="Label" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/GraphicsSection/VSyncContainer"]
+[node name="VSyncLabel" type="Label" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/GraphicsSection/VSyncContainer" unique_id=990320671]
 layout_mode = 2
-size_flags_vertical = 4
 theme_override_colors/font_color = Color(0.89411765, 0.8, 0.627451, 1)
 theme_override_fonts/font = ExtResource("4_font")
 theme_override_font_sizes/font_size = 16
 text = "VSync:"
 vertical_alignment = 1
 
-[node name="VSyncCheckBox" type="CheckBox" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/GraphicsSection/VSyncContainer"]
+[node name="VSyncCheckBox" type="CheckBox" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/GraphicsSection/VSyncContainer" unique_id=1911947421]
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_colors/font_color = Color(0.89411765, 0.8, 0.627451, 1)
 theme_override_fonts/font = ExtResource("4_font")
 theme_override_font_sizes/font_size = 16
-text = "Ativar"
 button_pressed = true
+text = "Ativar"
 
-[node name="ButtonsContainer" type="HBoxContainer" parent="Panel/VBoxContainer"]
+[node name="ButtonsContainer" type="HBoxContainer" parent="Panel/VBoxContainer" unique_id=720086640]
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_constants/separation = 10
 
-[node name="BackButton" type="Button" parent="Panel/VBoxContainer/ButtonsContainer"]
+[node name="BackButton" type="Button" parent="Panel/VBoxContainer/ButtonsContainer" unique_id=2140940047]
+custom_minimum_size = Vector2(150, 90)
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_stretch_ratio = 1.0
-custom_minimum_size = Vector2(0, 50)
 theme_override_colors/font_color = Color(0.89411765, 0.8, 0.627451, 1)
 theme_override_colors/font_outline_color = Color(0.6117647, 0.47843137, 0.34901962, 1)
 theme_override_constants/outline_size = 4
 theme_override_fonts/font = ExtResource("4_font")
 theme_override_font_sizes/font_size = 20
 theme_override_styles/normal = SubResource("StyleBoxTexture_button")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_button_hover")
-theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
+theme_override_styles/pressed = ExtResource("4_mjqtt")
+theme_override_styles/hover = ExtResource("5_ppjuv")
 text = "Voltar"
 
-[node name="ApplyButton" type="Button" parent="Panel/VBoxContainer/ButtonsContainer"]
+[node name="ApplyButton" type="Button" parent="Panel/VBoxContainer/ButtonsContainer" unique_id=16284215]
+custom_minimum_size = Vector2(150, 90)
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_stretch_ratio = 1.0
-custom_minimum_size = Vector2(0, 50)
 theme_override_colors/font_color = Color(0.89411765, 0.8, 0.627451, 1)
 theme_override_colors/font_outline_color = Color(0.6117647, 0.47843137, 0.34901962, 1)
 theme_override_constants/outline_size = 4
 theme_override_fonts/font = ExtResource("4_font")
 theme_override_font_sizes/font_size = 20
 theme_override_styles/normal = SubResource("StyleBoxTexture_button")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_button_hover")
-theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
+theme_override_styles/pressed = ExtResource("4_mjqtt")
+theme_override_styles/hover = ExtResource("5_ppjuv")
 text = "Aplicar"

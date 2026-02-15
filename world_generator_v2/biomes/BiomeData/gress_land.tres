@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="BiomeData" format=3 uid="uid://g26yf8snbibe"]
+
+[ext_resource type="Script" uid="uid://b78jp2kr0j5w" path="res://world_generator_v2/biome_item.gd" id="1_4y7gu"]
+[ext_resource type="Resource" uid="uid://hitqgkgbxddr" path="res://world_generator_v2/biomes/BiomeItem/gress.tres" id="2_ker00"]
+[ext_resource type="Script" uid="uid://cckc1eka3ujni" path="res://world_generator_v2/poi_data.gd" id="2_qiw2a"]
+[ext_resource type="Script" uid="uid://el3it5rlbpge" path="res://world_generator_v2/animal_spawner_data.gd" id="3_ker00"]
+[ext_resource type="Script" uid="uid://b21qcx74inoxd" path="res://world_generator_v2/biome_data.gd" id="4_hp567"]
+
+[resource]
+script = ExtResource("4_hp567")
+biome_name = "Grass land"
+biome_noise_value = 1.0
+biome_items = Array[ExtResource("1_4y7gu")]([ExtResource("2_ker00")])
+metadata/_custom_type_script = "uid://b21qcx74inoxd"

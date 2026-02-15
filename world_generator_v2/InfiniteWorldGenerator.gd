@@ -8,6 +8,7 @@ class_name InfiniteWorldGenerator
 
 const POIManagerScript = preload("res://world_generator_v2/poi/POIManager.gd")
 const SpawnerManagerScript = preload("res://world_generator_v2/spawners/SpawnerManager.gd")
+const ChunkAmbientParticlesScene = preload("res://effects/AmbientParticles.tscn")
 
 # Constantes de suavização do terreno (get_terrain_height)
 const TERRAIN_BEACH_ZONE_TOP := 15.0
@@ -92,6 +93,7 @@ const TERRAIN_BOTTOM_SMOOTH_ZONE := 3.0
 @export_range(0.002, 0.04, 0.001) var biome_noise_frequency: float = 0.008 ## Densidade de biomas: menor = regiões maiores; maior = regiões menores (mais misturado)
 @export var biome_transition_distance: float = 200.0
 @export var max_vegetation_points_per_chunk: int = 150 ## 0 = ilimitado; ~150 acelera muito o carregamento
+@export var enable_ambient_particles: bool = true ## Partículas ambientais (poeira/pólen) por chunk; descarregam com o chunk
 
 @export_group("Água")
 @export var water_size: float = 2000.0
@@ -1624,6 +1626,16 @@ func _create_chunk_vegetation(chunk_data: ChunkData, start_pos: Vector3):
 			_spawn_biome_item(current_biome, position, chunk_data)
 		points_done += 1
 
+	# Partículas ambientais fixas no chunk (não seguem o jogador; descarregam com o chunk)
+	if enable_ambient_particles and ChunkAmbientParticlesScene:
+		var center_x := start_pos.x + chunk_size * 0.5
+		var center_z := start_pos.z + chunk_size * 0.5
+		var center_y := get_terrain_height(center_x, center_z) + 3.0
+		var particles := ChunkAmbientParticlesScene.instantiate()
+		particles.position = Vector3(center_x, center_y, center_z)
+		add_child(particles)
+		chunk_data.objects.append(particles)
+
 func _spawn_biome_item(biome: BiomeData, position: Vector3, chunk_data: ChunkData):
 	# Um único item por posição para evitar árvores em cima de pedras etc.
 	var total_weight := 1.0  # peso "não spawnar nada"
@@ -1651,24 +1663,28 @@ func _spawn_biome_item(biome: BiomeData, position: Vector3, chunk_data: ChunkDat
 				chunk_data.objects.append(obj)
 
 				for sub_item in item.sub_items:
-					if not sub_item or randf() > sub_item.spawn_chance:
+					if not sub_item:
 						continue
-					var offset := Vector3(
-						randf_range(-sub_item.spawn_radius, sub_item.spawn_radius),
-						0.0,
-						randf_range(-sub_item.spawn_radius, sub_item.spawn_radius)
-					)
-					var sub_pos := position + offset
-					sub_pos.y = get_terrain_height(sub_pos.x, sub_pos.z) + sub_item.height_offset
-					var sub_variant := get_random_variant(sub_item.variants)
-					if sub_variant and sub_variant.scene:
-						var sub_obj := sub_variant.scene.instantiate()
-						sub_obj.position = sub_pos
-						sub_obj.rotation.y = randf_range(0, TAU)
-						var sub_s := randf_range(sub_item.min_scale, sub_item.max_scale)
-						sub_obj.scale = Vector3(sub_s, sub_s, sub_s)
-						add_child(sub_obj)
-						chunk_data.objects.append(sub_obj)
+					var count := sub_item.spawn_count
+					for _i in count:
+						if randf() > sub_item.spawn_chance:
+							continue
+						var offset := Vector3(
+							randf_range(-sub_item.spawn_radius, sub_item.spawn_radius),
+							0.0,
+							randf_range(-sub_item.spawn_radius, sub_item.spawn_radius)
+						)
+						var sub_pos := position + offset
+						sub_pos.y = get_terrain_height(sub_pos.x, sub_pos.z) + sub_item.height_offset
+						var sub_variant := get_random_variant(sub_item.variants)
+						if sub_variant and sub_variant.scene:
+							var sub_obj := sub_variant.scene.instantiate()
+							sub_obj.position = sub_pos
+							sub_obj.rotation.y = randf_range(0, TAU)
+							var sub_s := randf_range(sub_item.min_scale, sub_item.max_scale)
+							sub_obj.scale = Vector3(sub_s, sub_s, sub_s)
+							add_child(sub_obj)
+							chunk_data.objects.append(sub_obj)
 			return
 		roll -= item.spawn_chance
 

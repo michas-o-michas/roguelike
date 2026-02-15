@@ -5,7 +5,7 @@ extends Control
 @export var delay_before_hide: float = 1.5 ## Tempo em segundos para manter a tela visível após "Pronto!" antes de sumir
 
 @onready var loading_label = $VBoxContainer/LoadingLabel
-@onready var progress_bar = $VBoxContainer/ProgressBar
+@onready var progress_bar = $VBoxContainer/TextureProgressBar/ProgressBar
 
 var world_generator: Node = null
 var game_manager: Node = null
@@ -77,7 +77,7 @@ func _on_generator_progress(percent: float, stage: int, message: String):
 func _on_world_generation_complete():
 	update_progress(100.0, "Mundo gerado!")
 	await get_tree().create_timer(delay_before_hide).timeout
-	hide_loading()
+	#hide_loading()
 
 func monitor_loading():
 	# Fallback: monitoramento manual se sinais não estiverem conectados

@@ -1,18 +1,15 @@
 # weapon_handler.gd
 # Attach diretamente no seu Player (CharacterBody3D).
-# Gerencia: arma equipada, ataques melee, projétis e efeitos.
+# Gerencia: arma equipada, ataques melee (por ÁREA — estilo roguelike), projéteis e efeitos.
+#
+# Melee: usa um "arco" na frente do personagem (overlap), não RayCast — mais perdoável
+# e combina melhor com jogos de ação/roguelike. Mineração continua opcional com RayCast.
 #
 # Como usar:
 #   1. Seleciona o Player no editor
 #   2. Attach script > seleciona weapon_handler.gd
-#   3. No Inspector, arrasta o RayCast3D que você já tem no campo "attack_raycast"
-#   4. Equipa uma arma via código:
-#        var sword = preload("res://items/weapons/iron_sword.tres")
-#        $WeaponHandler.equip(sword)
-#
-# IMPORTANTE:
-#   Seu Player precisa ter um nó "WeaponHandler" ou você pode dar extend
-#   diretamente no player. Abaixo vai como standalone (nó filho do Player).
+#   3. No Inspector: hand_marker = Marker3D da mão; attack_raycast = opcional (só mineração)
+#   4. Equipa uma arma via código: $WeaponHandler.equip(sword)
 
 extends Node3D
 
@@ -22,8 +19,15 @@ signal weapon_unequipped
 signal attack_hit(target: Node3D, damage: int)
 
 # ================= EXPORTS =================
-@export var attack_raycast: RayCast3D   # Arrasta o RayCast3D que você já tem no Player
-@export var hand_marker: Marker3D       # Arrasta o Marker3D que é o ponto da mão (veja abaixo como criar)
+@export var hand_marker: Marker3D       # Marker3D onde o modelo da arma aparece (ex: mão)
+
+@export_group("Melee (arco na frente — estilo roguelike)")
+@export var attack_area: Area3D = null            # AttackArea com CollisionShape3D — arraste aqui (prioridade)
+@export var melee_range: float = 2.0              # Usado só se attack_area estiver vazio
+@export var melee_half_extents: Vector3 = Vector3(0.7, 0.5, 0.6)  # Idem: fallback em código
+
+@export_group("Mineração (opcional)")
+@export var attack_raycast: RayCast3D = null      # Só para minerar: mirar em rocha/árvore (deixe vazio se não usar)
 
 # ================= ESTADO =================
 var equipped_weapon: Weapon = null
@@ -43,9 +47,10 @@ var is_swinging: bool = false
 
 # ================= INICIALIZAÇÃO =================
 func _ready():
-	# Garante que o raycast existe
-	if attack_raycast == null:
-		push_warning("WeaponHandler: RayCast3D não assignado no Inspector!")
+	if attack_area != null:
+		attack_area.monitoring = true
+		# Garanta que o AttackArea: collision_mask inclui a layer dos inimigos
+	pass
 
 # ================= EQUIPAR / DESEQUIPAR =================
 
@@ -165,45 +170,84 @@ func _update_swing(delta: float) -> void:
 			var ease_t = 1.0 - pow(1.0 - t, 4.0)
 			weapon_model.rotation_degrees.z = swing_angle * (1.0 - ease_t)
 
-# ================= MELEE =================
+# ================= MELEE (por área — estilo roguelike) =================
 
 func _attack_melee() -> void:
 	_start_swing()
 
-	if attack_raycast == null:
-		return
+	# Hitbox em arco na frente do personagem (não depende de mira com RayCast)
+	var hit_targets = _get_melee_overlap_targets()
+	for target in hit_targets:
+		if is_instance_valid(target) and _is_enemy(target):
+			_apply_damage(target)
+			_apply_melee_effect(target)
 
-	# Força o raycast a atualizar agora (pra pegar colisão atual)
-	attack_raycast.force_raycast_update()
+	# Mineração: opcional, só se tiver RayCast (mirar em rocha/árvore)
+	if equipped_weapon.can_mine() and attack_raycast != null:
+		attack_raycast.force_raycast_update()
+		if attack_raycast.is_colliding():
+			var collider = attack_raycast.get_collider()
+			if collider != null and collider.is_in_group("minable"):
+				_try_mine_target(collider)
 
-	if not attack_raycast.is_colliding():
-		# Não acertou nada — mas pode estar minerando
-		if equipped_weapon.can_mine():
-			_try_mine()
-		return
+## True se o nó é considerado inimigo (grupo "enemy" ou "enemies" — lobo usa "enemy")
+func _is_enemy(node: Node) -> bool:
+	return node.is_in_group("enemy") or node.is_in_group("enemies")
 
-	var target = attack_raycast.get_collider()
+## Retorna lista de corpos na área de melee (inimigos no "arco" na frente do player)
+## Se attack_area estiver atribuído, usa get_overlapping_bodies(); senão usa hitbox em código.
+func _get_melee_overlap_targets() -> Array:
+	# Prioridade: Area3D (AttackArea) que você ajustou no editor
+	if attack_area != null:
+		var targets: Array = []
+		for body in attack_area.get_overlapping_bodies():
+			if is_instance_valid(body) and _is_enemy(body):
+				targets.append(body)
+		return targets
 
-	# --- Mineração (bloco/recurso no mundo) ---
-	if target.is_in_group("minable") and equipped_weapon.can_mine():
-		_try_mine_target(target)
-		return
+	# Fallback: hitbox gerado em código (quando não tem AttackArea na cena)
+	var player = get_parent() as Node3D
+	if player == null:
+		return []
 
-	# --- Combate (inimigo) ---
-	if target.is_in_group("enemies"):
-		_apply_damage(target)
-		_apply_melee_effect(target)
+	var space_state = get_world_3d().direct_space_state
+	if space_state == null:
+		return []
+
+	var forward = -player.global_transform.basis.z
+	forward.y = 0.0
+	forward = forward.normalized()
+	if forward.length_squared() < 0.01:
+		forward = -player.global_transform.basis.z.normalized()
+
+	var origin = player.global_position + Vector3(0.0, 1.0, 0.0) + forward * melee_range
+	var basis := Basis.looking_at(forward, Vector3.UP)
+	var shape_transform := Transform3D(basis, origin)
+
+	var box := BoxShape3D.new()
+	box.size = melee_half_extents * 2.0
+
+	var params := PhysicsShapeQueryParameters3D.new()
+	params.shape = box
+	params.transform = shape_transform
+	if player is PhysicsBody3D:
+		params.exclude = [player.get_rid()]
+
+	var results = space_state.intersect_shape(params)
+	var targets: Array = []
+	for dict in results:
+		var collider = dict.get("collider", null)
+		if collider != null and _is_enemy(collider):
+			targets.append(collider)
+	return targets
 
 ## Aplica dano ao inimigo
 func _apply_damage(target: Node3D) -> void:
 	var damage = equipped_weapon.damage
-
-	# Direção do dano: do player pra o inimigo (usado pra knockback)
 	var player = get_parent()
-	var damage_dir = (target.global_position - player.global_position).normalized()
 
 	if target.has_method("take_damage"):
-		target.take_damage(damage, damage_dir)
+		target.take_damage(damage, player)
 		emit_signal("attack_hit", target, damage)
 
 ## Aplica efeitos específicos do ataque melee (stun, knockback, etc.)
@@ -227,22 +271,26 @@ func _apply_melee_effect(target: Node3D) -> void:
 	# --- Efeitos visuais (partículas) ---
 	_spawn_hit_effect(target.global_position)
 
-## Dano em área ao redor do ponto de impacto
+## Dano em área ao redor do ponto de impacto (inimigos no raio)
 func _apply_aoe_damage(center: Vector3) -> void:
-	var aoe_radius = 3.0
-	var aoe_damage = int(equipped_weapon.damage * 0.5)  # 50% do dano principal
+	var aoe_radius := 3.0
+	var aoe_damage := int(equipped_weapon.damage * 0.5)  # 50% do dano principal
 
-	# Pega todos os inimigos na área usando ShapeCast ou overlap
-	var space_state = get_viewport().get_world_3d().direct_space_state
-	var query = PhysicsPointQueryParameters3D.new()
-	query.position = center
-	query.collision_mask = 0b0010  # Ajuste o layer dos inimigos aqui
+	var space_state = get_world_3d().direct_space_state
+	if space_state == null:
+		return
+	var sphere := SphereShape3D.new()
+	sphere.radius = aoe_radius
+	var params := PhysicsShapeQueryParameters3D.new()
+	params.shape = sphere
+	params.transform = Transform3D(Basis.IDENTITY, center)
 
-	var results = space_state.query_point(query)
-	for result in results:
-		var target = result["collider"]
-		if target.is_in_group("enemies") and target.has_method("take_damage"):
-			target.take_damage(aoe_damage)
+	var player = get_parent()
+	var results = space_state.intersect_shape(params)
+	for dict in results:
+		var target = dict.get("collider", null)
+		if target != null and _is_enemy(target) and target.has_method("take_damage"):
+			target.take_damage(aoe_damage, player)
 
 # ================= MINERAÇÃO =================
 

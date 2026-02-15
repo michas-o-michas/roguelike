@@ -5,6 +5,7 @@ class_name SubBiomeItem
 
 @export_group("Spawn")
 @export_range(0.0, 1.0) var spawn_chance: float = 0.5
+@export_range(1, 20) var spawn_count: int = 1 ## Quantos sub-itens ao redor (ex: flores juntas)
 @export var spawn_radius: float = 2.0
 @export var height_offset: float = 0.05
 

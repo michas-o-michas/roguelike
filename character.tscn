@@ -1,5 +1,7 @@
 [gd_scene format=4 uid="uid://dxn3hgesuxuvx"]
 
+[ext_resource type="PackedScene" uid="uid://r0yorigm607u" path="res://Standing Melee Attack Downward.fbx" id="1_glpr6"]
+
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_33u3n"]
 resource_name = "Hair"
 vertex_color_use_as_albedo = true
@@ -7492,3 +7494,6 @@ skeleton = NodePath("..")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1865095821]
 libraries/ = SubResource("AnimationLibrary_6d5r2")
+
+[node name="Standing Melee Attack Downward" parent="." unique_id=126597991 instance=ExtResource("1_glpr6")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2112033, 0, 2.918459)
