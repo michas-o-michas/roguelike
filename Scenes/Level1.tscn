@@ -9,6 +9,7 @@
 [ext_resource type="Resource" uid="uid://ddifpics0l6m5" path="res://world_generator_v2/biomes/BiomeData/montanha_rochosa.tres" id="5_8d4ee"]
 [ext_resource type="Script" uid="uid://dh8cw2d6nnl6u" path="res://Scenes/fps-test.gd" id="5_efk68"]
 [ext_resource type="Script" uid="uid://cckc1eka3ujni" path="res://world_generator_v2/poi_data.gd" id="6_rarx8"]
+[ext_resource type="ArrayMesh" uid="uid://crdvmf8j8fnk5" path="res://Assets/teste/grama2.tres" id="7_03od6"]
 [ext_resource type="Resource" uid="uid://bqpqu6d4gt3re" path="res://world_generator_v2/POIData/temple.tres" id="7_wjxug"]
 [ext_resource type="Script" uid="uid://el3it5rlbpge" path="res://world_generator_v2/animal_spawner_data.gd" id="9_3la1u"]
 [ext_resource type="Resource" uid="uid://ps0uvoii2yph" path="res://world_generator_v2/Spawner/wolf_spawner.tres" id="10_c5xim"]
@@ -30,7 +31,7 @@ script/source = "extends Label
 @export var node_b: Node3D
 @export var label: Label
 
-func _process(delta):
+func _process(_delta):
 	if node_a and node_b:
 		var distancia_y = abs(node_a.global_position.y - node_b.global_position.y)
 
@@ -71,6 +72,12 @@ rock_start_height = 60.0
 rock_thickness = 40.0
 snow_start_height = 80.0
 biomes = Array[ExtResource("2_rxb08")]([ExtResource("4_kq4yt"), ExtResource("3_kq4yt"), ExtResource("5_8d4ee")])
+grass_mesh = ExtResource("7_03od6")
+grass_circle_radius = 100.0
+grass_circle_count = 5000
+grass_min_scale = 1.0
+grass_max_scale = 1.0
+water_size = 1000000.0
 poi_check_interval = 1.0
 poi_min_spacing = 1.0
 poi_per_area_chance = 1.0

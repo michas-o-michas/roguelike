@@ -7,7 +7,6 @@
 [ext_resource type="PackedScene" uid="uid://k5kw063o8n6i" path="res://Scenes/UI/hotbar.tscn" id="6_2hs0m"]
 [ext_resource type="AudioStream" uid="uid://b3ta1gunljg3b" path="res://Assets/sounds/WASD Sound Grass Run 06.wav" id="6_od3ui"]
 [ext_resource type="Script" uid="uid://dlpnngrlkw3a5" path="res://Scripts/player/weapon_handler.gd" id="8_dw050"]
-[ext_resource type="PackedScene" uid="uid://cv7xrvawqq1pt" path="res://Scenes/sword.tscn" id="8_od3ui"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_4flbx"]
 radius = 0.2915039
@@ -7263,9 +7262,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.50008714, -0.7505561)
 [node name="AttackPoint" type="Marker3D" parent="Camera3D" unique_id=1274675329]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.50008714, -0.74833083)
 
-[node name="HandMarker" type="Marker3D" parent="Camera3D" unique_id=1806334939]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.40712833, -0.4052465, -0.859625)
-
 [node name="UI" parent="." unique_id=704400542 instance=ExtResource("5_sweqy")]
 
 [node name="InventoryUi" parent="UI" unique_id=361916822 instance=ExtResource("5_1jxqw")]
@@ -7621,13 +7617,10 @@ mesh = SubResource("ArrayMesh_x3vf3")
 skin = SubResource("Skin_apopc")
 skeleton = NodePath("..")
 
-[node name="BoneAttachment3D" type="BoneAttachment3D" parent="Character/CharacterArmature/Skeleton3D" unique_id=985645510]
+[node name="HandMarker" type="BoneAttachment3D" parent="Character/CharacterArmature/Skeleton3D" unique_id=985645510]
 transform = Transform3D(-0.6774611, 0.6071457, -0.4152351, -0.38546997, -0.7738366, -0.50258297, -0.62646526, -0.18041974, 0.7582805, -0.0010836932, -0.010421928, 0.015018262)
 bone_name = "Fist1.R"
 bone_idx = 24
-
-[node name="Sword" parent="Character/CharacterArmature/Skeleton3D/BoneAttachment3D" unique_id=1113955345 instance=ExtResource("8_od3ui")]
-transform = Transform3D(0.0030931667, 0.0017565701, -0.004831851, -0.0043427306, 0.0039109965, -0.0013582467, 0.002751916, 0.0041974513, 0.0032876125, 0.001967221, 0.0051719337, 0.0034223124)
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="Character" unique_id=68795366]
 libraries/ = SubResource("AnimationLibrary_5htga")

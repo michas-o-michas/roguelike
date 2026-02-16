@@ -22,7 +22,7 @@ func _ready():
 func _create_grass():
 	multimesh_instance = MultiMeshInstance3D.new()
 	add_child(multimesh_instance)
-
+	multimesh_instance.position.y = .9
 	var multimesh = MultiMesh.new()
 	multimesh.transform_format = MultiMesh.TRANSFORM_3D
 	multimesh.instance_count = grass_count
@@ -43,12 +43,20 @@ func _create_grass():
 			rng.randf_range(-area_size, area_size)
 		)
 
-		# rotação aleatória
-		transform.basis = Basis(Vector3.UP, rng.randf_range(0, TAU))
+			# rotação aleatória no Y
+		var rotation_y = Basis(Vector3.UP, rng.randf_range(0, TAU))
 
-		# escala aleatória
+		# rotaciona -90° no X para levantar corretamente
+		var rotation_x = Basis(Vector3.RIGHT, deg_to_rad(0))
+
+		# combina rotações
+		transform.basis = rotation_y * rotation_x
+
+		# escala
 		var scale = rng.randf_range(min_scale, max_scale)
 		transform.basis = transform.basis.scaled(Vector3.ONE * scale)
+
+
 
 		multimesh.set_instance_transform(i, transform)
 

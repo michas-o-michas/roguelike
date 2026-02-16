@@ -1,15 +1,26 @@
 [gd_resource type="Resource" script_class="WorldTheme" format=3 uid="uid://bp18e2vqvo5do"]
 
+[ext_resource type="Material" uid="uid://c00adswmsap4c" path="res://material/gress/gress.tres" id="1_saork"]
 [ext_resource type="Script" uid="uid://c4pc3qiwssvlq" path="res://world_generator_v2/world_theme.gd" id="1_tk56k"]
+[ext_resource type="Material" uid="uid://oey6cifa5kh3" path="res://material/dusty-ground-gravel1-bl/dusty.tres" id="2_bwdr1"]
+[ext_resource type="Material" uid="uid://byjenyig8e8op" path="res://material/sand/sand.tres" id="2_wbdhd"]
+[ext_resource type="Material" uid="uid://7ld1lo8jmpi6" path="res://material/snow/snow.tres" id="4_defk5"]
+[ext_resource type="Material" uid="uid://dgvyixyvxvvwp" path="res://materials/Water.tres" id="6_defk5"]
 
 [resource]
 script = ExtResource("1_tk56k")
-liquid_color = Color(0, 0.38431373, 0.35686275, 0.92941177)
+water_material = ExtResource("6_defk5")
+liquid_color = Color(0, 0.38039216, 0.3529412, 1)
 use_custom_colors = true
 shallow_water_color = Color(0.2462565, 0.4466853, 0.71049106, 1)
 beach_color = Color(0.6137805, 0.5539315, 0.37856546, 1)
 grass_low_color = Color(0.283476, 0.47705537, 0.2441138, 1)
 grass_high_color = Color(0.152681, 0.29153875, 0.13457549, 1)
+use_terrain_textures = true
+material_sand = ExtResource("2_wbdhd")
+material_grass = ExtResource("1_saork")
+material_rock = ExtResource("2_bwdr1")
+material_snow = ExtResource("4_defk5")
 custom_mountain_level = 40.0
 enable_custom_fog = true
 enable_custom_lighting = true

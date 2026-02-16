@@ -18,7 +18,7 @@ func _ready():
 	# Atualizar valor inicial
 	_update_fill(health_component.current_health)
 
-func _process(delta):
+func _process(_delta):
 	if not health_component:
 		return
 
@@ -29,7 +29,7 @@ func _process(delta):
 
 
 
-func _on_health_changed(old_value: float, new_value: float):
+func _on_health_changed(_old_value: float, new_value: float):
 	_update_fill(new_value)
 
 func _update_fill(current_health: float):

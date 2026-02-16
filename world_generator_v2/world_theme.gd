@@ -7,7 +7,9 @@ class_name WorldTheme
 
 @export_group("🌊 Líquido")
 @export var liquid_type: LiquidType = LiquidType.WATER ## Tipo de líquido do mundo
-@export var liquid_color: Color = Color(0.15, 0.5, 0.8, 0.6) ## Cor do líquido
+## Se atribuído, a água usa este material (configura no inspector). Senão, usa shader/cores abaixo.
+@export var water_material: Material
+@export var liquid_color: Color = Color(0.15, 0.5, 0.8, 0.6) ## Cor do líquido (quando não usa water_material)
 @export var liquid_metallic: float = 0.8 ## Brilho metálico (0-1)
 @export var liquid_roughness: float = 0.05 ## Rugosidade (0-1)
 
@@ -30,6 +32,22 @@ enum LiquidType {
 @export var grass_high_color: Color = Color(0.28, 0.5, 0.25) ## Cor da grama alta/floresta
 @export var rock_color: Color = Color(0.5, 0.5, 0.5) ## Cor da rocha/montanha
 @export var snow_color: Color = Color(0.92, 0.92, 0.95) ## Cor da neve (picos altos)
+
+@export_group("🖼️ Terreno com Materiais")
+@export var use_terrain_textures: bool = false
+## Se true, usa materiais por camada; transições suaves por altura
+@export var material_sand: Material ## Areia/praia (abaixo de grass_level)
+@export var material_grass: Material ## Grama (entre praia e rocha)
+@export var material_rock: Material ## Rocha (altitudes médias/altas)
+@export var material_snow: Material ## Neve (picos)
+## Escala UV no shader (menor = mais repetido).
+@export var texture_scale: float = 0.05
+@export var transition_width: float = 6.0
+## Largura base da transição (unidades de altura). Maior = mais suave.
+@export var transition_softness: float = 2.0
+## 1=smoothstep, 2=mais suave (recomendado), 3=zona bem larga
+@export var transition_noise: float = 2.0
+## Ruído espacial (0=linha reta, 2=natural, 4=bastante irregular)
 
 @export_group("🌡️ Níveis de Altura")
 @export var use_custom_levels: bool = false ## Se false, usa níveis padrão do WorldGenerator

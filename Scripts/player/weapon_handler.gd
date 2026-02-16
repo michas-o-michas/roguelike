@@ -351,18 +351,18 @@ func _play_attack_sound() -> void:
 
 ## Instancia partículas no ponto de impacto
 ## Ajuste o caminho do .tres de partículas conforme seu projeto
-func _spawn_hit_effect(position: Vector3) -> void:
+func _spawn_hit_effect(pos: Vector3) -> void:
 	match equipped_weapon.effect:
 		Weapon.AttackEffect.SPARKS:
-			_spawn_particles(position, "res://effects/particles_sparks.tres")
+			_spawn_particles(pos, "res://effects/particles_sparks.tres")
 		Weapon.AttackEffect.DARK_AURA:
-			_spawn_particles(position, "res://effects/particles_dark.tres")
+			_spawn_particles(pos, "res://effects/particles_dark.tres")
 		Weapon.AttackEffect.STUN_LONG_AOE:
-			_spawn_particles(position, "res://effects/particles_shockwave.tres")
+			_spawn_particles(pos, "res://effects/particles_shockwave.tres")
 		Weapon.AttackEffect.MINE_EXPLODE:
-			_spawn_particles(position, "res://effects/particles_explosion.tres")
+			_spawn_particles(pos, "res://effects/particles_explosion.tres")
 
-func _spawn_particles(position: Vector3, particles_path: String) -> void:
+func _spawn_particles(pos: Vector3, particles_path: String) -> void:
 	# Verifica se o arquivo existe antes de tentar carregar
 	if not ResourceLoader.exists(particles_path):
 		return
@@ -373,7 +373,7 @@ func _spawn_particles(position: Vector3, particles_path: String) -> void:
 
 	var particles = particles_scene.instantiate()
 	get_tree().current_scene.add_child(particles)
-	particles.global_position = position
+	particles.global_position = pos
 
 	# Auto-remove após a animação terminar (ajuste o tempo se precisar)
 	var timer = Timer.new()

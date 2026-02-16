@@ -95,10 +95,24 @@ const TERRAIN_BOTTOM_SMOOTH_ZONE := 3.0
 @export var max_vegetation_points_per_chunk: int = 150 ## 0 = ilimitado; ~150 acelera muito o carregamento
 @export var enable_ambient_particles: bool = true ## Partículas ambientais (poeira/pólen) por chunk; descarregam com o chunk
 
+@export_subgroup("Grama MultiMesh (estilo Muck: círculo ao redor do jogador)")
+@export var enable_grass_multimesh: bool = true ## Grama em círculo ao redor do jogador, spawn gradual com fade-in
+@export var grass_mesh: Mesh = null ## Mesh da grama (ex.: res://gress.tres); vazio = desativa grama
+@export var grass_circle_radius: float = 18.0 ## Raio do círculo de grama ao redor do jogador
+@export var grass_circle_count: int = 2500 ## Número de tufos no pool (reutilizados ao andar)
+@export var grass_spawn_per_frame: int = 8 ## Quantos tufos novos por frame (spawn suave)
+@export var grass_with_animation: = true
+
+@export_range(0.3, 0.95, 0.05) var grass_spawn_min_ratio: float = 0.5 ## Grama nova só aparece entre este % e 100% do raio (evita spawn perto do jogador)
+@export var grass_min_scale: float = 2.0
+@export var grass_max_scale: float = 4.0
+@export var grass_wind_strength: float = 0.05
+@export var grass_wind_speed: float = 2.0
+@export var grass_max_height: float = 25.0 ## Não coloca grama acima desta altura
+
 @export_group("Água")
-@export var water_size: float = 2000.0
-@export var use_animated_water: bool = true
-@export var water_shader_path: String = "res://shaders/agua_animada.gdshader"
+@export var water_size: float = 10000.0
+## Plano fixo na origem (não segue o jogador). Tamanho em X e Z; 10000 = água “infinita”.
 
 @export_group("Pontos de Interesse (POIs)")
 @export var poi_check_interval: float = 300.0
@@ -165,7 +179,19 @@ var poi_manager: Node
 var spawner_manager: Node
 
 # Otimizações: Material compartilhado
-var shared_terrain_material: StandardMaterial3D
+var shared_terrain_material: Material
+# Grama MultiMesh: material com shader de vento (compartilhado)
+var _grass_wind_material: ShaderMaterial
+# Grama em círculo (estilo Muck): segue o jogador, spawn gradual
+var _grass_circle_mi: MultiMeshInstance3D
+# Posições de mundo de cada slot (para checar distância sem ler Transform3D)
+var _grass_positions: PackedVector3Array = PackedVector3Array()
+# Slots livres (escondidos, prontos para reposicionar)
+var _grass_free_slots: Array[int] = []
+# Última posição do jogador usada para reciclar (evita recalcular quando parado)
+var _grass_last_player_pos: Vector3 = Vector3(0, -9999, 0)
+# Fallback quando um material não tem textura (1x1 branco)
+var _terrain_white_fallback: Texture2D
 
 # Time-slicing: geração de terreno com budget de tempo
 var _terrain_build_queue: Array[Dictionary] = [] ## Fila interna de builds parciais
@@ -226,9 +252,7 @@ func _ready():
 	add_to_group("world_generator")
 
 	if use_shared_material:
-		shared_terrain_material = StandardMaterial3D.new()
-		shared_terrain_material.vertex_color_use_as_albedo = true
-		shared_terrain_material.roughness = 0.9
+		shared_terrain_material = _create_terrain_material()
 
 	if enable_water:
 		create_water()
@@ -419,7 +443,7 @@ func _dequeue_chunk() -> Vector2i:
 # LOOP PRINCIPAL (_process) — Time-budget driven
 # =============================================================================
 
-func _process(_delta):
+func _process(delta: float):
 	# Pós-carregamento: mundo infinito
 	if current_stage >= GenerationStage.COMPLETE:
 		if player:
@@ -430,6 +454,7 @@ func _process(_delta):
 				_unload_far_chunks(current_chunk)
 			if _chunk_queue.size() > 0:
 				_process_chunk_queue()
+			_process_grass_circle(delta)
 		_process_vegetation_queue()
 		_process_collision_queue()
 		return
@@ -454,12 +479,8 @@ func _process(_delta):
 	if not player:
 		return
 
-	if water_mesh and enable_water:
-		water_mesh.global_position.x = player.global_position.x
-		water_mesh.global_position.z = player.global_position.z
-
 	if enable_origin_rebase:
-		_tick_origin_rebase_when_idle(_delta)
+		_tick_origin_rebase_when_idle(delta)
 
 	var current_chunk = world_to_chunk(player.global_position)
 	if current_chunk != last_player_chunk:
@@ -1210,10 +1231,75 @@ func setup_noise():
 	temperature_noise.noise_type = FastNoiseLite.TYPE_PERLIN
 	temperature_noise.frequency = 0.012
 
-func create_water():
-	if not world_theme:
-		_log("⚠️ WorldTheme não configurado, usando água padrão")
+## Extrai a textura de albedo de um Material (StandardMaterial3D). Retorna null se não houver.
+func _get_albedo_texture_from_material(m: Material) -> Texture2D:
+	if m is StandardMaterial3D:
+		var std := m as StandardMaterial3D
+		if std.albedo_texture:
+			return std.albedo_texture
+	return null
 
+## Retorna textura de albedo do material ou fallback 1x1 branco (evita shader quebrado).
+func _get_terrain_layer_texture(m: Material) -> Texture2D:
+	var tex := _get_albedo_texture_from_material(m)
+	if tex:
+		return tex
+	if not _terrain_white_fallback:
+		var img := Image.create(1, 1, false, Image.FORMAT_RGBA8)
+		img.fill(Color.WHITE)
+		_terrain_white_fallback = ImageTexture.create_from_image(img)
+	return _terrain_white_fallback
+
+## Cria o material do terreno: com materiais por camada (se WorldTheme tiver) ou só cor por vértice.
+func _create_terrain_material() -> Material:
+	if world_theme and world_theme.use_terrain_textures:
+		var has_any := (
+			world_theme.material_sand != null or world_theme.material_grass != null
+			or world_theme.material_rock != null or world_theme.material_snow != null
+		)
+		if has_any:
+			var shader_path := "res://world_generator_v2/shader/terrain_textured.gdshader"
+			if not ResourceLoader.exists(shader_path):
+				shader_path = "res://shaders/terrain_textured.gdshader"
+			var shader_res := load(shader_path) as Shader
+			if shader_res:
+				var mat := ShaderMaterial.new()
+				mat.shader = shader_res
+				mat.set_shader_parameter("texture_sand", _get_terrain_layer_texture(world_theme.material_sand))
+				mat.set_shader_parameter("texture_grass", _get_terrain_layer_texture(world_theme.material_grass))
+				mat.set_shader_parameter("texture_rock", _get_terrain_layer_texture(world_theme.material_rock))
+				mat.set_shader_parameter("texture_snow", _get_terrain_layer_texture(world_theme.material_snow))
+				mat.set_shader_parameter("water_level", water_level)
+				mat.set_shader_parameter("beach_level", beach_level + 3.0)
+				mat.set_shader_parameter("grass_level", grass_level)
+				mat.set_shader_parameter("rock_start", rock_start_height)
+				mat.set_shader_parameter("rock_end", rock_start_height + rock_thickness)
+				var snow_start_val := (rock_start_height + rock_thickness) if snow_start_height < 0 else snow_start_height
+				mat.set_shader_parameter("snow_start", snow_start_val)
+				mat.set_shader_parameter("transition_width", maxf(world_theme.transition_width, 2.0))
+				var softness := 2.0
+				if "transition_softness" in world_theme:
+					softness = world_theme.transition_softness
+				var noise_amt := 2.0
+				if "transition_noise" in world_theme:
+					noise_amt = world_theme.transition_noise
+				mat.set_shader_parameter("transition_softness", clampf(softness, 0.5, 3.0))
+				mat.set_shader_parameter("transition_noise", clampf(noise_amt, 0.0, 5.0))
+				mat.set_shader_parameter("texture_scale_uv", world_theme.texture_scale if world_theme.texture_scale > 0 else 0.05)
+				mat.set_shader_parameter("use_vertex_cwolor_tint", true)
+				_log("🖼️ Terreno usando materiais do WorldTheme (transições suaves por altura)")
+				return mat
+			else:
+				push_warning("Shader de terreno não encontrado, usando cor por vértice.")
+		elif debug_log:
+			_log("⚠️ use_terrain_textures ativo mas nenhum material atribuído, usando cor por vértice")
+
+	var mat := StandardMaterial3D.new()
+	mat.vertex_color_use_as_albedo = true
+	mat.roughness = 0.9
+	return mat
+
+func create_water():
 	if world_theme and world_theme.liquid_type == WorldTheme.LiquidType.NONE:
 		return
 
@@ -1227,17 +1313,22 @@ func create_water():
 	var liquid_level := water_level
 	if world_theme and world_theme.use_custom_levels:
 		liquid_level = world_theme.custom_water_level
-	water_mesh.position.y = liquid_level
+	# Offset maior + sem receber sombras = sombras na água param de tremer
+	const WATER_VISUAL_OFFSET := 0.12
+	water_mesh.position = Vector3(0.0, liquid_level + WATER_VISUAL_OFFSET, 0.0)
 
-	if use_animated_water:
-		var shader_mat := create_animated_water_shader()
-		if shader_mat:
-			water_mesh.material_override = shader_mat
-		else:
-			water_mesh.material_override = create_simple_water_material()
+	var water_mat: Material = null
+	if world_theme and "water_material" in world_theme and world_theme.water_material:
+		water_mat = world_theme.water_material
 	else:
-		water_mesh.material_override = create_simple_water_material()
+		water_mat = load("res://materials/Water.tres") as Material
+	if water_mat:
+		water_mesh.material_override = water_mat
+	else:
+		push_warning("Material res://materials/Water.tres não encontrado; água sem aparência.")
 
+	# Não projetar sombra; receber sombras desativado no próprio shader da água (evita tremor)
+	water_mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(water_mesh)
 
 	var water_body := StaticBody3D.new()
@@ -1248,86 +1339,6 @@ func create_water():
 	water_collision.position.y = liquid_level - 0.25
 	water_body.add_child(water_collision)
 	add_child(water_body)
-
-func create_animated_water_shader() -> ShaderMaterial:
-	var shader: Shader = null
-
-	if water_shader_path != "" and ResourceLoader.exists(water_shader_path):
-		shader = load(water_shader_path)
-	if not shader and ResourceLoader.exists("res://world_generator_v2/shader/agua_animada.gdshader"):
-		shader = load("res://world_generator_v2/shader/agua_animada.gdshader")
-	if not shader:
-		shader = Shader.new()
-		shader.code = """
-shader_type spatial;
-render_mode blend_mix, depth_draw_opaque, cull_back;
-
-uniform vec4 water_color : source_color = vec4(0.15, 0.5, 0.8, 0.7);
-uniform float wave_speed : hint_range(0.0, 3.0) = 1.0;
-uniform float wave_height : hint_range(0.0, 1.0) = 0.2;
-uniform float metallic : hint_range(0.0, 1.0) = 0.8;
-uniform float roughness : hint_range(0.0, 1.0) = 0.05;
-
-float noise(vec2 p) {
-	return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
-}
-
-float smooth_noise(vec2 p) {
-	vec2 i = floor(p);
-	vec2 f = fract(p);
-	f = f * f * (3.0 - 2.0 * f);
-	float a = noise(i);
-	float b = noise(i + vec2(1.0, 0.0));
-	float c = noise(i + vec2(0.0, 1.0));
-	float d = noise(i + vec2(1.0, 1.0));
-	return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
-}
-
-void vertex() {
-	vec3 world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
-	vec2 uv = world_pos.xz * 0.1;
-	float wave1 = sin(uv.x * 2.0 + TIME * wave_speed + uv.y * 0.5) * 0.5;
-	float wave2 = smooth_noise(uv * 2.0 + TIME * wave_speed * 0.3) * 0.3;
-	float wave3 = smooth_noise(uv * 4.0 - TIME * wave_speed * 0.5) * 0.2;
-	VERTEX.y += (wave1 + wave2 + wave3) * wave_height;
-}
-
-void fragment() {
-	ALBEDO = water_color.rgb;
-	ALPHA = water_color.a;
-	METALLIC = metallic;
-	ROUGHNESS = roughness;
-}
-"""
-
-	var material := ShaderMaterial.new()
-	material.shader = shader
-
-	if world_theme:
-		material.set_shader_parameter("water_color", world_theme.liquid_color)
-		material.set_shader_parameter("metallic", world_theme.liquid_metallic)
-		material.set_shader_parameter("roughness", world_theme.liquid_roughness)
-
-	return material
-
-func create_simple_water_material() -> StandardMaterial3D:
-	var mat := StandardMaterial3D.new()
-	if world_theme:
-		mat.albedo_color = world_theme.liquid_color
-		mat.metallic = world_theme.liquid_metallic
-		mat.roughness = world_theme.liquid_roughness
-	else:
-		mat.albedo_color = Color(0.15, 0.5, 0.8, 0.6)
-		mat.metallic = 0.8
-		mat.roughness = 0.05
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.rim_enabled = true
-	mat.rim = 0.6
-	mat.rim_tint = 0.5
-	mat.clearcoat_enabled = true
-	mat.clearcoat = 0.5
-	mat.clearcoat_roughness = 0.1
-	return mat
 
 func get_liquid_name(type: WorldTheme.LiquidType) -> String:
 	match type:
@@ -1635,6 +1646,146 @@ func _create_chunk_vegetation(chunk_data: ChunkData, start_pos: Vector3):
 		particles.position = Vector3(center_x, center_y, center_z)
 		add_child(particles)
 		chunk_data.objects.append(particles)
+
+func _get_grass_wind_material() -> ShaderMaterial:
+	if _grass_wind_material == null and grass_mesh:
+		var shader := load("res://world_generator_v2/shader/grass_wind.gdshader") as Shader
+		if shader:
+			_grass_wind_material = ShaderMaterial.new()
+			_grass_wind_material.shader = shader
+			_grass_wind_material.set_shader_parameter("wind_strength", grass_wind_strength)
+			_grass_wind_material.set_shader_parameter("wind_speed", grass_wind_speed)
+			var grass_color := Color(0.25, 0.55, 0.25)
+			if world_theme:
+				grass_color = world_theme.grass_low_color
+			_grass_wind_material.set_shader_parameter("base_color", grass_color)
+			# Usar textura e cor do material do mesh da grama (cor natural da grama)
+			var tint := grass_color
+			var tex: Texture2D = null
+			if grass_mesh.get_surface_count() > 0:
+				var mat := grass_mesh.surface_get_material(0)
+				if mat:
+					tex = _get_albedo_texture_from_material(mat)
+					if mat is StandardMaterial3D:
+						tint = (mat as StandardMaterial3D).albedo_color
+			if tex:
+				_grass_wind_material.set_shader_parameter("albedo_texture", tex)
+			_grass_wind_material.set_shader_parameter("albedo_tint", tint)
+	return _grass_wind_material
+
+func _setup_grass_circle():
+	if not player or not grass_mesh or _grass_circle_mi != null:
+		return
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.instance_count = grass_circle_count
+	mm.mesh = grass_mesh
+
+	_grass_positions.resize(grass_circle_count)
+	_grass_free_slots.clear()
+
+	# Iniciar todos os slots escondidos; o preenchimento é gradual em _process_grass_circle
+	# (evita travar: antes fazia milhares de get_terrain_height em um único frame)
+	for i in grass_circle_count:
+		var tr := Transform3D()
+		tr.origin = Vector3(0, -1000, 0)
+		tr.basis = Basis().scaled(Vector3(0.001, 0.001, 0.001))
+		mm.set_instance_transform(i, tr)
+		_grass_positions[i] = Vector3(0, -1000, 0)
+		_grass_free_slots.append(i)
+
+	_grass_circle_mi = MultiMeshInstance3D.new()
+	_grass_circle_mi.multimesh = mm
+	if grass_with_animation:
+		var wind_mat := _get_grass_wind_material()
+		if wind_mat:
+			_grass_circle_mi.material_override = wind_mat
+	add_child(_grass_circle_mi)
+	_grass_circle_mi.position = Vector3.ZERO
+	_grass_last_player_pos = player.global_position
+
+func _process_grass_circle(_delta: float):
+	if not enable_grass_multimesh or not grass_mesh or not player:
+		return
+	if _grass_circle_mi == null:
+		_setup_grass_circle()
+	if _grass_circle_mi == null:
+		return
+
+	var mm: MultiMesh = _grass_circle_mi.multimesh
+	if mm == null:
+		return
+
+	var player_pos := player.global_position
+	var radius_sq := grass_circle_radius * grass_circle_radius
+
+	# --- FASE 1: Coletar slots que saíram do raio ---
+	# (Só comparação de distância, muito barato. Thread não vale: o custo pesado é
+	# get_terrain_height e set_instance_transform, que têm de rodar na main thread.)
+	for i in grass_circle_count:
+		var gp := _grass_positions[i]
+		if gp.y < -500.0:
+			continue  # Já está livre/escondido
+		var dx := gp.x - player_pos.x
+		var dz := gp.z - player_pos.z
+		if (dx * dx + dz * dz) > radius_sq:
+			# Saiu do círculo — esconder e marcar como livre
+			var tr := Transform3D()
+			tr.origin = Vector3(0, -1000, 0)
+			tr.basis = Basis().scaled(Vector3(0.001, 0.001, 0.001))
+			mm.set_instance_transform(i, tr)
+			_grass_positions[i] = Vector3(0, -1000, 0)
+			_grass_free_slots.append(i)
+
+	# --- FASE 2: Reposicionar slots livres na faixa externa (longe do jogador) ---
+	# Preferência para a frente; raio entre grass_spawn_min_ratio e 100% do raio
+	var spawned := 0
+	var max_tries_per_slot := 6
+	var forward_2d := Vector2(-player.global_transform.basis.z.x, -player.global_transform.basis.z.z)
+	if forward_2d.length_squared() < 0.01:
+		forward_2d = Vector2(1.0, 0.0)
+	else:
+		forward_2d = forward_2d.normalized()
+	var angle_fwd := atan2(forward_2d.y, forward_2d.x)
+	var r_min := grass_circle_radius * grass_spawn_min_ratio
+	var r_range := grass_circle_radius - r_min
+
+	while spawned < grass_spawn_per_frame and _grass_free_slots.size() > 0:
+		var slot: int = _grass_free_slots.pop_back()
+		var placed := false
+
+		for _try in max_tries_per_slot:
+			# 70% na frente, 30% em qualquer direção (garante achar terreno válido)
+			var angle: float
+			if randf() < 0.7:
+				angle = angle_fwd + randf_range(-PI / 2.0, PI / 2.0)
+			else:
+				angle = randf() * TAU
+			var r := r_min + sqrt(randf()) * r_range
+			var wx := player_pos.x + cos(angle) * r
+			var wz := player_pos.z + sin(angle) * r
+			var h := get_terrain_height(wx, wz)
+
+			if h <= water_level or h < beach_level + 1.0 or h >= grass_max_height:
+				continue
+
+			var tr := Transform3D()
+			tr.origin = Vector3(wx, h, wz)
+			tr.basis = Basis(Vector3.UP, randf() * TAU)
+			var s := randf_range(grass_min_scale, grass_max_scale)
+			tr.basis = tr.basis.scaled(Vector3(s, s, s))
+			mm.set_instance_transform(slot, tr)
+			_grass_positions[slot] = Vector3(wx, h, wz)
+			placed = true
+			break
+
+		if not placed:
+			_grass_free_slots.append(slot)
+		else:
+			spawned += 1
+
+	_grass_last_player_pos = player_pos
+
 
 func _spawn_biome_item(biome: BiomeData, position: Vector3, chunk_data: ChunkData):
 	# Um único item por posição para evitar árvores em cima de pedras etc.

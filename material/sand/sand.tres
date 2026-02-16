@@ -1,0 +1,14 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://byjenyig8e8op"]
+
+[ext_resource type="Texture2D" uid="uid://csu4jp53cb5mg" path="res://material/sand/GroundSand005_COL_1K.jpg" id="1_g1k0y"]
+[ext_resource type="Texture2D" uid="uid://bf6qlsq5illei" path="res://material/sand/GroundSand005_AO_1K.jpg" id="2_xrmme"]
+[ext_resource type="Texture2D" uid="uid://cam3ua3xdu14y" path="res://material/sand/GroundSand005_NRM_1K.jpg" id="3_pas7h"]
+[ext_resource type="Texture2D" uid="uid://dkod7vefvyvvj" path="res://material/sand/GroundSand005_BUMP_1K.jpg" id="4_s25yi"]
+
+[resource]
+albedo_texture = ExtResource("1_g1k0y")
+roughness_texture = ExtResource("4_s25yi")
+normal_enabled = true
+normal_texture = ExtResource("3_pas7h")
+ao_enabled = true
+ao_texture = ExtResource("2_xrmme")
