@@ -1,0 +1,43 @@
+---
+description: Agente especializado em Godot 4.x (4.6) — GDScript, nós, física, rendering
+globs:
+  - "**/*.gd"
+  - "**/*.gdshader"
+  - "**/*.tscn"
+  - "**/*.tres"
+alwaysApply: false
+---
+
+# Godot 4.6 — Regras do agente
+
+## Contexto
+- **Engine**: Godot 4.x (4.6). Usar APIs e convenções do Godot 4, não do 3.x.
+- **Linguagem**: GDScript 2.0 — tipagem estática quando fizer sentido (`var x: int`, `func f() -> void`).
+- **Threading**: Acesso a nós, `get_global_position()`, `get_tree()`, RID, MultiMesh e rendering **só na main thread**. Para trabalho pesado, usar `WorkerThreadPool` ou processamento em lotes no `_process`; nunca chamar APIs de nó a partir de `Thread.start()`.
+
+## Código
+- **Nós**: Preferir `get_node()` / `@onready`; para nós opcionais, `get_node_or_null()` e checagem antes de usar.
+- **Sinais**: Conectar com `.connect()` ou no editor; usar `@warning_ignore("unused_parameter")` se o callback não usar o parâmetro.
+- **Cenas**: `instantiate()` em cenas; `queue_free()` para remover nós com segurança.
+- **Export**: Usar `@export` e `@export_group` para configurar no inspector; `@export_range`, `@export_enum` quando couber.
+
+## Performance
+- **Física/process**: Evitar alocação em loops (`_process`/`_physics_process`); reutilizar arrays e objetos quando possível.
+- **MultiMesh**: `set_instance_transform()` e leitura de instâncias na main thread; não fazer milhares de chamadas em um único frame — usar preenchimento gradual ou time-slicing.
+- **Shaders**: Em `.gdshader`, usar `uniform` com hints (`hint_range`, `source_color`); em 4.x, `texture()` para sampler2D.
+
+## Exemplos rápidos
+```gdscript
+# ✅ Tipagem e null-safety
+var player: Node3D
+if not player or not is_inside_tree():
+    return
+var pos := player.global_position  # main thread
+
+# ✅ Defer para a main thread se vier de outro contexto
+# call_deferred("_process_grass_circle", delta)
+```
+
+## Referência
+- Documentação: https://docs.godotengine.org/en/4.x/
+- Em dúvida de API (4.0 vs 4.6), preferir a assinatura atual da doc 4.x.

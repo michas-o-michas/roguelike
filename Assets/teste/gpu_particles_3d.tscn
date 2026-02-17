@@ -1,0 +1,16 @@
+[gd_scene format=3 uid="uid://cd3lty0suvw8q"]
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_70mym"]
+gravity = Vector3(0, 0, 0)
+scale_min = 0.099999994
+scale_max = 0.19999999
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_qq0ct"]
+
+[node name="GPUParticles3D" type="GPUParticles3D" unique_id=2012369415]
+amount = 50
+lifetime = 5.79
+trail_enabled = true
+trail_lifetime = 1.0
+process_material = SubResource("ParticleProcessMaterial_70mym")
+draw_pass_1 = SubResource("PlaneMesh_qq0ct")

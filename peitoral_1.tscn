@@ -1,0 +1,5 @@
+[gd_scene format=3 uid="uid://de45rmrjjg70x"]
+
+[ext_resource type="PackedScene" uid="uid://be3uokotjcddy" path="res://Assets/Itens/peitoral_1.fbx" id="1_sdt6t"]
+
+[node name="peitoral_1" unique_id=556258703 instance=ExtResource("1_sdt6t")]

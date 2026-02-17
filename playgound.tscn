@@ -1,9 +1,10 @@
 [gd_scene format=4 uid="uid://ch0eejl2qm6lv"]
 
-[ext_resource type="PackedScene" uid="uid://chmt2wxe13a3o" path="res://Player/player.tscn" id="1_o1adr"]
 [ext_resource type="Script" uid="uid://d2chl4stsv18o" path="res://playgound.gd" id="1_xwb8w"]
 [ext_resource type="ArrayMesh" uid="uid://crdvmf8j8fnk5" path="res://Assets/teste/grama2.tres" id="2_pvwtc"]
 [ext_resource type="PackedScene" uid="uid://y7pgqj2m0epu" path="res://Assets/teste/grama/grass_02.glb" id="3_h02br"]
+[ext_resource type="PackedScene" uid="uid://chmt2wxe13a3o" path="res://Player/player.tscn" id="4_xwb8w"]
+[ext_resource type="PackedScene" uid="uid://nql47rn6v1pw" path="res://Scenes/Landingpad.tscn" id="5_qdibi"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_h02br"]
 sky_horizon_color = Color(0.53434706, 0.53197336, 0.6919441, 1)
@@ -31,10 +32,8 @@ glow_enabled = true
 data = PackedVector3Array(1, 0, 1, -1, 0, 1, 1, 0, -1, -1, 0, 1, -1, 0, -1, 1, 0, -1)
 
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_2i64y"]
-load_path = "res://.godot/imported/grass_01_0.png-a21c85644e0f8119ce6fbc648956df01.s3tc.ctex"
 
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_6jpt7"]
-load_path = "res://.godot/imported/grass_01_1.png-b08943851f7634cb7d9315709437dda7.s3tc.ctex"
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_b6mrh"]
 resource_name = "Material"
@@ -94,7 +93,7 @@ light_color = Color(1, 0.8784314, 0.81960785, 1)
 shadow_enabled = true
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1859175482]
-transform = Transform3D(100, 0, 0, 0, 100, 0, 0, 0, 100, -0.0026631355, -0.004686117, 0.0040299892)
+transform = Transform3D(1000, 0, 0, 0, 1000, 0, 0, 0, 1000, -0.0026631355, -0.004686117, 0.0040299892)
 mesh = SubResource("PlaneMesh_624p1")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="MeshInstance3D" unique_id=1168251287]
@@ -102,11 +101,14 @@ mesh = SubResource("PlaneMesh_624p1")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="MeshInstance3D/StaticBody3D" unique_id=773813371]
 shape = SubResource("ConcavePolygonShape3D_tprpm")
 
-[node name="Player" parent="." unique_id=267460793 instance=ExtResource("1_o1adr")]
-
 [node name="Grama" type="MeshInstance3D" parent="." unique_id=1281387467]
 transform = Transform3D(1, 0, 0, 0, 0.31684116, -0.94847864, 0, 0.94847864, 0.31684116, 0.3624022, 0.16201513, -1.9566237)
 mesh = SubResource("ArrayMesh_nyaa2")
 
 [node name="Sketchfab_Scene" parent="." unique_id=1590201832 instance=ExtResource("3_h02br")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.63826466, 0.07709188, -3.287671)
+
+[node name="Player" parent="." unique_id=267460793 instance=ExtResource("4_xwb8w")]
+
+[node name="Landingpad" parent="." unique_id=1535864988 instance=ExtResource("5_qdibi")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.3686876, 0, 0)

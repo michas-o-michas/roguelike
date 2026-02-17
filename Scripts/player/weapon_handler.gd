@@ -8,7 +8,7 @@
 # Como usar:
 #   1. Seleciona o Player no editor
 #   2. Attach script > seleciona weapon_handler.gd
-#   3. No Inspector: hand_marker = Marker3D da mão; attack_raycast = opcional (só mineração)
+#   3. No Inspector: hand_marker = nó da mão (ex: Character/CharacterArmature/Skeleton3D/HandMarker); attack_raycast = opcional
 #   4. Equipa uma arma via código: $WeaponHandler.equip(sword)
 
 extends Node3D
@@ -19,7 +19,8 @@ signal weapon_unequipped
 signal attack_hit(target: Node3D, damage: int)
 
 # ================= EXPORTS =================
-@export var hand_marker: Marker3D       # Marker3D onde o modelo da arma aparece (ex: mão)
+@export var hand_marker: Node3D  # Onde a arma aparece (ex: Character/CharacterArmature/Skeleton3D/HandMarker)
+@export var weapon_display_scale: float = 0.01  # Escala do modelo na mão (muitos .glb vêm gigantes; 0.01 = 1%)
 
 @export_group("Melee (arco na frente — estilo roguelike)")
 @export var attack_area: Area3D = null            # AttackArea com CollisionShape3D — arraste aqui (prioridade)
@@ -47,10 +48,12 @@ var is_swinging: bool = false
 
 # ================= INICIALIZAÇÃO =================
 func _ready():
+	if hand_marker == null:
+		hand_marker = get_node_or_null("../Character/CharacterArmature/Skeleton3D/HandMarker") as Node3D
+		if hand_marker == null:
+			push_warning("WeaponHandler: hand_marker não encontrado. Armas não aparecerão na mão.")
 	if attack_area != null:
 		attack_area.monitoring = true
-		# Garanta que o AttackArea: collision_mask inclui a layer dos inimigos
-	pass
 
 # ================= EQUIPAR / DESEQUIPAR =================
 
@@ -75,13 +78,14 @@ func unequip() -> void:
 
 ## Carrega o modelo 3D da arma no Marker3D (mão do player)
 func _load_weapon_model() -> void:
-	if equipped_weapon == null or hand_marker == null:
+	if equipped_weapon == null:
 		return
-
-	# A arma precisa ter um @export "model_scene: PackedScene" no weapon.gd
-	# apontando pra uma .tscn que contém o .glb
+	if hand_marker == null:
+		push_warning("WeaponHandler: hand_marker é null. Defina no Inspector (Character/.../HandMarker).")
+		return
 	if equipped_weapon.model_scene != null:
 		weapon_model = equipped_weapon.model_scene.instantiate()
+		weapon_model.scale = Vector3(weapon_display_scale, weapon_display_scale, weapon_display_scale)
 		hand_marker.add_child(weapon_model)
 	else:
 		push_warning("Arma '%s' não tem model_scene definido no .tres" % equipped_weapon.item_name)
@@ -122,6 +126,7 @@ func _try_attack() -> void:
 
 	# Seta o cooldown baseado na velocidade da arma
 	attack_cooldown_timer = equipped_weapon.attack_speed
+	print("attacando")
 
 	# Toca o som do ataque
 	_play_attack_sound()

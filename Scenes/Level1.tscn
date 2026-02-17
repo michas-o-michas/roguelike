@@ -20,6 +20,7 @@
 [ext_resource type="Texture2D" uid="uid://cx0y8t0wxeqpw" path="res://Skills/hp_level1.png" id="22_5nfnx"]
 [ext_resource type="PackedScene" uid="uid://dgj57rflji482" path="res://DayNightCycle/DayNightCycle.tscn" id="23_2qiau"]
 [ext_resource type="Texture2D" uid="uid://dgq5l3nv6gdqm" path="res://Skills/hp_level4.png" id="23_j3nt6"]
+[ext_resource type="PackedScene" uid="uid://jdklemiiq721" path="res://dungeon/scenes/dungeon_lv_1.tscn" id="24_384de"]
 [ext_resource type="AudioStream" uid="uid://b3m1kt2swv6po" path="res://Assets/sounds/day.wav" id="24_l5fjl"]
 [ext_resource type="AudioStream" uid="uid://dymr761r3u8p6" path="res://Assets/sounds/night.wav" id="25_txpnq"]
 [ext_resource type="AudioStream" uid="uid://dcobdymhcson2" path="res://Assets/sounds/street-corner-jazz-cafe-338559.mp3" id="26_r6o88"]
@@ -58,7 +59,9 @@ icon = ExtResource("23_j3nt6")
 bonus_health = 5
 metadata/_custom_type_script = "uid://cwbxmv6ud8e5u"
 
-[node name="Level1" type="Node3D" unique_id=1067751182]
+[node name="Main" type="Node3D" unique_id=2079712470]
+
+[node name="Level1" type="Node3D" parent="." unique_id=1067751182]
 script = ExtResource("1_rxb08")
 view_distance = 5
 world_theme = ExtResource("2_wjxug")
@@ -87,51 +90,54 @@ animal_spawners = Array[ExtResource("9_3la1u")]([ExtResource("10_c5xim")])
 player_scene = ExtResource("1_gxb1y")
 player_spawn_position = Vector3(0, 66, 0)
 
-[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=358278969]
+[node name="VBoxContainer" type="VBoxContainer" parent="Level1" unique_id=358278969]
 offset_right = 40.0
 offset_bottom = 40.0
 
-[node name="Label" type="Label" parent="VBoxContainer" unique_id=193483811]
+[node name="Label" type="Label" parent="Level1/VBoxContainer" unique_id=193483811]
 layout_mode = 2
 text = "000000"
 script = ExtResource("5_efk68")
 
-[node name="Label2" type="Label" parent="VBoxContainer" unique_id=1618899090 node_paths=PackedStringArray("node_a", "label")]
+[node name="Label2" type="Label" parent="Level1/VBoxContainer" unique_id=1618899090 node_paths=PackedStringArray("node_a", "label")]
 layout_mode = 2
 text = "000000"
 script = SubResource("GDScript_fh0sh")
 node_a = NodePath("../..")
 label = NodePath(".")
 
-[node name="Label3" type="Label" parent="VBoxContainer" unique_id=85887987 node_paths=PackedStringArray("node_a", "label")]
+[node name="Label3" type="Label" parent="Level1/VBoxContainer" unique_id=85887987 node_paths=PackedStringArray("node_a", "label")]
 layout_mode = 2
 text = "000000"
 script = SubResource("GDScript_fh0sh")
 node_a = NodePath("../..")
 label = NodePath(".")
 
-[node name="SkillManager" type="Node" parent="." unique_id=1525371097]
+[node name="SkillManager" type="Node" parent="Level1" unique_id=1525371097]
 script = ExtResource("18_fc4x2")
 common_skills = Array[ExtResource("19_r3dg4")]([ExtResource("20_k2w6b"), ExtResource("21_oqyyu")])
 rare_skills = Array[ExtResource("19_r3dg4")]([SubResource("Resource_ikiii"), SubResource("Resource_cbp6q")])
 epic_skills = Array[ExtResource("19_r3dg4")]([SubResource("Resource_26xuy")])
 
-[node name="DayCycle" type="AudioStreamPlayer2D" parent="." unique_id=1334289533]
+[node name="DayCycle" type="AudioStreamPlayer2D" parent="Level1" unique_id=1334289533]
 stream = ExtResource("24_l5fjl")
 volume_db = -25.336
 autoplay = true
 max_polyphony = 1294
 
-[node name="NightCycle" type="AudioStreamPlayer2D" parent="." unique_id=154092956]
+[node name="NightCycle" type="AudioStreamPlayer2D" parent="Level1" unique_id=154092956]
 stream = ExtResource("25_txpnq")
 volume_db = -12.169
 max_distance = 1293.55
 
-[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="." unique_id=1100434845]
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="Level1" unique_id=1100434845]
 stream = ExtResource("26_r6o88")
 volume_db = -20.756
 autoplay = true
 
-[node name="Day_Night" parent="." unique_id=606555801 instance=ExtResource("23_2qiau")]
+[node name="Day_Night" parent="Level1" unique_id=606555801 instance=ExtResource("23_2qiau")]
 visible = true
 dayLengthInSeconds = 300.0
+
+[node name="Dungeon_Lv1" parent="." unique_id=1654411826 instance=ExtResource("24_384de")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1000, 0)

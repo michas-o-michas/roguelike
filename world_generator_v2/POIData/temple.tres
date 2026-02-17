@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="POIData" format=3 uid="uid://bqpqu6d4gt3re"]
 
 [ext_resource type="Script" uid="uid://cckc1eka3ujni" path="res://world_generator_v2/poi_data.gd" id="1_14umt"]
-[ext_resource type="PackedScene" uid="uid://di60ofd0bfo7r" path="res://Assets/Temple/temple.tscn" id="1_860li"]
+[ext_resource type="PackedScene" uid="uid://di60ofd0bfo7r" path="res://dungeon/scenes/temple.tscn" id="1_860li"]
 
 [resource]
 script = ExtResource("1_14umt")

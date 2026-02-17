@@ -41,10 +41,7 @@ var jump_buffered := false
 @export var cam_pitch_min := -50.0
 @export var cam_pitch_max := 60.0
 
-@onready var camera: Camera3D = $Camera3D
 var rotation_x := 0.0
-var _camera_pos_smooth: Vector3 = Vector3.ZERO
-var _camera_pos_ready := false
 
 # ================= ATRIBUTOS =================
 var base_health := 100
@@ -75,10 +72,7 @@ func _ready():
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	add_to_group("player")
 	position.y = 100
-	var target := _get_camera_target_position()
-	_camera_pos_smooth = target
-	camera.position = target
-	_camera_pos_ready = true
+
 	if animation_tree:
 		animation_tree.active = true
 		set_animation("Idle")
@@ -128,14 +122,7 @@ func _get_camera_target_position() -> Vector3:
 func _get_pivot_global() -> Vector3:
 	return global_position + Vector3(0.0, cam_pivot_height, 0.0)
 
-func _process(delta):
-	var target_pos := _get_camera_target_position()
-	if _camera_pos_ready:
-		_camera_pos_smooth = _camera_pos_smooth.lerp(target_pos, cam_follow_speed * delta)
-	else:
-		_camera_pos_smooth = target_pos
-	camera.position = _camera_pos_smooth
-	camera.look_at(_get_pivot_global(), Vector3.UP)
+
 
 
 func _physics_process(delta):

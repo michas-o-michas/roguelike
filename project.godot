@@ -29,6 +29,10 @@ window/stretch/mode="canvas_items"
 window/stretch/aspect="ignore"
 window/vsync/vsync_mode=0
 
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/mixamo_animation_retargeter/plugin.cfg")
+
 [filesystem]
 
 import/blender/enabled=false
