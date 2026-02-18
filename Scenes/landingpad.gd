@@ -124,7 +124,7 @@ func _do_teleport(body: CharacterBody3D, target_pos: Vector3, do_fade_in: bool =
 	else:
 		body.global_position = target_pos
 		body.velocity = Vector3.ZERO
-	if do_fade_in and fade_duration > 0.0:
+	if do_fade_in:
 		var sf = get_node_or_null("/root/ScreenFade")
 		if sf:
 			sf.fade_in(fade_duration)

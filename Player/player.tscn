@@ -24,6 +24,7 @@
 [ext_resource type="Animation" uid="uid://nhksp0um8lmd" path="res://Assets/nunu-player/anim/swiming.tres" id="22_hshwv"]
 
 [sub_resource type="SeparationRayShape3D" id="SeparationRayShape3D_o28un"]
+length = 0.25932503
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_4flbx"]
 radius = 0.2915039
@@ -396,7 +397,7 @@ cam_distance = 3.0
 animation_tree_path = NodePath("Char/AnimationTree")
 
 [node name="CollisionShape3D2" type="CollisionShape3D" parent="." unique_id=1919645408]
-transform = Transform3D(-1, 0, -8.742278e-08, 6.299999e-08, 0.6933138, -0.72063583, 6.061141e-08, -0.72063583, -0.6933138, 0, 0.7952769, 0)
+transform = Transform3D(-1, 8.742276e-08, 0, 3.821371e-15, 4.371138e-08, -0.9999998, -8.742278e-08, -0.9999998, -4.371138e-08, 0, 0.18415904, -0.19195765)
 shape = SubResource("SeparationRayShape3D_o28un")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=2024708969]
