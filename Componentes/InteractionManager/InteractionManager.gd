@@ -25,7 +25,7 @@ func _do_raycast() -> void:
 					current_interactable.on_focus_exit()
 				current_interactable = found
 				current_interactable.on_focus_enter()
-			_show_prompt(found.interact_label)
+			_show_prompt(found.get_display_label())
 			return
 
 	# Nada encontrado

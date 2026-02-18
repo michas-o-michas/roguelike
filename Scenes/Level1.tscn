@@ -22,8 +22,10 @@
 [ext_resource type="Texture2D" uid="uid://dgq5l3nv6gdqm" path="res://Skills/hp_level4.png" id="23_j3nt6"]
 [ext_resource type="PackedScene" uid="uid://jdklemiiq721" path="res://dungeon/scenes/dungeon_lv_1.tscn" id="24_384de"]
 [ext_resource type="AudioStream" uid="uid://b3m1kt2swv6po" path="res://Assets/sounds/day.wav" id="24_l5fjl"]
+[ext_resource type="PackedScene" uid="uid://cy4p525k07au7" path="res://dungeon/scenes/dungeon_lv_2.tscn" id="25_bhaf5"]
 [ext_resource type="AudioStream" uid="uid://dymr761r3u8p6" path="res://Assets/sounds/night.wav" id="25_txpnq"]
 [ext_resource type="AudioStream" uid="uid://dcobdymhcson2" path="res://Assets/sounds/street-corner-jazz-cafe-338559.mp3" id="26_r6o88"]
+[ext_resource type="Script" path="res://Scenes/Level1_main.gd" id="27_main"]
 
 [sub_resource type="GDScript" id="GDScript_fh0sh"]
 script/source = "extends Label
@@ -60,6 +62,7 @@ bonus_health = 5
 metadata/_custom_type_script = "uid://cwbxmv6ud8e5u"
 
 [node name="Main" type="Node3D" unique_id=2079712470]
+script = ExtResource("27_main")
 
 [node name="Level1" type="Node3D" parent="." unique_id=1067751182]
 script = ExtResource("1_rxb08")
@@ -140,4 +143,7 @@ visible = true
 dayLengthInSeconds = 300.0
 
 [node name="Dungeon_Lv1" parent="." unique_id=1654411826 instance=ExtResource("24_384de")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1000, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 203.3359, -1.7163544, 0)
+
+[node name="Dungeon_Lv2" parent="." unique_id=545736727 instance=ExtResource("25_bhaf5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 657.98267, 0, 0)

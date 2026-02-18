@@ -67,6 +67,12 @@ var _attack_end_time := 0.0
 @export var creative_mode := false
 var flying := false
 
+## Teleporte: definido por pads/portais; aplicado no início do próximo _physics_process.
+var _pending_teleport: Vector3 = Vector3.INF
+
+func request_teleport(global_pos: Vector3) -> void:
+	_pending_teleport = global_pos
+
 
 func _ready():
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
@@ -122,10 +128,23 @@ func _get_camera_target_position() -> Vector3:
 func _get_pivot_global() -> Vector3:
 	return global_position + Vector3(0.0, cam_pivot_height, 0.0)
 
+## Usado pelo script ThirdPersonCamera.gd para posição suave em terceira pessoa.
+func get_camera_pivot_global() -> Vector3:
+	return _get_pivot_global()
+
+func get_camera_target_global_position() -> Vector3:
+	return global_position + transform.basis * _get_camera_target_position()
+
 
 
 
 func _physics_process(delta):
+	# Aplicar teleporte pendente antes de qualquer movimento (evita ser sobrescrito)
+	if _pending_teleport != Vector3.INF:
+		global_position = _pending_teleport
+		velocity = Vector3.ZERO
+		_pending_teleport = Vector3.INF
+		return
 
 	var input_dir = Input.get_vector("a", "d", "w", "s")
 	var direction = (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
@@ -137,6 +156,8 @@ func _physics_process(delta):
 		# Alterna voo com o botão de pulo
 		if Input.is_action_just_pressed("jump"):
 			flying = !flying
+
+
 
 		if flying:
 			var current_fly_speed = fly_speed
@@ -189,7 +210,8 @@ func _physics_process(delta):
 	if Input.is_action_just_pressed("jump"):
 		jump_buffered = true
 		jump_buffer_timer = jump_buffer_time
-		set_animation("Jump")
+		if not is_dashing:
+			set_animation("Jump")
 
 	if jump_buffered:
 		var can_jump := false
@@ -203,7 +225,8 @@ func _physics_process(delta):
 			velocity.y = jump_force
 			jump_buffered = false
 			jumps_left -= 1
-			set_animation("Jump")
+			if not is_dashing:
+				set_animation("Jump")
 
 	handle_dash(delta, direction)
 
@@ -218,12 +241,14 @@ func _physics_process(delta):
 			velocity.x = lerp(velocity.x, 0.0, used_deaccel * delta)
 			velocity.z = lerp(velocity.z, 0.0, used_deaccel * delta)
 
-	# Não sobrescrever animação durante o ataque
+	# Não sobrescrever animação durante o ataque nem durante o dash
 	if is_attacking:
 		if Time.get_ticks_msec() / 1000.0 >= _attack_end_time:
 			is_attacking = false
 	elif health <= 0:
 		set_animation("Death")
+	elif is_dashing:
+		set_animation("Dash")
 	elif not is_on_floor():
 		set_animation("Jump")
 	elif direction.length_squared() > 0.01:
@@ -257,6 +282,7 @@ func handle_dash(delta, direction):
 		return
 
 	if Input.is_action_just_pressed("dash") and dash_cooldown_timer <= 0:
+		set_animation("Dash")
 		if direction == Vector3.ZERO:
 			direction = -transform.basis.z
 

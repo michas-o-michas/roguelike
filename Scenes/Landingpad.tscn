@@ -1,7 +1,10 @@
 [gd_scene format=4 uid="uid://nql47rn6v1pw"]
 
 [ext_resource type="Script" uid="uid://dewi2o7s7oxbv" path="res://Scenes/landingpad.gd" id="1_qnt78"]
+[ext_resource type="AudioStream" uid="uid://dqp74q2g8kywh" path="res://Assets/sounds/teleport.mp3" id="2_7kcjg"]
 [ext_resource type="Texture2D" uid="uid://bb4vagcwrae7g" path="res://Assets/landingpad_large_0.png" id="2_41ns4"]
+[ext_resource type="PackedScene" uid="uid://dxgv1f6vhifpi" path="res://Particles/teleport_particles.tscn" id="3_41ns4"]
+[ext_resource type="AudioStream" uid="uid://c71etwlkqf5dd" path="res://Assets/sounds/hover.mp3" id="3_mq0wr"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_udiqf"]
 resource_name = "spacebits_texture"
@@ -54,8 +57,12 @@ viewport_path = NodePath("SubViewport")
 
 [node name="Landingpad" type="Node3D" unique_id=1535864988]
 script = ExtResource("1_qnt78")
-Type = null
-interact_label = null
+sound_teleport = ExtResource("2_7kcjg")
+sound_dungeon_enter = ExtResource("3_mq0wr")
+sound_dungeon_exit = ExtResource("3_mq0wr")
+particles_node = NodePath("Sprite3D")
+fade_duration = 0.5
+use_fade_on_teleport = true
 
 [node name="Area3D" type="Area3D" parent="." unique_id=1336000984]
 
@@ -91,9 +98,10 @@ grow_vertical = 2
 size_flags_horizontal = 4
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 4
-text = "Interação"
 
 [node name="Sprite3D" type="Sprite3D" parent="." unique_id=804447766]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8712054, 0)
 billboard = 2
 texture = SubResource("ViewportTexture_qnt78")
+
+[node name="TeleportParticles" parent="." unique_id=689301471 instance=ExtResource("3_41ns4")]

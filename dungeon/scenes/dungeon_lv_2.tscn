@@ -1,0 +1,55 @@
+[gd_scene format=3 uid="uid://cy4p525k07au7"]
+
+[ext_resource type="Script" uid="uid://brh6h7uclddsm" path="res://dungeon/scripts/room.gd" id="1_o5qb4"]
+[ext_resource type="PackedScene" uid="uid://nql47rn6v1pw" path="res://Scenes/Landingpad.tscn" id="2_4qm01"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_x8svo"]
+sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
+ground_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
+
+[sub_resource type="Sky" id="Sky_edknb"]
+sky_material = SubResource("ProceduralSkyMaterial_x8svo")
+
+[sub_resource type="Environment" id="Environment_twy6t"]
+background_mode = 2
+sky = SubResource("Sky_edknb")
+tonemap_mode = 2
+glow_enabled = true
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_fjt7r"]
+noise_type = 4
+frequency = 1.0
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_tyhg8"]
+noise = SubResource("FastNoiseLite_fjt7r")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_48ueg"]
+albedo_color = Color(0.43529412, 0.2901961, 0.13333334, 1)
+roughness_texture = SubResource("NoiseTexture2D_tyhg8")
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_56xut"]
+material = SubResource("StandardMaterial3D_48ueg")
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_x8svo"]
+points = PackedVector3Array(-1, 0, -1, -1, 0, 1, 1, 0, -1, 1, 0, 1)
+
+[node name="Dungeon_Lv1" type="Node3D" unique_id=1654411826]
+script = ExtResource("1_o5qb4")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=465325789]
+environment = SubResource("Environment_twy6t")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=49482982]
+transform = Transform3D(-0.8660254, -0.43301278, 0.25, 0, 0.49999997, 0.86602545, -0.50000006, 0.75, -0.43301266, 0, 0, 0)
+shadow_enabled = true
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=514850539]
+transform = Transform3D(300, 0, 0, 0, 300, 0, 0, 0, 300, 0.008608818, 0, -0.020428658)
+mesh = SubResource("PlaneMesh_56xut")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="MeshInstance3D" unique_id=1172977775]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshInstance3D/StaticBody3D" unique_id=866808267]
+shape = SubResource("ConvexPolygonShape3D_x8svo")
+
+[node name="Landingpad" parent="." unique_id=1535864988 instance=ExtResource("2_4qm01")]

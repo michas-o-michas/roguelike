@@ -12,6 +12,10 @@ var loading_screen_scene = preload("res://Scenes/LoadingScreen.tscn")
 var loading_screen: Control = null
 
 func _ready():
+	# Carrega uma imagem (logo, loading, etc.)
+	var tex = preload("uid://6gl80c43hdsd") as Texture2D
+	if ScreenFade:
+		ScreenFade.set_fade_texture(tex)
 	# Menu processa mesmo quando pausado
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	mouse_filter = Control.MOUSE_FILTER_STOP

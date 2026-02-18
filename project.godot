@@ -16,9 +16,12 @@ config/features=PackedStringArray("4.6", "Forward Plus")
 
 [autoload]
 
+DungeonManager="*res://dungeon/scripts/DungeonManager.gd"
 GameManager="*uid://bxu7l7ke3kn5x"
 InventoryManager="*uid://c2n0gd8g11e3u"
 CraftingManager="*uid://cpv77nj6xguny"
+ScreenFade="*res://Scenes/ScreenFade.gd"
+SoundManager="*res://Scenes/SoundManager.gd"
 
 [display]
 

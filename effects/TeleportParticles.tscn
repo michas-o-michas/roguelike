@@ -1,0 +1,33 @@
+[gd_scene load_steps=4 format=3 uid="uid://c8teleport_pad"]
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_teleport"]
+emission_shape = 1
+emission_sphere_radius = 0.8
+direction = Vector3(0, 1, 0)
+spread = 180.0
+initial_velocity_min = 0.5
+initial_velocity_max = 2.0
+gravity = Vector3(0, 2, 0)
+scale_min = 0.1
+scale_max = 0.3
+color = Color(0.4, 0.6, 1, 0.8)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_teleport"]
+transparency = 1
+albedo_color = Color(0.6, 0.8, 1, 0.7)
+emission_enabled = true
+emission = Color(0.5, 0.7, 1, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_teleport"]
+radius = 0.15
+height = 0.3
+
+[node name="TeleportParticles" type="Node3D"]
+
+[node name="GPUParticles3D" type="GPUParticles3D" parent="."]
+amount = 24
+lifetime = 0.6
+one_shot = true
+process_material = SubResource("ParticleProcessMaterial_teleport")
+draw_pass_1 = SubResource("SphereMesh_teleport")
+material_override = SubResource("StandardMaterial3D_teleport")
