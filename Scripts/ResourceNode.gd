@@ -18,5 +18,5 @@ func take_hit(damage):
 		die()
 
 func die():
-	GameManager.add_item(resource_id, drop_amount)
+	InventoryManager.add_item_by_id(resource_id, drop_amount)
 	queue_free()

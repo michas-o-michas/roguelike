@@ -82,7 +82,7 @@ var flee_timer: float = 0.0
 # ========================================
 
 func _ready():
-
+	add_to_group("enemy")
 	player = get_tree().get_first_node_in_group("player")
 	change_state(State.IDLE)
 

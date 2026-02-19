@@ -30,14 +30,13 @@ var currentDayState = 0
 var durationMultiplier = 1.0
 
 func _ready() -> void:
+	world_environment.add_to_group("world_environment_apply")
+	if SettingsManager:
+		SettingsManager.apply_environment_to_scene()
 	_change_duration()
-	
 	_set_sun()
-	
 	_set_current_state()
-	
 	_refresh_day_state()
-	
 	_day_change_animation()
 
 func _change_duration():

@@ -1,0 +1,10 @@
+[gd_scene format=3 uid="uid://bcm851fypk54"]
+
+[ext_resource type="Script" uid="uid://deysj0vsbbyh8" path="res://Scripts/PropWithVariants.gd" id="1_obmyt"]
+[ext_resource type="Resource" uid="uid://b18pusiqjbewa" path="res://Assets/Trees/Resources/LogVariants.tres" id="2_rginy"]
+
+[node name="Tronco" type="Node3D" unique_id=1615581621]
+
+[node name="VariantLoader" type="Node" parent="." unique_id=1432723193]
+script = ExtResource("1_obmyt")
+variant_set = ExtResource("2_rginy")

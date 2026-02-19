@@ -34,34 +34,16 @@ func init_coins(amount: int) -> void:
 
 # ================= INICIALIZAÇÃO =================
 func _ready():
-	# FORÇA o resize mesmo que já tenha valor anterior
 	slots.clear()
 	slots.resize(max_slots)
-	print("InventoryManager inicializado com ", max_slots, " slots")
-	
-	# --- ITENS DE TESTE (remova depois) ---
-	print("=== Adicionando itens de teste ao inventário ===")
+	# Itens de teste para criar receitas e testar craft (remova quando não precisar)
 	const WOOD = preload("res://items/wood.tres")
-	slots[13] = { "item": WOOD, "amount": 30 }
-
-	const stone = preload("res://items/stone.tres")
-	slots[11] = { "item": stone, "amount": 30 }
-
-	const WOOD_SWORD = preload("uid://dty3m422lyon1")
-	
-	slots[12] = { "item": WOOD_SWORD, "amount": 1 }
-	print("Espada adicionada no slot 12")
-	
-	print("Total de slots ocupados: ", _count_occupied_slots())
-	
-	# Debug: mostra conteúdo dos slots
-	for i in range(15):
-		var slot = slots[i]
-		if slot != null:
-			print("  Slot ", i, ": ", slot["item"].item_name, " x", slot["amount"])
-	
+	const STONE = preload("res://items/stone.tres")
+	const WOOD_SWORD = preload("res://items/wood_sword.tres")
+	slots[0] = { "item": WOOD, "amount": 20 }
+	slots[1] = { "item": STONE, "amount": 20 }
+	slots[2] = { "item": WOOD_SWORD, "amount": 1 }
 	emit_signal("inventory_changed")
-	print("===========================================")
 
 
 
@@ -177,6 +159,61 @@ func get_item_count(item: Item) -> int:
 		if slot != null and slot["item"].resource_path == item.resource_path:
 			total += slot["amount"]
 	return total
+
+# ================= API POR ID (usa CraftingManager.item_registry) =================
+
+## Adiciona item por id (ex.: "wood", "stone"). Retorna false se id não existir ou inventário cheio.
+func add_item_by_id(id: String, amount: int) -> bool:
+	if not CraftingManager:
+		return false
+	var item: Item = CraftingManager.get_item_by_id(id)
+	if not item:
+		return false
+	return add_item(item, amount)
+
+## Remove quantidade do item por id. Retorna false se não tiver quantidade suficiente.
+func remove_item_by_id(id: String, amount: int) -> bool:
+	if not CraftingManager:
+		return false
+	var item: Item = CraftingManager.get_item_by_id(id)
+	if not item:
+		return false
+	return remove_item(item, amount)
+
+## Verifica se tem pelo menos [amount] do item por id.
+func has_item_by_id(id: String, amount: int = 1) -> bool:
+	if not CraftingManager:
+		return false
+	var item: Item = CraftingManager.get_item_by_id(id)
+	if not item:
+		return false
+	return has_item(item, amount)
+
+## Retorna a quantidade total do item por id no inventário.
+func get_item_count_by_id(id: String) -> int:
+	if not CraftingManager:
+		return 0
+	var item: Item = CraftingManager.get_item_by_id(id)
+	if not item:
+		return 0
+	return get_item_count(item)
+
+## Retorna dicionário id (string) → quantidade total. Útil para UI legada (ex.: UIManager).
+func get_all_item_counts() -> Dictionary:
+	var counts: Dictionary = {}
+	if not CraftingManager:
+		return counts
+	for slot in slots:
+		if slot == null:
+			continue
+		var item: Item = slot["item"]
+		var id: String = CraftingManager.get_id_for_item(item)
+		if id.is_empty():
+			id = item.resource_path
+		if not counts.has(id):
+			counts[id] = 0
+		counts[id] += slot["amount"]
+	return counts
 
 # ================= UTILITÁRIOS =================
 

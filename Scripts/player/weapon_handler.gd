@@ -51,9 +51,23 @@ func _ready():
 	if hand_marker == null:
 		hand_marker = get_node_or_null("../Character/CharacterArmature/Skeleton3D/HandMarker") as Node3D
 		if hand_marker == null:
+			hand_marker = get_node_or_null("../Char/Skeleton/BoneAttachment3D/hand_marker") as Node3D
+		if hand_marker == null:
 			push_warning("WeaponHandler: hand_marker não encontrado. Armas não aparecerão na mão.")
+	# AttackArea é irmão do WeaponHandler (filho do player); pega automaticamente se não atribuído
+	if attack_area == null:
+		attack_area = get_parent().get_node_or_null("AttackArea") as Area3D
 	if attack_area != null:
 		attack_area.monitoring = true
+		attack_area.collision_mask = 1  # layer 1 = personagens/inimigos
+	# Equipa arma padrão ao iniciar (ex.: wood_sword) para poder bater logo
+	var ws = get_tree().root.get_node_or_null("WeaponSystem")
+	if equipped_weapon == null and ws != null:
+		var default_id: String = ws.get_default_weapon_id()
+		if not default_id.is_empty():
+			var w: Weapon = ws.get_weapon(default_id)
+			if w:
+				equip(w)
 
 # ================= EQUIPAR / DESEQUIPAR =================
 
@@ -180,12 +194,17 @@ func _update_swing(delta: float) -> void:
 func _attack_melee() -> void:
 	_start_swing()
 
-	# Hitbox em arco na frente do personagem (não depende de mira com RayCast)
 	var hit_targets = _get_melee_overlap_targets()
 	for target in hit_targets:
-		if is_instance_valid(target) and _is_enemy(target):
+		if not is_instance_valid(target):
+			continue
+		if _is_enemy(target):
 			_apply_damage(target)
 			_apply_melee_effect(target)
+		elif target.has_method("take_hit"):
+			# Árvore, pedra, etc. (ResourceNode)
+			target.take_hit(equipped_weapon.damage)
+			emit_signal("attack_hit", target, equipped_weapon.damage)
 
 	# Mineração: opcional, só se tiver RayCast (mirar em rocha/árvore)
 	if equipped_weapon.can_mine() and attack_raycast != null:
@@ -199,18 +218,18 @@ func _attack_melee() -> void:
 func _is_enemy(node: Node) -> bool:
 	return node.is_in_group("enemy") or node.is_in_group("enemies")
 
-## Retorna lista de corpos na área de melee (inimigos no "arco" na frente do player)
+## Retorna lista de corpos na área de melee (inimigos + árvores/recursos na frente do player)
 ## Se attack_area estiver atribuído, usa get_overlapping_bodies(); senão usa hitbox em código.
 func _get_melee_overlap_targets() -> Array:
-	# Prioridade: Area3D (AttackArea) que você ajustou no editor
+	# Prioridade: Area3D (AttackArea)
 	if attack_area != null:
 		var targets: Array = []
 		for body in attack_area.get_overlapping_bodies():
-			if is_instance_valid(body) and _is_enemy(body):
+			if is_instance_valid(body) and (_is_enemy(body) or body.has_method("take_hit")):
 				targets.append(body)
 		return targets
 
-	# Fallback: hitbox gerado em código (quando não tem AttackArea na cena)
+	# Fallback: hitbox em código
 	var player = get_parent() as Node3D
 	if player == null:
 		return []
@@ -225,7 +244,8 @@ func _get_melee_overlap_targets() -> Array:
 	if forward.length_squared() < 0.01:
 		forward = -player.global_transform.basis.z.normalized()
 
-	var origin = player.global_position + Vector3(0.0, 1.0, 0.0) + forward * melee_range
+	# Caixa na frente do player (centro um pouco à frente para acertar melhor)
+	var origin = player.global_position + Vector3(0.0, 1.0, 0.0) + forward * (melee_range * 0.6)
 	var basis := Basis.looking_at(forward, Vector3.UP)
 	var shape_transform := Transform3D(basis, origin)
 
@@ -235,6 +255,8 @@ func _get_melee_overlap_targets() -> Array:
 	var params := PhysicsShapeQueryParameters3D.new()
 	params.shape = box
 	params.transform = shape_transform
+	params.collide_with_bodies = true
+	params.collide_with_areas = false
 	if player is PhysicsBody3D:
 		params.exclude = [player.get_rid()]
 
@@ -242,7 +264,7 @@ func _get_melee_overlap_targets() -> Array:
 	var targets: Array = []
 	for dict in results:
 		var collider = dict.get("collider", null)
-		if collider != null and _is_enemy(collider):
+		if collider != null and (_is_enemy(collider) or collider.has_method("take_hit")):
 			targets.append(collider)
 	return targets
 

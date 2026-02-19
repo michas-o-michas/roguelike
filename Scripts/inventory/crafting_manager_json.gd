@@ -63,6 +63,22 @@ func _register_items_from_folder(folder_path: String):
 	dir.list_dir_end()
 	print("  Total: %d itens registrados" % item_registry.size())
 
+# ================= API REGISTRO (ID ↔ Item) =================
+
+## Retorna o Item associado ao id (nome do .tres em res://items/). Retorna null se não existir.
+func get_item_by_id(id: String) -> Item:
+	return item_registry.get(id, null)
+
+## Retorna o id (string) do item no registro. Usado para UI e get_all_item_counts.
+func get_id_for_item(item: Item) -> String:
+	if not item:
+		return ""
+	for key in item_registry:
+		var reg_item = item_registry[key]
+		if reg_item and reg_item.resource_path == item.resource_path:
+			return key
+	return ""
+
 # ================= REGISTRO DE ITENS =================
 
 func _register_items():

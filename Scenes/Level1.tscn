@@ -5,7 +5,7 @@
 [ext_resource type="Script" uid="uid://b21qcx74inoxd" path="res://world_generator_v2/biome_data.gd" id="2_rxb08"]
 [ext_resource type="Resource" uid="uid://bp18e2vqvo5do" path="res://world_generator_v2/WorldTheme/simple.tres" id="2_wjxug"]
 [ext_resource type="Resource" uid="uid://d2fg6i2elup0" path="res://world_generator_v2/biomes/BiomeData/floresta-carvalo.tres" id="3_kq4yt"]
-[ext_resource type="Resource" uid="uid://j0bb2kofnqgn" path="res://world_generator_v2/biomes/BiomeData/floresta_fall_tree.tres" id="4_kq4yt"]
+[ext_resource type="Resource" uid="uid://j0bb2kofnqgn" path="res://world_generator_v2/biomes/BiomeData/tundra.tres" id="4_kq4yt"]
 [ext_resource type="Resource" uid="uid://ddifpics0l6m5" path="res://world_generator_v2/biomes/BiomeData/montanha_rochosa.tres" id="5_8d4ee"]
 [ext_resource type="Script" uid="uid://dh8cw2d6nnl6u" path="res://Scenes/fps-test.gd" id="5_efk68"]
 [ext_resource type="Script" uid="uid://cckc1eka3ujni" path="res://world_generator_v2/poi_data.gd" id="6_rarx8"]
@@ -25,7 +25,8 @@
 [ext_resource type="PackedScene" uid="uid://cy4p525k07au7" path="res://dungeon/scenes/dungeon_lv_2.tscn" id="25_bhaf5"]
 [ext_resource type="AudioStream" uid="uid://dymr761r3u8p6" path="res://Assets/sounds/night.wav" id="25_txpnq"]
 [ext_resource type="AudioStream" uid="uid://dcobdymhcson2" path="res://Assets/sounds/street-corner-jazz-cafe-338559.mp3" id="26_r6o88"]
-[ext_resource type="Script" path="res://Scenes/Level1_main.gd" id="27_main"]
+[ext_resource type="Script" uid="uid://b4fyoobgjged2" path="res://Scenes/Level1_main.gd" id="27_main"]
+[ext_resource type="PackedScene" path="res://Scenes/PauseMenu.tscn" id="28_pause"]
 
 [sub_resource type="GDScript" id="GDScript_fh0sh"]
 script/source = "extends Label
@@ -66,9 +67,7 @@ script = ExtResource("27_main")
 
 [node name="Level1" type="Node3D" parent="." unique_id=1067751182]
 script = ExtResource("1_rxb08")
-view_distance = 5
 world_theme = ExtResource("2_wjxug")
-unload_distance = 7
 origin_rebase_threshold = 100.0
 enable_collision_lod = false
 noise_amplitude = 200.0
@@ -88,14 +87,16 @@ poi_check_interval = 1.0
 poi_min_spacing = 1.0
 poi_per_area_chance = 1.0
 pois = Array[ExtResource("6_rarx8")]([ExtResource("7_wjxug")])
+spawner_check_interval = 15.0
+spawner_min_spacing = 10.0
 spawner_per_area_chance = 1.0
 animal_spawners = Array[ExtResource("9_3la1u")]([ExtResource("10_c5xim")])
 player_scene = ExtResource("1_gxb1y")
 player_spawn_position = Vector3(0, 66, 0)
 
 [node name="VBoxContainer" type="VBoxContainer" parent="Level1" unique_id=358278969]
-offset_right = 40.0
-offset_bottom = 40.0
+offset_right = 55.0
+offset_bottom = 77.0
 
 [node name="Label" type="Label" parent="Level1/VBoxContainer" unique_id=193483811]
 layout_mode = 2
@@ -139,7 +140,6 @@ volume_db = -20.756
 autoplay = true
 
 [node name="Day_Night" parent="Level1" unique_id=606555801 instance=ExtResource("23_2qiau")]
-visible = true
 dayLengthInSeconds = 300.0
 
 [node name="Dungeon_Lv1" parent="." unique_id=1654411826 instance=ExtResource("24_384de")]
@@ -147,3 +147,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 203.3359, -1.7163544, 0)
 
 [node name="Dungeon_Lv2" parent="." unique_id=545736727 instance=ExtResource("25_bhaf5")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 657.98267, 0, 0)
+
+[node name="PauseMenuLayer" type="CanvasLayer" parent="." unique_id=1]
+process_mode = 4
+
+[node name="PauseMenu" parent="PauseMenuLayer" unique_id=1990186081 instance=ExtResource("28_pause")]

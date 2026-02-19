@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://dgj57rflji482"]
 
 [ext_resource type="Script" uid="uid://c8li1dwrgxudo" path="res://DayNightCycle/DayNightCycle.gd" id="1_5uv11"]
-[ext_resource type="PackedScene" uid="uid://bu78s58p6rpfc" path="res://DayNightCycle/world_environment1.tscn" id="2_lhk2g"]
 
 [sub_resource type="Animation" id="Animation_3253y"]
 length = 0.56666666
@@ -65,8 +64,46 @@ _data = {
 &"day_and_night": SubResource("Animation_nxogm")
 }
 
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_5uv11"]
+load_path = "res://.godot/imported/AllSkyFree_Sky_EpicBlueSunset_Equirect.png-0af611167c4ae2009fc5b5d956ef70a1.s3tc.ctex"
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_lhk2g"]
+sky_top_color = Color(0.0366329, 0.0532976, 0.0765334, 1)
+sky_horizon_color = Color(0.00582178, 0, 0.287057, 1)
+sky_cover = SubResource("CompressedTexture2D_5uv11")
+ground_bottom_color = Color(0.0352941, 0.054902, 0.0784314, 1)
+ground_horizon_color = Color(0.00392157, 0, 0.286275, 1)
+sun_angle_max = 3.0
+sun_curve = 3.5138004
+
+[sub_resource type="Sky" id="Sky_teo0l"]
+sky_material = SubResource("ProceduralSkyMaterial_lhk2g")
+
+[sub_resource type="Environment" id="Environment_iywxt"]
+background_mode = 2
+sky = SubResource("Sky_teo0l")
+tonemap_mode = 4
+ssr_enabled = true
+ssao_enabled = true
+ssil_enabled = true
+sdfgi_enabled = true
+sdfgi_use_occlusion = true
+glow_enabled = true
+fog_enabled = true
+fog_mode = 1
+fog_light_color = Color(5.77569e-06, 0.7875715, 0.9100993, 1)
+fog_sun_scatter = 0.06
+fog_density = 1.0
+fog_sky_affect = 0.889
+fog_depth_curve = 0.7320451
+fog_depth_begin = 208.0
+fog_depth_end = 424.1
+volumetric_fog_sky_affect = 0.0
+adjustment_enabled = true
+adjustment_brightness = 1.06
+adjustment_saturation = 0.94
+
 [node name="Day_Night" type="Node3D" unique_id=606555801]
-visible = false
 script = ExtResource("1_5uv11")
 startTime = 10
 
@@ -77,4 +114,5 @@ shadow_enabled = true
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=10428957]
 libraries/ = SubResource("AnimationLibrary_u3cyc")
 
-[node name="WorldEnvironment" parent="." unique_id=300116563 instance=ExtResource("2_lhk2g")]
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=300116563]
+environment = SubResource("Environment_iywxt")

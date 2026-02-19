@@ -1,0 +1,106 @@
+[gd_scene load_steps=6 format=3 uid="uid://cpause_menu_001"]
+
+[ext_resource type="Script" path="res://Scenes/PauseMenu.gd" id="1_script"]
+[ext_resource type="FontFile" uid="uid://cfhotyty164nn" path="res://Assets/menu/Cinzel,Poppins,Raleway/Cinzel/Cinzel-VariableFont_wght.ttf" id="2_font"]
+[ext_resource type="StyleBox" uid="uid://86wbxar6gxav" path="res://Interface/btn-normal.tres" id="3_btn_n"]
+[ext_resource type="StyleBox" uid="uid://b2x8a2uu5145i" path="res://Interface/btn-pressed.tres" id="4_btn_p"]
+[ext_resource type="StyleBox" uid="uid://bk66fuuyv7wp5" path="res://Interface/bnt-hover.tres" id="5_btn_h"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.1, 0.1, 0.15, 0.95)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+expand_margin_left = 8.0
+expand_margin_top = 8.0
+expand_margin_right = 8.0
+expand_margin_bottom = 8.0
+
+[node name="PauseMenu" type="Control" unique_id="pause_menu_root"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Overlay" type="ColorRect" parent="." unique_id="pause_overlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+color = Color(0, 0, 0, 0.5)
+
+[node name="Panel" type="Panel" parent="." unique_id="pause_panel"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -220.0
+offset_top = -180.0
+offset_right = 220.0
+offset_bottom = 180.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel" unique_id="pause_vbox"]
+layout_mode = 1
+anchors_preset = 14
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -180.0
+offset_top = -140.0
+offset_right = 180.0
+offset_bottom = 140.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="Title" type="Label" parent="Panel/VBoxContainer" unique_id="pause_title"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.9371171, 0.87513644, 0.76249474, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 36
+text = "Pausado"
+horizontal_alignment = 1
+
+[node name="SettingsButton" type="Button" parent="Panel/VBoxContainer" unique_id="pause_settings_btn"]
+process_mode = 4
+custom_minimum_size = Vector2(320, 70)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.9371171, 0.87513644, 0.76249474, 1)
+theme_override_colors/font_outline_color = Color(0.6117647, 0.47843137, 0.34901962, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 32
+theme_override_styles/normal = ExtResource("3_btn_n")
+theme_override_styles/pressed = ExtResource("4_btn_p")
+theme_override_styles/hover = ExtResource("5_btn_h")
+text = "Configurações"
+
+[node name="QuitButton" type="Button" parent="Panel/VBoxContainer" unique_id="pause_quit_btn"]
+process_mode = 4
+custom_minimum_size = Vector2(320, 70)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.9371171, 0.87513644, 0.76249474, 1)
+theme_override_colors/font_outline_color = Color(0.6117647, 0.47843137, 0.34901962, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 32
+theme_override_styles/normal = ExtResource("3_btn_n")
+theme_override_styles/pressed = ExtResource("4_btn_p")
+theme_override_styles/hover = ExtResource("5_btn_h")
+text = "Sair do jogo"

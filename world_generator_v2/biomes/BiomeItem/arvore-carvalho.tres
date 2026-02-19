@@ -6,12 +6,12 @@
 [ext_resource type="Script" uid="uid://okens1wa1haa" path="res://world_generator_v2/item_variant.gd" id="3_nedh0"]
 [ext_resource type="Resource" uid="uid://b2cvy8kxiimmw" path="res://world_generator_v2/biomes/ItemVariant/tree/pine.tres" id="4_54lry"]
 [ext_resource type="Resource" uid="uid://dgk8y4v08vl0o" path="res://world_generator_v2/biomes/subbiome/gress.tres" id="4_nedh0"]
-[ext_resource type="Resource" uid="uid://c76lmam8sqks4" path="res://world_generator_v2/biomes/ItemVariant/tree/red_pine.tres" id="5_6xmfm"]
+[ext_resource type="Resource" uid="uid://d37fptmjgmsil" path="res://world_generator_v2/biomes/ItemVariant/logs/logs.tres" id="7_nedh0"]
 
 [resource]
 script = ExtResource("1_quj3s")
 item_name = "Árvore de Carvalho"
-spawn_chance = 0.1
-variants = Array[ExtResource("3_nedh0")]([ExtResource("4_54lry"), ExtResource("5_6xmfm")])
+spawn_chance = 1.0
+variants = Array[ExtResource("3_nedh0")]([ExtResource("4_54lry"), ExtResource("7_nedh0")])
 sub_items = Array[ExtResource("2_g7cun")]([ExtResource("3_g7cun"), ExtResource("4_nedh0")])
 metadata/_custom_type_script = "uid://b78jp2kr0j5w"

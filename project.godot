@@ -11,15 +11,21 @@ config_version=5
 [application]
 
 config/name="Rootfall"
+config/version="0.1"
 run/main_scene="uid://44gkbea22p70"
 config/features=PackedStringArray("4.6", "Forward Plus")
+boot_splash/stretch_mode=4
+boot_splash/image="uid://b8nh680ori21t"
+config/icon="uid://cvmdf72pw2bpy"
 
 [autoload]
 
+SettingsManager="*res://Scripts/SettingsManager.gd"
 DungeonManager="*res://dungeon/scripts/DungeonManager.gd"
 GameManager="*uid://bxu7l7ke3kn5x"
 InventoryManager="*uid://c2n0gd8g11e3u"
 CraftingManager="*uid://cpv77nj6xguny"
+WeaponSystem="*res://Scripts/WeaponSystem.gd"
 ScreenFade="*res://Scenes/ScreenFade.gd"
 SoundManager="*res://Scenes/SoundManager.gd"
 
@@ -165,4 +171,3 @@ mb2={
 
 rendering_device/driver.windows="d3d12"
 occlusion_culling/use_occlusion_culling=true
-mesh_lod/lod_change/threshold_pixels=2.0

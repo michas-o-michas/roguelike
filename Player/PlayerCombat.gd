@@ -15,7 +15,7 @@ func try_attack():
 	if not can_attack:
 		return
 
-	var weapon = WeaponSystem.get(equipped)
+	var weapon = WeaponSystem.get_weapon(equipped)
 	if weapon == null:
 		return
 

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="BiomeData" format=3 uid="uid://j0bb2kofnqgn"]
+
+[ext_resource type="Script" uid="uid://b78jp2kr0j5w" path="res://world_generator_v2/biome_item.gd" id="1_6uqrf"]
+[ext_resource type="Resource" uid="uid://r6hfknveshwy" path="res://world_generator_v2/biomes/BiomeItem/tundra.tres" id="2_mcvm6"]
+[ext_resource type="Resource" uid="uid://bed86835h6cwg" path="res://world_generator_v2/biomes/BiomeItem/stone.tres" id="3_fmu8t"]
+[ext_resource type="Script" uid="uid://cckc1eka3ujni" path="res://world_generator_v2/poi_data.gd" id="4_fs1l6"]
+[ext_resource type="Script" uid="uid://el3it5rlbpge" path="res://world_generator_v2/animal_spawner_data.gd" id="5_w507m"]
+[ext_resource type="Script" uid="uid://b21qcx74inoxd" path="res://world_generator_v2/biome_data.gd" id="6_sylm1"]
+
+[resource]
+script = ExtResource("6_sylm1")
+min_height = 80.0
+max_height = 100.0
+biome_noise_value = 0.701
+biome_items = Array[ExtResource("1_6uqrf")]([ExtResource("2_mcvm6"), ExtResource("3_fmu8t")])
+metadata/_custom_type_script = "uid://b21qcx74inoxd"

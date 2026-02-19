@@ -3,7 +3,6 @@
 [ext_resource type="Script" uid="uid://b78jp2kr0j5w" path="res://world_generator_v2/biome_item.gd" id="1_ee0u6"]
 [ext_resource type="Script" uid="uid://b21qcx74inoxd" path="res://world_generator_v2/biome_data.gd" id="2_5rm5j"]
 [ext_resource type="Resource" uid="uid://0g0msx52k4g4" path="res://world_generator_v2/biomes/BiomeItem/arvore-carvalho.tres" id="2_8exqf"]
-[ext_resource type="Resource" uid="uid://c2lptrees01" path="res://world_generator_v2/biomes/BiomeItem/lowpoly/lowpoly_trees.tres" id="4_lpt"]
 [ext_resource type="Resource" uid="uid://c2lpbush01" path="res://world_generator_v2/biomes/BiomeItem/lowpoly/lowpoly_bushes.tres" id="6_lpb"]
 [ext_resource type="Resource" uid="uid://c2lpplant01" path="res://world_generator_v2/biomes/BiomeItem/lowpoly/lowpoly_plants.tres" id="7_lpp"]
 [ext_resource type="Resource" uid="uid://c2lpgrass01" path="res://world_generator_v2/biomes/BiomeItem/lowpoly/lowpoly_grass.tres" id="8_lpg"]
@@ -14,8 +13,9 @@
 [resource]
 script = ExtResource("2_5rm5j")
 biome_name = "Floresta Normal"
+max_height = 40.0
 preferred_moisture = 1.0
 preferred_temperature = 1.0
 biome_noise_value = 0.0
-biome_items = Array[ExtResource("1_ee0u6")]([ExtResource("2_8exqf"), ExtResource("4_lpt"), ExtResource("6_lpb"), ExtResource("7_lpp"), ExtResource("8_lpg"), ExtResource("9_lpl")])
+biome_items = Array[ExtResource("1_ee0u6")]([ExtResource("2_8exqf"), ExtResource("6_lpb"), ExtResource("7_lpp"), ExtResource("8_lpg"), ExtResource("9_lpl")])
 metadata/_custom_type_script = "uid://b21qcx74inoxd"

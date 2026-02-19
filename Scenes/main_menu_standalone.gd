@@ -12,6 +12,10 @@ var loading_screen_scene = preload("res://Scenes/LoadingScreen.tscn")
 var loading_screen: Control = null
 
 func _ready():
+	# Remover menu de pausa deixado na raiz ao voltar do jogo (para ESC não fazer nada aqui)
+	var layer = get_tree().root.get_node_or_null("PauseMenuRootLayer")
+	if layer:
+		layer.queue_free()
 	# Carrega uma imagem (logo, loading, etc.)
 	var tex = preload("uid://6gl80c43hdsd") as Texture2D
 	if ScreenFade:
@@ -19,16 +23,12 @@ func _ready():
 	# Menu processa mesmo quando pausado
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	
 	# Menu visível
 	visible = true
-	
 	# Mostrar cursor
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	
 	# Aguardar frame
 	await get_tree().process_frame
-	
 	# Conectar botões
 	if start_button:
 		start_button.pressed.connect(_on_start_button_pressed)

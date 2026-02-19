@@ -25,7 +25,7 @@ extends Control
 @onready var inv_tab = $PanelContainer/Window/Tabs/InventoryTab
 @onready var craft_tab = $PanelContainer/Window/Tabs/CraftingTab
 @onready var inv_content = $PanelContainer/Window/InventoryContent
-@onready var craft_content = $PanelContainer/Window/CraftingContent
+@onready var craft_content = $PanelContainer/Window/MarginContainer/CraftingContent
 @onready var coins_label = $PanelContainer/Window/Header/CoinsLabel  # Ajuste o caminho
 
 var current_tab: String = "inventory"

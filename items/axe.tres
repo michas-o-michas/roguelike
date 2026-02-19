@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="Weapon" format=3 uid="uid://bfc6oeygysy3n"]
+
+[ext_resource type="AudioStream" uid="uid://bxanrnefngxrp" path="res://attack_sword.mp3" id="1_8fi4i"]
+[ext_resource type="Texture2D" uid="uid://dib3ie80s1um2" path="res://items/icons/axe.png" id="2_8fi4i"]
+[ext_resource type="PackedScene" uid="uid://cagj0s8g716kv" path="res://items/Scenes/axe.tscn" id="3_8fi4i"]
+[ext_resource type="Script" uid="uid://brg2mqlobceng" path="res://Scripts/weapon/weapon.gd" id="4_ry2sa"]
+
+[resource]
+script = ExtResource("4_ry2sa")
+model_scene = ExtResource("3_8fi4i")
+damage = 1
+attack_speed = 1.0
+attack_sound = ExtResource("1_8fi4i")
+item_name = "Machado"
+item_icon = ExtResource("2_8fi4i")
+type = 1
+max_stack = 1
+metadata/_custom_type_script = "uid://brg2mqlobceng"

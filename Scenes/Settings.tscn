@@ -237,13 +237,15 @@ size_flags_horizontal = 3
 theme_override_fonts/font = ExtResource("4_font")
 theme_override_font_sizes/font_size = 16
 selected = 2
-item_count = 3
-popup/item_0/text = "Baixa"
+item_count = 4
+popup/item_0/text = "Muito baixa"
 popup/item_0/id = 0
-popup/item_1/text = "Media"
+popup/item_1/text = "Baixa"
 popup/item_1/id = 1
-popup/item_2/text = "Alta"
+popup/item_2/text = "Média"
 popup/item_2/id = 2
+popup/item_3/text = "Alta"
+popup/item_3/id = 3
 
 [node name="VSyncContainer" type="HBoxContainer" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/GraphicsSection" unique_id=1876524230]
 layout_mode = 2
@@ -264,6 +266,143 @@ theme_override_colors/font_color = Color(0.89411765, 0.8, 0.627451, 1)
 theme_override_fonts/font = ExtResource("4_font")
 theme_override_font_sizes/font_size = 16
 button_pressed = true
+text = "Ativar"
+
+[node name="EnvironmentSection" type="VBoxContainer" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent" unique_id="env_section"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/separation = 10
+
+[node name="EnvironmentTitle" type="Label" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/EnvironmentSection" unique_id="env_title"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.89411765, 0.8, 0.627451, 1)
+theme_override_fonts/font = ExtResource("4_font")
+theme_override_font_sizes/font_size = 20
+text = "Efeitos visuais (Environment)"
+
+[node name="SSAOContainer" type="HBoxContainer" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/EnvironmentSection" unique_id="env_ssao"]
+layout_mode = 2
+size_flags_horizontal = 4
+
+[node name="SSAOLabel" type="Label" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/EnvironmentSection/SSAOContainer" unique_id="env_ssao_lbl"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.89411765, 0.8, 0.627451, 1)
+theme_override_fonts/font = ExtResource("4_font")
+theme_override_font_sizes/font_size = 16
+text = "SSAO (oclusão ambiente):"
+vertical_alignment = 1
+
+[node name="SSAOCheckBox" type="CheckBox" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/EnvironmentSection/SSAOContainer" unique_id="env_ssao_cb"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_colors/font_color = Color(0.89411765, 0.8, 0.627451, 1)
+theme_override_fonts/font = ExtResource("4_font")
+theme_override_font_sizes/font_size = 16
+button_pressed = true
+text = "Ativar"
+
+[node name="GlowContainer" type="HBoxContainer" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/EnvironmentSection" unique_id="env_glow"]
+layout_mode = 2
+size_flags_horizontal = 4
+
+[node name="GlowLabel" type="Label" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/EnvironmentSection/GlowContainer" unique_id="env_glow_lbl"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.89411765, 0.8, 0.627451, 1)
+theme_override_fonts/font = ExtResource("4_font")
+theme_override_font_sizes/font_size = 16
+text = "Brilho (Glow):"
+vertical_alignment = 1
+
+[node name="GlowCheckBox" type="CheckBox" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/EnvironmentSection/GlowContainer" unique_id="env_glow_cb"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_colors/font_color = Color(0.89411765, 0.8, 0.627451, 1)
+theme_override_fonts/font = ExtResource("4_font")
+theme_override_font_sizes/font_size = 16
+button_pressed = true
+text = "Ativar"
+
+[node name="FogContainer" type="HBoxContainer" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/EnvironmentSection" unique_id="env_fog"]
+layout_mode = 2
+size_flags_horizontal = 4
+
+[node name="FogLabel" type="Label" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/EnvironmentSection/FogContainer" unique_id="env_fog_lbl"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.89411765, 0.8, 0.627451, 1)
+theme_override_fonts/font = ExtResource("4_font")
+theme_override_font_sizes/font_size = 16
+text = "Neblina:"
+vertical_alignment = 1
+
+[node name="FogCheckBox" type="CheckBox" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/EnvironmentSection/FogContainer" unique_id="env_fog_cb"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_colors/font_color = Color(0.89411765, 0.8, 0.627451, 1)
+theme_override_fonts/font = ExtResource("4_font")
+theme_override_font_sizes/font_size = 16
+button_pressed = true
+text = "Ativar"
+
+[node name="SSRContainer" type="HBoxContainer" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/EnvironmentSection" unique_id="env_ssr"]
+layout_mode = 2
+size_flags_horizontal = 4
+
+[node name="SSRLabel" type="Label" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/EnvironmentSection/SSRContainer" unique_id="env_ssr_lbl"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.89411765, 0.8, 0.627451, 1)
+theme_override_fonts/font = ExtResource("4_font")
+theme_override_font_sizes/font_size = 16
+text = "Reflexos (SSR):"
+vertical_alignment = 1
+
+[node name="SSRCheckBox" type="CheckBox" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/EnvironmentSection/SSRContainer" unique_id="env_ssr_cb"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_colors/font_color = Color(0.89411765, 0.8, 0.627451, 1)
+theme_override_fonts/font = ExtResource("4_font")
+theme_override_font_sizes/font_size = 16
+button_pressed = true
+text = "Ativar"
+
+[node name="SSILContainer" type="HBoxContainer" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/EnvironmentSection" unique_id="env_ssil"]
+layout_mode = 2
+size_flags_horizontal = 4
+
+[node name="SSILLabel" type="Label" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/EnvironmentSection/SSILContainer" unique_id="env_ssil_lbl"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.89411765, 0.8, 0.627451, 1)
+theme_override_fonts/font = ExtResource("4_font")
+theme_override_font_sizes/font_size = 16
+text = "Iluminação indireta (SSIL):"
+vertical_alignment = 1
+
+[node name="SSILCheckBox" type="CheckBox" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/EnvironmentSection/SSILContainer" unique_id="env_ssil_cb"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_colors/font_color = Color(0.89411765, 0.8, 0.627451, 1)
+theme_override_fonts/font = ExtResource("4_font")
+theme_override_font_sizes/font_size = 16
+text = "Ativar"
+
+[node name="SDFGIContainer" type="HBoxContainer" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/EnvironmentSection" unique_id="env_sdfgi"]
+layout_mode = 2
+size_flags_horizontal = 4
+
+[node name="SDFGILabel" type="Label" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/EnvironmentSection/SDFGIContainer" unique_id="env_sdfgi_lbl"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.89411765, 0.8, 0.627451, 1)
+theme_override_fonts/font = ExtResource("4_font")
+theme_override_font_sizes/font_size = 16
+text = "Iluminação global (SDFGI):"
+vertical_alignment = 1
+
+[node name="SDFGICheckBox" type="CheckBox" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/EnvironmentSection/SDFGIContainer" unique_id="env_sdfgi_cb"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_colors/font_color = Color(0.89411765, 0.8, 0.627451, 1)
+theme_override_fonts/font = ExtResource("4_font")
+theme_override_font_sizes/font_size = 16
 text = "Ativar"
 
 [node name="ButtonsContainer" type="HBoxContainer" parent="Panel/VBoxContainer" unique_id=720086640]

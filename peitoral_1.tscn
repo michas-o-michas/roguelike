@@ -1,9 +1,8 @@
 [gd_scene format=4 uid="uid://de45rmrjjg70x"]
 
-[ext_resource type="PackedScene" uid="uid://dvu48mrxb20x0" path="res://Assets/Itens/peitoral_1 (1).fbx" id="1_sdt6t"]
+[ext_resource type="PackedScene" uid="uid://dvu48mrxb20x0" path="res://Assets/Items/peitoral_1 (1).fbx" id="1_sdt6t"]
 
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_apswq"]
-load_path = "res://.godot/imported/peitoral_1_0.png-eba0b71f857648efce0bc2f9840532ed.s3tc.ctex"
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_kft3b"]
 resource_name = "Material.004"

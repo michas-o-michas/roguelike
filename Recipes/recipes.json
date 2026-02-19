@@ -1,12 +1,20 @@
 {
   "recipes": [
 	{
-	  "name": "Espada de Madeira",
-	  "output": "wood_sword",
+	  "name": "Machado",
+	  "output": "axe",
 	  "output_amount": 1,
 	  "inputs": [
-		{"item": "wood", "amount": 1}
+		{"item": "wood", "amount": 5}
 	  ]
 	},
+	{
+	  "name": "Picareta",
+	  "output": "pickaxe",
+	  "output_amount": 1,
+	  "inputs": [
+		{"item": "stone", "amount": 5}
+	  ]
+	}
   ]
 }
