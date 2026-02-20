@@ -16,12 +16,13 @@ func open(player):
 		print('opened',opened)
 		return
 
-	# Verifica se o player tem moedas suficientes
-	if player.coins < cost:
+	# Verifica se o player tem moedas suficientes (via InventoryManager)
+	if InventoryManager.get_coins() < cost:
 		print("Você não tem moedas suficientes!")
 		return
 
-	player.coins -= cost
+	if not InventoryManager.spend_coins(cost):
+		return
 	print("Baú aberto! Moedas gastas:", cost)
 
 	# Pega o SkillManager da cena

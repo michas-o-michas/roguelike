@@ -1095,9 +1095,6 @@ func start_mobs_instantiation():
 			position_player_on_terrain()
 		_enable_player()
 
-		if spawner_manager:
-			spawner_manager.activate_all_enemy_spawners(self)
-
 		_finalize_world()
 
 func _finalize_world():

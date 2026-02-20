@@ -1,5 +1,7 @@
 # Plano: Unificar inventário (Passo 1)
 
+> **Status:** Migração concluída. O GameManager já não possui inventário; a fonte de verdade é o InventoryManager. Este doc permanece como referência do que foi feito.
+
 ## Objetivo
 Ter **um único sistema de inventário**: o **InventoryManager** (slots + Item resource). Remover o inventário por string id do **GameManager** e migrar todos os consumidores para o InventoryManager, usando um registro **id → Item** já existente no CraftingManager.
 

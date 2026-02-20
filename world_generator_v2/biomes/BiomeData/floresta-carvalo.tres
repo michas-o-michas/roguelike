@@ -3,9 +3,11 @@
 [ext_resource type="Script" uid="uid://b78jp2kr0j5w" path="res://world_generator_v2/biome_item.gd" id="1_ee0u6"]
 [ext_resource type="Script" uid="uid://b21qcx74inoxd" path="res://world_generator_v2/biome_data.gd" id="2_5rm5j"]
 [ext_resource type="Resource" uid="uid://0g0msx52k4g4" path="res://world_generator_v2/biomes/BiomeItem/arvore-carvalho.tres" id="2_8exqf"]
-[ext_resource type="Resource" uid="uid://c2lpbush01" path="res://world_generator_v2/biomes/BiomeItem/lowpoly/lowpoly_bushes.tres" id="6_lpb"]
-[ext_resource type="Resource" uid="uid://c2lpplant01" path="res://world_generator_v2/biomes/BiomeItem/lowpoly/lowpoly_plants.tres" id="7_lpp"]
-[ext_resource type="Resource" uid="uid://c2lpgrass01" path="res://world_generator_v2/biomes/BiomeItem/lowpoly/lowpoly_grass.tres" id="8_lpg"]
+[ext_resource type="Resource" path="res://world_generator_v2/biomes/BiomeItem/stylized/stylized_rocks.tres" id="4_rocks"]
+[ext_resource type="Resource" path="res://world_generator_v2/biomes/BiomeItem/stylized/stylized_bushes.tres" id="6_lpb"]
+[ext_resource type="Resource" path="res://world_generator_v2/biomes/BiomeItem/stylized/stylized_plants.tres" id="7_lpp"]
+[ext_resource type="Resource" path="res://world_generator_v2/biomes/BiomeItem/stylized/stylized_flowers.tres" id="8_flowers"]
+[ext_resource type="Resource" path="res://world_generator_v2/biomes/BiomeItem/stylized/stylized_grass.tres" id="8_lpg"]
 [ext_resource type="Resource" uid="uid://c2lplogs01" path="res://world_generator_v2/biomes/BiomeItem/lowpoly/lowpoly_logs.tres" id="9_lpl"]
 [ext_resource type="Script" uid="uid://cckc1eka3ujni" path="res://world_generator_v2/poi_data.gd" id="10_y4u32"]
 [ext_resource type="Script" uid="uid://el3it5rlbpge" path="res://world_generator_v2/animal_spawner_data.gd" id="11_o0c2a"]
@@ -17,5 +19,5 @@ max_height = 40.0
 preferred_moisture = 1.0
 preferred_temperature = 1.0
 biome_noise_value = 0.0
-biome_items = Array[ExtResource("1_ee0u6")]([ExtResource("2_8exqf"), ExtResource("6_lpb"), ExtResource("7_lpp"), ExtResource("8_lpg"), ExtResource("9_lpl")])
+biome_items = Array[ExtResource("1_ee0u6")]([ExtResource("2_8exqf"), ExtResource("4_rocks"), ExtResource("6_lpb"), ExtResource("7_lpp"), ExtResource("8_lpg"), ExtResource("8_flowers"), ExtResource("9_lpl")])
 metadata/_custom_type_script = "uid://b21qcx74inoxd"

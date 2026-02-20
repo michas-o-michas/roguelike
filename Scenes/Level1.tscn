@@ -9,10 +9,9 @@
 [ext_resource type="Resource" uid="uid://ddifpics0l6m5" path="res://world_generator_v2/biomes/BiomeData/montanha_rochosa.tres" id="5_8d4ee"]
 [ext_resource type="Script" uid="uid://dh8cw2d6nnl6u" path="res://Scenes/fps-test.gd" id="5_efk68"]
 [ext_resource type="Script" uid="uid://cckc1eka3ujni" path="res://world_generator_v2/poi_data.gd" id="6_rarx8"]
-[ext_resource type="ArrayMesh" uid="uid://crdvmf8j8fnk5" path="res://Assets/teste/grama2.tres" id="7_03od6"]
 [ext_resource type="Resource" uid="uid://bqpqu6d4gt3re" path="res://world_generator_v2/POIData/temple.tres" id="7_wjxug"]
+[ext_resource type="ArrayMesh" uid="uid://08aj7yowiacx" path="res://grass4.tres" id="8_bqkvc"]
 [ext_resource type="Script" uid="uid://el3it5rlbpge" path="res://world_generator_v2/animal_spawner_data.gd" id="9_3la1u"]
-[ext_resource type="Resource" uid="uid://ps0uvoii2yph" path="res://world_generator_v2/Spawner/wolf_spawner.tres" id="10_c5xim"]
 [ext_resource type="Script" uid="uid://bbwcjlccr203h" path="res://Scripts/SkillManager.gd" id="18_fc4x2"]
 [ext_resource type="Script" uid="uid://cwbxmv6ud8e5u" path="res://Skills/skill.gd" id="19_r3dg4"]
 [ext_resource type="Resource" uid="uid://qinafm4w04qx" path="res://Skills/hp_level1.tres" id="20_k2w6b"]
@@ -78,7 +77,7 @@ rock_start_height = 60.0
 rock_thickness = 40.0
 snow_start_height = 80.0
 biomes = Array[ExtResource("2_rxb08")]([ExtResource("4_kq4yt"), ExtResource("3_kq4yt"), ExtResource("5_8d4ee")])
-grass_mesh = ExtResource("7_03od6")
+grass_mesh = ExtResource("8_bqkvc")
 grass_circle_radius = 100.0
 grass_circle_count = 5000
 grass_min_scale = 1.0
@@ -91,7 +90,7 @@ pois = Array[ExtResource("6_rarx8")]([ExtResource("7_wjxug")])
 spawner_check_interval = 15.0
 spawner_min_spacing = 10.0
 spawner_per_area_chance = 1.0
-animal_spawners = Array[ExtResource("9_3la1u")]([ExtResource("10_c5xim")])
+animal_spawners = Array[ExtResource("9_3la1u")]([])
 player_scene = ExtResource("1_gxb1y")
 player_spawn_position = Vector3(0, 66, 0)
 

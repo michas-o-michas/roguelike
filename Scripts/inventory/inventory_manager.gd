@@ -36,13 +36,6 @@ func init_coins(amount: int) -> void:
 func _ready():
 	slots.clear()
 	slots.resize(max_slots)
-	# Itens de teste para criar receitas e testar craft (remova quando não precisar)
-	const WOOD = preload("res://items/wood.tres")
-	const STONE = preload("res://items/stone.tres")
-	const WOOD_SWORD = preload("res://items/wood_sword.tres")
-	slots[0] = { "item": WOOD, "amount": 20 }
-	slots[1] = { "item": STONE, "amount": 20 }
-	slots[2] = { "item": WOOD_SWORD, "amount": 1 }
 	emit_signal("inventory_changed")
 
 

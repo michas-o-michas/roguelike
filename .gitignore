@@ -2,6 +2,9 @@
 .godot/
 /android/
 
+# Backups temporários do editor
+*.tmp
+
 # Builds / executáveis (GitHub limita 100 MB)
 *.exe
 *.pck

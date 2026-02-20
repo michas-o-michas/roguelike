@@ -90,7 +90,7 @@ func set_animation(anim_name: String) -> void:
 	if playback:
 		playback.travel(anim_name)
 
-## Chamado pelo PlayerCombat ao atacar — evita que Idle/Walk/Run sobrescrevam a animação
+## Chamado ao atacar (weapon_handler) — evita que Idle/Walk/Run sobrescrevam a animação
 func play_attack_animation(anim_state_name: String = "Attack") -> void:
 	set_animation(anim_state_name)
 	is_attacking = true

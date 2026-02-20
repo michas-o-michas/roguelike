@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="ItemVariant" format=3 uid="uid://bqsg2l7xisyxj"]
 
 [ext_resource type="Script" uid="uid://okens1wa1haa" path="res://world_generator_v2/item_variant.gd" id="1_ioutq"]
-[ext_resource type="PackedScene" uid="uid://b1feif10d5dyl" path="res://Assets/LowPoly Environment Pack/Grass_1.fbx" id="1_kc6t3"]
+[ext_resource type="PackedScene" uid="uid://d3d8hk4m0bt0b" path="res://Assets/Stylized Nature MegaKit[Standard]/FBX/Grass_Common_Short.fbx" id="1_kc6t3"]
 
 [resource]
 script = ExtResource("1_ioutq")

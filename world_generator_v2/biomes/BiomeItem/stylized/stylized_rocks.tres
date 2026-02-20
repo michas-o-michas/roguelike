@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="BiomeItem" format=3]
+
+[ext_resource type="Script" uid="uid://b78jp2kr0j5w" path="res://world_generator_v2/biome_item.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://okens1wa1haa" path="res://world_generator_v2/item_variant.gd" id="2_var"]
+[ext_resource type="Resource" path="res://world_generator_v2/biomes/ItemVariant/stylized/rock_medium_1.tres" id="r1"]
+[ext_resource type="Resource" path="res://world_generator_v2/biomes/ItemVariant/stylized/rock_medium_2.tres" id="r2"]
+[ext_resource type="Resource" path="res://world_generator_v2/biomes/ItemVariant/stylized/rock_medium_3.tres" id="r3"]
+[ext_resource type="Resource" path="res://world_generator_v2/biomes/ItemVariant/stylized/pebble_round_1.tres" id="p1"]
+[ext_resource type="Resource" path="res://world_generator_v2/biomes/ItemVariant/stylized/pebble_round_2.tres" id="p2"]
+[ext_resource type="Resource" path="res://world_generator_v2/biomes/ItemVariant/stylized/pebble_round_3.tres" id="p3"]
+[ext_resource type="Resource" path="res://world_generator_v2/biomes/ItemVariant/stylized/pebble_square_1.tres" id="p4"]
+[ext_resource type="Resource" path="res://world_generator_v2/biomes/ItemVariant/stylized/pebble_square_2.tres" id="p5"]
+[ext_resource type="Resource" path="res://world_generator_v2/biomes/ItemVariant/stylized/pebble_square_3.tres" id="p6"]
+
+[resource]
+script = ExtResource("1_script")
+item_name = "Stylized Rocks"
+spawn_chance = 0.25
+min_scale = 0.6
+max_scale = 1.5
+variants = Array[ExtResource("2_var")]([ExtResource("r1"), ExtResource("r2"), ExtResource("r3"), ExtResource("p1"), ExtResource("p2"), ExtResource("p3"), ExtResource("p4"), ExtResource("p5"), ExtResource("p6")])
+metadata/_custom_type_script = "uid://b78jp2kr0j5w"

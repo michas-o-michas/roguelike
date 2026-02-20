@@ -1,7 +1,7 @@
 extends Node
 class_name SpawnerManager
 
-## Gerencia spawn dinâmico de Animal Spawners e ativação de EnemySpawners quando o mundo está pronto.
+## Gerencia spawn dinâmico de Animal Spawners quando o mundo está pronto.
 ## Para desativar: enable_spawners = false no InfiniteWorldGenerator ou remova este nó.
 
 var spawned_spawners: Dictionary = {}  ## {Vector2i: Spawner_node}
@@ -107,40 +107,3 @@ func _check_spacing(pos: Vector2, min_spacing: float) -> bool:
 	return true
 
 
-func activate_all_enemy_spawners(world_gen: InfiniteWorldGenerator) -> void:
-	if world_gen.debug_log:
-		print("🔓 Ativando todos os EnemySpawners...")
-	var tree = world_gen.get_tree()
-	var spawners_found = 0
-	var spawners_activated = 0
-
-	var all_nodes = tree.get_nodes_in_group("enemy_spawners")
-	if all_nodes.is_empty():
-		all_nodes = _find_all_enemy_spawners_recursive(tree.root)
-
-	for node in all_nodes:
-		if node is EnemySpawner:
-			spawners_found += 1
-			var spawner: EnemySpawner = node
-			if not spawner.is_spawning:
-				spawner.start_spawning()
-				spawners_activated += 1
-				if world_gen.debug_log:
-					var name_str = spawner.name if spawner.name != "" else "sem nome"
-					print("✅ EnemySpawner ativado: ", name_str, " em ", spawner.global_position)
-			elif world_gen.debug_log:
-				print("ℹ️ EnemySpawner já estava ativo: ", spawner.name if spawner.name != "" else "sem nome")
-
-	if world_gen.debug_log:
-		print("📊 EnemySpawners encontrados: ", spawners_found, " | Ativados: ", spawners_activated)
-		if spawners_found == 0:
-			print("ℹ️ Nenhum EnemySpawner encontrado na cena (pode ser normal)")
-
-
-func _find_all_enemy_spawners_recursive(node: Node) -> Array:
-	var result: Array = []
-	if node is EnemySpawner:
-		result.append(node)
-	for child in node.get_children():
-		result.append_array(_find_all_enemy_spawners_recursive(child))
-	return result
