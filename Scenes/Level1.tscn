@@ -16,12 +16,13 @@
 [ext_resource type="Script" uid="uid://bbwcjlccr203h" path="res://Scripts/SkillManager.gd" id="18_fc4x2"]
 [ext_resource type="Script" uid="uid://cwbxmv6ud8e5u" path="res://Skills/skill.gd" id="19_r3dg4"]
 [ext_resource type="Resource" uid="uid://qinafm4w04qx" path="res://Skills/hp_level1.tres" id="20_k2w6b"]
+[ext_resource type="AudioStream" uid="uid://3g7udrca6e0j" path="res://Assets/sounds/windaudio.mp3" id="21_bqkvc"]
 [ext_resource type="Resource" uid="uid://dwag2boybp0ln" path="res://Skills/hp_level2.tres" id="21_oqyyu"]
 [ext_resource type="Texture2D" uid="uid://cx0y8t0wxeqpw" path="res://Skills/hp_level1.png" id="22_5nfnx"]
+[ext_resource type="AudioStream" uid="uid://bbduy8dn5akl" path="res://Assets/sounds/music_ingame.mp3" id="22_iswit"]
 [ext_resource type="PackedScene" uid="uid://dgj57rflji482" path="res://DayNightCycle/DayNightCycle.tscn" id="23_2qiau"]
 [ext_resource type="Texture2D" uid="uid://dgq5l3nv6gdqm" path="res://Skills/hp_level4.png" id="23_j3nt6"]
 [ext_resource type="PackedScene" uid="uid://jdklemiiq721" path="res://dungeon/scenes/dungeon_lv_1.tscn" id="24_384de"]
-[ext_resource type="AudioStream" uid="uid://b3m1kt2swv6po" path="res://Assets/sounds/day.wav" id="24_l5fjl"]
 [ext_resource type="PackedScene" uid="uid://cy4p525k07au7" path="res://dungeon/scenes/dungeon_lv_2.tscn" id="25_bhaf5"]
 [ext_resource type="AudioStream" uid="uid://dymr761r3u8p6" path="res://Assets/sounds/night.wav" id="25_txpnq"]
 [ext_resource type="AudioStream" uid="uid://dcobdymhcson2" path="res://Assets/sounds/street-corner-jazz-cafe-338559.mp3" id="26_r6o88"]
@@ -124,9 +125,13 @@ rare_skills = Array[ExtResource("19_r3dg4")]([SubResource("Resource_ikiii"), Sub
 epic_skills = Array[ExtResource("19_r3dg4")]([SubResource("Resource_26xuy")])
 
 [node name="DayCycle" type="AudioStreamPlayer2D" parent="Level1" unique_id=1334289533]
-stream = ExtResource("24_l5fjl")
-volume_db = -25.336
-autoplay = true
+stream = ExtResource("21_bqkvc")
+volume_db = 7.31
+max_polyphony = 1294
+
+[node name="Music" type="AudioStreamPlayer2D" parent="Level1" unique_id=1638091883]
+stream = ExtResource("22_iswit")
+volume_db = -11.629
 max_polyphony = 1294
 
 [node name="NightCycle" type="AudioStreamPlayer2D" parent="Level1" unique_id=154092956]
@@ -137,7 +142,6 @@ max_distance = 1293.55
 [node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="Level1" unique_id=1100434845]
 stream = ExtResource("26_r6o88")
 volume_db = -20.756
-autoplay = true
 
 [node name="Day_Night" parent="Level1" unique_id=606555801 instance=ExtResource("23_2qiau")]
 dayLengthInSeconds = 300.0
