@@ -154,5 +154,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 657.98267, 0, 0)
 
 [node name="PauseMenuLayer" type="CanvasLayer" parent="." unique_id=1]
 process_mode = 4
+layer = -100
 
 [node name="PauseMenu" parent="PauseMenuLayer" unique_id=1990186081 instance=ExtResource("28_pause")]

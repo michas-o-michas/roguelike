@@ -32,6 +32,7 @@ var current_tab: String = "inventory"
 
 func _ready():
 	visible = is_open
+	z_index = 50 if is_open else 0
 	
 	# Conecta botões
 	close_button.pressed.connect(_toggle)
@@ -79,8 +80,11 @@ func _toggle() -> void:
 	visible = is_open
 	
 	if is_open:
+		# Garantir que o inventário fique por cima de SkillsHUD, Hotbar e outros irmãos
+		z_index = 50
 		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	else:
+		z_index = 0
 		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 
 func _switch_tab(tab_id: String) -> void:

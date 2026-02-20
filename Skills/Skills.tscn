@@ -5,6 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://ctqdtdmcbil64" path="res://Skills/SkillIcon.tscn" id="3_f1rrp"]
 
 [node name="UI" type="CanvasLayer" unique_id=704400542]
+layer = 15
 script = ExtResource("1_5vy1b")
 
 [node name="SkillsHUD" type="MarginContainer" parent="." unique_id=1164417152]
@@ -13,6 +14,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 size_flags_horizontal = 0
 size_flags_vertical = 0
 theme_override_constants/margin_left = 4

@@ -9,11 +9,22 @@ extends Control
 
 var _settings_scene: PackedScene
 var _settings_instance: Control
+var _pause_layer: CanvasLayer  ## Layer do menu; quando fechado fica atrás da UI (layer -100)
 
 
 func _ready() -> void:
 	visible = false
 	_settings_scene = preload("res://Scenes/Settings.tscn")
+	# Desde o primeiro frame: não bloquear cliques na UI (inventário/hotbar/craft)
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_set_mouse_filter_recursive(self, Control.MOUSE_FILTER_IGNORE)
+	var overlay := get_node_or_null("Overlay")
+	if overlay is Control:
+		(overlay as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# Colocar a layer atual (antes do reparent) atrás da UI
+	var parent_layer = get_parent()
+	if parent_layer is CanvasLayer:
+		(parent_layer as CanvasLayer).layer = -100
 	# Reparentar para a raiz (deferred) para não ficar sob nós pausados
 	call_deferred("_reparent_to_root")
 	if settings_button:
@@ -24,26 +35,34 @@ func _ready() -> void:
 
 func _reparent_to_root() -> void:
 	var root := get_tree().root
-	var layer := CanvasLayer.new()
-	layer.name = "PauseMenuRootLayer"
-	layer.process_mode = Node.PROCESS_MODE_ALWAYS
-	layer.layer = 100
-	root.add_child(layer)
+	_pause_layer = CanvasLayer.new()
+	_pause_layer.name = "PauseMenuRootLayer"
+	_pause_layer.process_mode = Node.PROCESS_MODE_ALWAYS
+	# Começar atrás da UI do jogo (layer 0) para não bloquear inventário/hotbar/craft
+	_pause_layer.layer = -100
+	root.add_child(_pause_layer)
 	var old_parent := get_parent()
 	old_parent.remove_child(self)
-	layer.add_child(self)
+	_pause_layer.add_child(self)
 	_set_process_mode_always(self)
-	# Raiz e overlay não devem capturar cliques; deixar passar para o Panel/botões
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var overlay := get_node_or_null("Overlay")
 	if overlay is Control:
 		(overlay as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_set_mouse_filter_recursive(self, Control.MOUSE_FILTER_IGNORE)
 
 
 func _set_process_mode_always(node: Node) -> void:
 	node.process_mode = Node.PROCESS_MODE_ALWAYS
 	for child in node.get_children():
 		_set_process_mode_always(child)
+
+
+func _set_mouse_filter_recursive(node: Node, filter: Control.MouseFilter) -> void:
+	if node is Control:
+		(node as Control).mouse_filter = filter
+	for child in node.get_children():
+		_set_mouse_filter_recursive(child, filter)
 
 
 func _input(event: InputEvent) -> void:
@@ -61,6 +80,16 @@ func toggle_pause() -> void:
 
 func _open() -> void:
 	visible = true
+	# Trazer a layer do menu para a frente para receber input
+	if _pause_layer:
+		_pause_layer.layer = 100
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var overlay := get_node_or_null("Overlay")
+	if overlay is Control:
+		(overlay as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if panel:
+		panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	_set_mouse_filter_recursive(panel, Control.MOUSE_FILTER_STOP)
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	get_tree().paused = true
 	if settings_button:
@@ -72,8 +101,14 @@ func _close() -> void:
 		_settings_instance.queue_free()
 		_settings_instance = null
 	visible = false
+	# Colocar a layer do menu ATRÁS da UI do jogo (inventário, hotbar, craft) para não bloquear cliques/drag
+	if _pause_layer:
+		_pause_layer.layer = -100
+	_set_mouse_filter_recursive(self, Control.MOUSE_FILTER_IGNORE)
 	get_tree().paused = false
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	if get_viewport().gui_get_focus_owner() and is_ancestor_of(get_viewport().gui_get_focus_owner()):
+		get_viewport().gui_release_focus()
 
 
 func _on_settings_pressed() -> void:

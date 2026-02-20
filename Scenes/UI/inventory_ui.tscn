@@ -132,6 +132,34 @@ layout_mode = 2
 theme_override_fonts/font = ExtResource("3_sxwjb")
 text = "Crafting"
 
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer/Window" unique_id=1103760123]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 63.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="CraftingContent" type="Control" parent="PanelContainer/Window/MarginContainer" unique_id=1366819968]
+layout_mode = 2
+script = ExtResource("4_kyjlm")
+
+[node name="ScrollContainer" type="ScrollContainer" parent="PanelContainer/Window/MarginContainer/CraftingContent" unique_id=884245080]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="RecipesList" type="VBoxContainer" parent="PanelContainer/Window/MarginContainer/CraftingContent/ScrollContainer" unique_id=1122965751]
+layout_mode = 2
+
 [node name="InventoryContent" type="Control" parent="PanelContainer/Window" unique_id=1124085328]
 custom_minimum_size = Vector2(340, 270)
 layout_mode = 1
@@ -379,30 +407,3 @@ offset_top = 63.0
 offset_right = 62.0
 offset_bottom = 86.0
 text = "💍"
-
-[node name="MarginContainer" type="MarginContainer" parent="PanelContainer/Window" unique_id=1103760123]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/margin_left = 16
-theme_override_constants/margin_top = 16
-theme_override_constants/margin_right = 16
-theme_override_constants/margin_bottom = 16
-
-[node name="CraftingContent" type="Control" parent="PanelContainer/Window/MarginContainer" unique_id=1366819968]
-layout_mode = 2
-script = ExtResource("4_kyjlm")
-
-[node name="ScrollContainer" type="ScrollContainer" parent="PanelContainer/Window/MarginContainer/CraftingContent" unique_id=884245080]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="RecipesList" type="VBoxContainer" parent="PanelContainer/Window/MarginContainer/CraftingContent/ScrollContainer" unique_id=1122965751]
-layout_mode = 2
