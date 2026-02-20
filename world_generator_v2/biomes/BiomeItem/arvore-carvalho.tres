@@ -11,7 +11,8 @@
 [resource]
 script = ExtResource("1_quj3s")
 item_name = "Árvore de Carvalho"
-spawn_chance = 1.0
+min_scale = 2.0
+max_scale = 4.0
 variants = Array[ExtResource("3_nedh0")]([ExtResource("4_54lry"), ExtResource("7_nedh0")])
 sub_items = Array[ExtResource("2_g7cun")]([ExtResource("3_g7cun"), ExtResource("4_nedh0")])
 metadata/_custom_type_script = "uid://b78jp2kr0j5w"

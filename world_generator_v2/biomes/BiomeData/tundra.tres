@@ -10,7 +10,7 @@
 [resource]
 script = ExtResource("6_sylm1")
 min_height = 80.0
-max_height = 100.0
-biome_noise_value = 0.701
+max_height = 150.0
+biome_noise_value = 0.304
 biome_items = Array[ExtResource("1_6uqrf")]([ExtResource("2_mcvm6"), ExtResource("3_fmu8t")])
 metadata/_custom_type_script = "uid://b21qcx74inoxd"

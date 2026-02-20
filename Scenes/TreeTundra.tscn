@@ -1,9 +1,9 @@
-[gd_scene format=3 uid="uid://blpchb0gwdu2x"]
+[gd_scene format=3]
 
 [ext_resource type="Script" uid="uid://dv27eggtunm0h" path="res://Scripts/ResourceNode.gd" id="1_gtca3"]
 [ext_resource type="Script" uid="uid://cipgdn2xsfjj6" path="res://Interface/Interactable.gd" id="2_itkj8"]
 [ext_resource type="Texture2D" uid="uid://b5k7biut5fv5r" path="res://Scenes/folha-removebg-preview.png" id="3_0suky"]
-[ext_resource type="Resource" uid="uid://dcdubcqsijt55" path="res://Assets/Trees/Resources/TreeVariants.tres" id="3_rtd5e"]
+[ext_resource type="Resource" path="res://Assets/Trees/Resources/TreeVariantsTundra.tres" id="3_tundra"]
 [ext_resource type="Script" uid="uid://diendaurjcwrv" path="res://Scripts/TreeWind.gd" id="6_wind"]
 [ext_resource type="Script" uid="uid://deysj0vsbbyh8" path="res://Scripts/PropWithVariants.gd" id="7_variants"]
 
@@ -35,37 +35,36 @@ albedo_texture = ExtResource("3_0suky")
 [sub_resource type="QuadMesh" id="QuadMesh_rtd5e"]
 material = SubResource("StandardMaterial3D_cb0yx")
 
-[node name="Tree" type="StaticBody3D" unique_id=61243902]
+[node name="TreeTundra" type="StaticBody3D"]
 script = ExtResource("1_gtca3")
 
-[node name="VisualRoot" type="Node3D" parent="." unique_id=1262567211]
+[node name="VisualRoot" type="Node3D" parent="."]
 
-[node name="VariantLoader" type="Node" parent="." unique_id=1444635899]
+[node name="VariantLoader" type="Node" parent="."]
 script = ExtResource("7_variants")
-variant_set = ExtResource("3_rtd5e")
+variant_set = ExtResource("3_tundra")
 visual_root_path = NodePath("../VisualRoot")
 
-[node name="TreeWind" type="Node" parent="." unique_id=164717937]
+[node name="TreeWind" type="Node" parent="."]
 script = ExtResource("6_wind")
-mesh_instances_to_animate = Array[NodePath]([NodePath(""), NodePath(""), NodePath("")])
 visual_root_path = NodePath("VisualRoot")
 wind_height_scale = 2.0
 wind_height_power = 5.0
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1917019625]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5562319, -0.06266588)
 shape = SubResource("CylinderShape3D_itkj8")
 
-[node name="Node3D" type="Node3D" parent="." unique_id=59174988]
+[node name="Node3D" type="Node3D" parent="."]
 script = ExtResource("2_itkj8")
 
-[node name="Area3D" type="Area3D" parent="Node3D" unique_id=807248981]
+[node name="Area3D" type="Area3D" parent="Node3D"]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Node3D/Area3D" unique_id=1302361656]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Node3D/Area3D"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2876805, 1.4344943, 0)
 shape = SubResource("CapsuleShape3D_0suky")
 
-[node name="GPUParticles3D" type="GPUParticles3D" parent="." unique_id=1197563932]
+[node name="GPUParticles3D" type="GPUParticles3D" parent="."]
 transform = Transform3D(4.101844, 0, 0, 0, 1, 0, 0, 0, 3.7178228, -0.818331, 8.950705, 0)
 visibility_range_end = 50.0
 emitting = false

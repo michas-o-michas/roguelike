@@ -1,11 +1,17 @@
 [gd_resource type="Resource" script_class="PropVariantSet" format=3 uid="uid://dcdubcqsijt55"]
 
 [ext_resource type="Script" uid="uid://4tfo552xqm56" path="res://Scripts/PropVariantSet.gd" id="1_script"]
-[ext_resource type="PackedScene" uid="uid://chcgdhq8jnn0" path="res://Assets/Trees/Tree/Tree1.fbx" id="2_hni3b"]
-[ext_resource type="PackedScene" uid="uid://d1vcgy5wwlxxp" path="res://Assets/Trees/Tree/Tree_2.fbx" id="3_s4jvb"]
-[ext_resource type="PackedScene" uid="uid://ctximw6at2n10" path="res://Assets/Trees/Tree/Tree_3.fbx" id="4_mc1ab"]
+[ext_resource type="PackedScene" uid="uid://c8nejsfa2b1cp" path="res://Assets/Trees/Tree/Green1.tscn" id="2_u5767"]
+[ext_resource type="PackedScene" uid="uid://cyu6jfrfhx6n5" path="res://Assets/Trees/Tree/Green2.tscn" id="3_8bja7"]
+[ext_resource type="PackedScene" uid="uid://dcggeumy6ol2x" path="res://Assets/Trees/Tree/Green3.tscn" id="4_4dbge"]
+[ext_resource type="PackedScene" uid="uid://cq8bum3w5gcyo" path="res://Assets/Trees/Tree/red2.tscn" id="6_4dbge"]
+[ext_resource type="PackedScene" uid="uid://b3bdwkpanxk5d" path="res://Assets/Trees/Tree/Red1.tscn" id="6_red"]
+[ext_resource type="PackedScene" uid="uid://c5kfh7mhytocx" path="res://Assets/Trees/Tree/Red3.tscn" id="7_ywm1f"]
+[ext_resource type="PackedScene" uid="uid://cuds5pxm5dxj1" path="res://Assets/Trees/Tree/tree_2.tscn" id="8_1gh0i"]
+[ext_resource type="PackedScene" uid="uid://iajqb26lwien" path="res://Assets/Trees/Tree/tree_3.tscn" id="9_nacys"]
+[ext_resource type="PackedScene" uid="uid://2qxs7ybwj53c" path="res://Assets/Trees/Tree/yellow3.tscn" id="10_sxswf"]
 
 [resource]
 script = ExtResource("1_script")
 variant_name = "Árvores comuns"
-variant_scenes = Array[PackedScene]([ExtResource("2_hni3b"), ExtResource("3_s4jvb"), ExtResource("4_mc1ab")])
+variant_scenes = Array[PackedScene]([ExtResource("2_u5767"), ExtResource("3_8bja7"), ExtResource("4_4dbge"), ExtResource("6_red"), ExtResource("6_4dbge"), ExtResource("7_ywm1f"), ExtResource("8_1gh0i"), ExtResource("9_nacys"), ExtResource("10_sxswf")])

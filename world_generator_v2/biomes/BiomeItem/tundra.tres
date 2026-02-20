@@ -9,5 +9,7 @@
 script = ExtResource("1_sco0e")
 item_name = "fall_tree"
 spawn_chance = 0.138
+min_scale = 2.0
+max_scale = 3.0
 variants = Array[ExtResource("3_0brdp")]([ExtResource("4_t882d")])
 metadata/_custom_type_script = "uid://b78jp2kr0j5w"

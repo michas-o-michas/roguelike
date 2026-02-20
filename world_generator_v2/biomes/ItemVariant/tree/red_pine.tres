@@ -1,9 +1,11 @@
 [gd_resource type="Resource" script_class="ItemVariant" format=3 uid="uid://c76lmam8sqks4"]
 
+[ext_resource type="PackedScene" uid="uid://rvkmyou7dlqb" path="res://StylizedNatureLite_FBX/SM_Tree_01.fbx" id="1_yyocj"]
 [ext_resource type="Script" uid="uid://okens1wa1haa" path="res://world_generator_v2/item_variant.gd" id="2_nnd0n"]
 
 [resource]
 script = ExtResource("2_nnd0n")
 variant_name = "Pine red"
+scene = ExtResource("1_yyocj")
 rarity = 4
 metadata/_custom_type_script = "uid://okens1wa1haa"

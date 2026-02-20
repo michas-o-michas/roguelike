@@ -67,6 +67,9 @@ _surfaces = [{
 blend_shape_mode = 0
 shadow_mesh = SubResource("ArrayMesh_b10gh")
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tfjjx"]
+albedo_color = Color(0.41981313, 0.41981313, 0.4198131, 1)
+
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5juv5"]
 albedo_color = Color(0.7254902, 0.8117647, 0.9098039, 1)
 
@@ -75,4 +78,5 @@ albedo_color = Color(0.7254902, 0.8117647, 0.9098039, 1)
 [node name="Tree_1" type="MeshInstance3D" parent="." unique_id=735003323]
 transform = Transform3D(100, 0, 0, 0, -1.1920929e-05, 99.99999, 0, -99.99999, -1.1920929e-05, 0, 0, 0)
 mesh = SubResource("ArrayMesh_3onl2")
+surface_material_override/0 = SubResource("StandardMaterial3D_tfjjx")
 surface_material_override/1 = SubResource("StandardMaterial3D_5juv5")

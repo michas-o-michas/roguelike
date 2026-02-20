@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://cyu6jfrfhx6n5"]
+
+[ext_resource type="PackedScene" uid="uid://d1vcgy5wwlxxp" path="res://Assets/Trees/Tree/Tree_2.fbx" id="1_ep52x"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bsxvs"]
+albedo_color = Color(2.6471912e-06, 0.58707476, 0.007086002, 1)
+
+[node name="Tree_2" unique_id=433154790 instance=ExtResource("1_ep52x")]
+
+[node name="Tree_2" parent="." index="0" unique_id=183494470]
+surface_material_override/1 = SubResource("StandardMaterial3D_bsxvs")
