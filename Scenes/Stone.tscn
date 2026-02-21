@@ -17,6 +17,7 @@ script = ExtResource("1_resource")
 resource_id = "stone"
 drop_amount = 2
 max_health = 5
+required_tool = 3
 
 [node name="VisualRoot" type="Node3D" parent="."]
 

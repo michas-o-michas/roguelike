@@ -14,15 +14,6 @@ extends CharacterBody3D
 @export var air_accel := 6.0
 @export var air_deaccel := 2.0
 
-# ================= DASH =================
-@export var dash_force := 24.0
-@export var dash_time := 0.18
-@export var dash_cooldown := 0.7
-
-var dash_timer := 0.0
-var dash_cooldown_timer := 0.0
-var is_dashing := false
-
 # ================= PULO AVANÇADO =================
 @export var max_jumps := 1
 var jumps_left := 1
@@ -38,7 +29,11 @@ var jump_buffered := false
 @export var mouse_sensitivity := 0.10
 @export var cam_follow_speed := 12.0
 @export var cam_pivot_height := 1.15 ## Centro da órbita = costas/ombros (não os pés)
+@export var cam_pivot_side_offset := 0.5 ## Pivot ao lado (personagem “um pouco ao lado”); centro da tela = mira.
 @export var cam_distance := 5.2
+@export var cam_distance_min := 2.0 ## Distância mínima (scroll para perto)
+@export var cam_distance_max := 10.0 ## Distância máxima (scroll para longe)
+@export var cam_zoom_step := 0.5 ## Quanto altera a distância por “clique” do scroll
 @export var cam_height_offset := 0.35 ## Altura da câmera em relação ao pivot (acima/abaixo)
 @export var cam_pitch_min := -50.0
 @export var cam_pitch_max := 60.0
@@ -126,6 +121,11 @@ func play_attack_animation(anim_state_name: String = "Attack") -> void:
 	is_attacking = true
 	_attack_end_time = Time.get_ticks_msec() / 1000.0 + attack_anim_duration
 
+## Para animação de ataque/coleta (Work) e volta ao Idle. Chamado pelo WeaponHandler ao parar de coletar.
+func stop_attack_animation() -> void:
+	is_attacking = false
+	set_animation("Idle")
+
 ## Chamado pelo SkillManager após aplicar bônus da skill (ex.: para UI ou efeitos).
 func apply_skill(_skill) -> void:
 	pass
@@ -178,15 +178,24 @@ func _input(event):
 		rotation_x -= event.relative.y * mouse_sensitivity
 		rotation_x = clamp(rotation_x, cam_pitch_min, cam_pitch_max)
 
+	# Zoom com scroll: aproximar/afastar câmera
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+			cam_distance = clampf(cam_distance - cam_zoom_step, cam_distance_min, cam_distance_max)
+			get_viewport().set_input_as_handled()
+		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			cam_distance = clampf(cam_distance + cam_zoom_step, cam_distance_min, cam_distance_max)
+			get_viewport().set_input_as_handled()
+
 func _get_camera_target_position() -> Vector3:
-	# Órbita em volta do pivot (costas/ombros), não dos pés
-	var pivot := Vector3(0.0, cam_pivot_height, 0.0)
+	# Órbita em volta do pivot (ombro, ligeiramente ao lado), não do centro do personagem
+	var pivot := Vector3(cam_pivot_side_offset, cam_pivot_height, 0.0)
 	var offset := Vector3(0.0, cam_height_offset, cam_distance)
 	offset = offset.rotated(Vector3.RIGHT, deg_to_rad(rotation_x))
 	return pivot + offset
 
 func _get_pivot_global() -> Vector3:
-	return global_position + Vector3(0.0, cam_pivot_height, 0.0)
+	return global_position + transform.basis * Vector3(cam_pivot_side_offset, cam_pivot_height, 0.0)
 
 ## Usado pelo script ThirdPersonCamera.gd para posição suave em terceira pessoa.
 func get_camera_pivot_global() -> Vector3:
@@ -291,8 +300,7 @@ func _physics_process(delta):
 	if Input.is_action_just_pressed("jump"):
 		jump_buffered = true
 		jump_buffer_timer = jump_buffer_time
-		if not is_dashing:
-			set_animation("Jump")
+		set_animation("Jump")
 
 	if jump_buffered:
 		var can_jump := false
@@ -306,30 +314,24 @@ func _physics_process(delta):
 			velocity.y = jump_force
 			jump_buffered = false
 			jumps_left -= 1
-			if not is_dashing:
-				set_animation("Jump")
+			set_animation("Jump")
 
-	handle_dash(delta, direction)
+	if direction != Vector3.ZERO:
+		var target = direction * current_speed
+		var used_accel = accel if is_on_floor() else air_accel
+		velocity.x = lerp(velocity.x, target.x, used_accel * delta)
+		velocity.z = lerp(velocity.z, target.z, used_accel * delta)
+	else:
+		var used_deaccel = deaccel if is_on_floor() else air_deaccel
+		velocity.x = lerp(velocity.x, 0.0, used_deaccel * delta)
+		velocity.z = lerp(velocity.z, 0.0, used_deaccel * delta)
 
-	if not is_dashing:
-		if direction != Vector3.ZERO:
-			var target = direction * current_speed
-			var used_accel = accel if is_on_floor() else air_accel
-			velocity.x = lerp(velocity.x, target.x, used_accel * delta)
-			velocity.z = lerp(velocity.z, target.z, used_accel * delta)
-		else:
-			var used_deaccel = deaccel if is_on_floor() else air_deaccel
-			velocity.x = lerp(velocity.x, 0.0, used_deaccel * delta)
-			velocity.z = lerp(velocity.z, 0.0, used_deaccel * delta)
-
-	# Não sobrescrever animação durante o ataque nem durante o dash
+	# Não sobrescrever animação durante o ataque
 	if is_attacking:
 		if Time.get_ticks_msec() / 1000.0 >= _attack_end_time:
 			is_attacking = false
 	elif _is_dead():
 		set_animation("Death")
-	elif is_dashing:
-		set_animation("Dash")
 	elif not is_on_floor():
 		set_animation("Jump")
 	elif direction.length_squared() > 0.01:
@@ -340,7 +342,7 @@ func _physics_process(delta):
 	else:
 		set_animation("Idle")
 
-	if is_on_floor() and direction.length() > 0 and not is_dashing:
+	if is_on_floor() and direction.length() > 0:
 		step_timer -= delta
 		if step_timer <= 0:
 			step_audio.play()
@@ -349,26 +351,3 @@ func _physics_process(delta):
 		step_timer = 0
 
 	move_and_slide()
-
-
-func handle_dash(delta, direction):
-
-	if dash_cooldown_timer > 0:
-		dash_cooldown_timer -= delta
-
-	if is_dashing:
-		dash_timer -= delta
-		if dash_timer <= 0:
-			is_dashing = false
-		return
-
-	if Input.is_action_just_pressed("dash") and dash_cooldown_timer <= 0:
-		set_animation("Dash")
-		if direction == Vector3.ZERO:
-			direction = -transform.basis.z
-
-		velocity += direction * dash_force
-
-		is_dashing = true
-		dash_timer = dash_time
-		dash_cooldown_timer = dash_cooldown

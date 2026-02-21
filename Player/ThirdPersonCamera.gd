@@ -11,6 +11,8 @@ extends Camera3D
 # ---- Rotação ----
 @export_group("Rotação")
 @export var rotation_smooth := 14.0
+## Nó para onde a câmera sempre olha (ex.: Marker3D na frente do personagem). Se vazio, usa o pivot do player.
+@export var look_at_marker: Node3D = null
 
 # ---- Look-ahead (antecipação pelo movimento) ----
 @export_group("Look-ahead")
@@ -44,7 +46,7 @@ func _ready() -> void:
 		var target := _get_target_global_position(player)
 		global_position = target
 		_position_velocity = Vector3.ZERO
-		_align_rotation_to_pivot(player.get_camera_pivot_global())
+		_align_rotation_to(_get_look_at_position(player))
 
 
 func _physics_process(delta: float) -> void:
@@ -52,6 +54,7 @@ func _physics_process(delta: float) -> void:
 	if not player:
 		return
 
+	var look_at_pos := _get_look_at_position(player)
 	var pivot = player.get_camera_pivot_global()
 	var target_pos := _get_target_global_position(player)
 
@@ -74,8 +77,8 @@ func _physics_process(delta: float) -> void:
 	_position_velocity = _position_velocity.limit_length(max_velocity)
 	global_position += _position_velocity * delta
 
-	# Rotação suave: slerp em direção ao pivot
-	var ideal_basis := Basis.looking_at(pivot - global_position, Vector3.UP)
+	# Rotação suave: slerp em direção ao ponto de olhar (marker ou pivot)
+	var ideal_basis := Basis.looking_at(look_at_pos - global_position, Vector3.UP)
 	var rot_k := 1.0 - exp(-rotation_smooth * delta)
 	global_transform.basis = global_transform.basis.slerp(ideal_basis, rot_k)
 
@@ -100,8 +103,13 @@ func _get_target_global_position(player: Node) -> Vector3:
 	return player.get_camera_target_global_position()
 
 
-func _align_rotation_to_pivot(pivot: Vector3) -> void:
-	global_transform.basis = Basis.looking_at(pivot - global_position, Vector3.UP)
+func _get_look_at_position(player: Node) -> Vector3:
+	if look_at_marker and is_instance_valid(look_at_marker):
+		return look_at_marker.global_position
+	return player.get_camera_pivot_global()
+
+func _align_rotation_to(point: Vector3) -> void:
+	global_transform.basis = Basis.looking_at(point - global_position, Vector3.UP)
 
 
 func _resolve_collision(from: Vector3, to: Vector3) -> Vector3:

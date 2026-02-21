@@ -1,11 +1,12 @@
-[gd_scene format=3 uid="uid://blpchb0gwdu2x"]
+[gd_scene format=3]
 
-[ext_resource type="Script" uid="uid://dv27eggtunm0h" path="res://Scripts/ResourceNode.gd" id="1_gtca3"]
-[ext_resource type="Script" uid="uid://cipgdn2xsfjj6" path="res://Interface/Interactable.gd" id="2_itkj8"]
-[ext_resource type="Texture2D" uid="uid://b5k7biut5fv5r" path="res://Scenes/folha-removebg-preview.png" id="3_0suky"]
-[ext_resource type="Resource" uid="uid://dcdubcqsijt55" path="res://Assets/Trees/Resources/TreeVariants.tres" id="3_rtd5e"]
-[ext_resource type="Script" uid="uid://deysj0vsbbyh8" path="res://Scripts/PropWithVariants.gd" id="7_variants"]
-[ext_resource type="Script" uid="uid://diendaurjcwrv" path="res://Scripts/TreeWind.gd" id="8_wind"]
+[ext_resource type="Script" path="res://Scripts/ResourceNode.gd" id="1_wtpcv"]
+[ext_resource type="PackedScene" path="res://Assets/Trees/Tree/tree_3.tscn" id="2_2jcyn"]
+[ext_resource type="Script" path="res://Scripts/PropWithVariants.gd" id="3_ai7la"]
+[ext_resource type="Resource" path="res://Assets/Trees/Resources/TreeVariants.tres" id="4_v8216"]
+[ext_resource type="Script" path="res://Interface/Interactable.gd" id="5_bli6i"]
+[ext_resource type="Texture2D" path="res://Scenes/folha-removebg-preview.png" id="6_mgnjd"]
+[ext_resource type="Script" path="res://Scripts/TreeWind.gd" id="7_c86sv"]
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_itkj8"]
 height = 3.4067383
@@ -30,32 +31,35 @@ scale_max = 0.5
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_cb0yx"]
 transparency = 1
 cull_mode = 2
-albedo_texture = ExtResource("3_0suky")
+albedo_texture = ExtResource("6_mgnjd")
 
 [sub_resource type="QuadMesh" id="QuadMesh_rtd5e"]
 material = SubResource("StandardMaterial3D_cb0yx")
 
-[node name="Tree" type="StaticBody3D" unique_id=61243902]
+[node name="_StaticBody3D_76" type="StaticBody3D" unique_id=61243902]
+transform = Transform3D(1.7482656, 0, 3.4274395, 0, 3.847567, 0, -3.4274395, 0, 1.7482656, 99.00619, 25.919153, 24.059826)
 collision_layer = 3
 collision_mask = 3
-script = ExtResource("1_gtca3")
+script = ExtResource("1_wtpcv")
 drop_amount = 5
 
 [node name="VisualRoot" type="Node3D" parent="." unique_id=1262567211]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 
+[node name="Tree_3" parent="VisualRoot" unique_id=441538536 instance=ExtResource("2_2jcyn")]
+
 [node name="VariantLoader" type="Node" parent="." unique_id=1444635899]
-script = ExtResource("7_variants")
-variant_set = ExtResource("3_rtd5e")
+script = ExtResource("3_ai7la")
+variant_set = ExtResource("4_v8216")
 visual_root_path = NodePath("../VisualRoot")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1917019625]
-transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 1.5562319, -0.06266588)
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 1.5562319, -0.06266588)
 shape = SubResource("CylinderShape3D_itkj8")
 debug_color = Color(1.732707e-06, 0.6190691, 0.72399837, 0.41960785)
 
 [node name="Node3D" type="Node3D" parent="." unique_id=59174988]
-script = ExtResource("2_itkj8")
+script = ExtResource("5_bli6i")
 
 [node name="Area3D" type="Area3D" parent="Node3D" unique_id=807248981]
 
@@ -74,6 +78,6 @@ process_material = SubResource("ParticleProcessMaterial_0e63j")
 draw_pass_1 = SubResource("QuadMesh_rtd5e")
 
 [node name="TreeWind" type="Node" parent="." unique_id=559624633]
-script = ExtResource("8_wind")
+script = ExtResource("7_c86sv")
 visual_root_path = NodePath("../VisualRoot")
 wind_speed = 0.5

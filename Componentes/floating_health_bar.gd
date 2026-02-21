@@ -109,8 +109,11 @@ func update_position():
 	if not camera:
 		return
 	
-	# Converter posição 3D para 2D
-	var screen_pos = camera.unproject_position(target_node.global_position)
+	# Posição em mundo: usar get_bar_world_position() se o alvo tiver (ex.: ResourceNode.raycast_position)
+	var world_pos: Vector3 = target_node.global_position
+	if target_node.has_method("get_bar_world_position"):
+		world_pos = target_node.get_bar_world_position()
+	var screen_pos = camera.unproject_position(world_pos)
 	
 	# Aplicar offset
 	screen_pos += bar_offset

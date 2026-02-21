@@ -4,6 +4,7 @@
 [ext_resource type="PackedScene" uid="uid://dgsjsutvtlgdh" path="res://Scenes/enemies/wolf_spawner.tscn" id="4_pvwtc"]
 [ext_resource type="PackedScene" uid="uid://chmt2wxe13a3o" path="res://Player/player.tscn" id="4_xwb8w"]
 [ext_resource type="PackedScene" uid="uid://nql47rn6v1pw" path="res://Scenes/Landingpad.tscn" id="5_qdibi"]
+[ext_resource type="PackedScene" path="res://Testes/TreeWithResource.tscn" id="5_xwb8w"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_h02br"]
 sky_horizon_color = Color(0.53434706, 0.53197336, 0.6919441, 1)
@@ -116,3 +117,6 @@ pad_type = 1
 
 [node name="WolfSpawner" parent="." unique_id=1076301937 instance=ExtResource("4_pvwtc")]
 transform = Transform3D(1, 0, 0, 0, 0.99999475, 0.003246307, 0, -0.003246307, 0.99999475, 0, 0, 0)
+
+[node name="_StaticBody3D_76" parent="." unique_id=61243902 instance=ExtResource("5_xwb8w")]
+transform = Transform3D(1.7482656, 0, 3.4274395, 0, 3.847567, 0, -3.4274395, 0, 1.7482656, 16.822517, 0.13557625, 6.4079742)

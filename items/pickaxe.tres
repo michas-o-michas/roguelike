@@ -11,6 +11,7 @@ model_scene = ExtResource("3_nns10")
 damage = 1
 attack_speed = 1.0
 attack_sound = ExtResource("1_nns10")
+equipment_slot = 3
 item_name = "Picareta"
 item_icon = ExtResource("2_upg28")
 type = 0

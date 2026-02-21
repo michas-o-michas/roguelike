@@ -15,4 +15,5 @@ item_name = "Espada"
 item_icon = ExtResource("2_qtt24")
 type = 0
 max_stack = 1
+equipment_slot = 0
 metadata/_custom_type_script = "uid://brg2mqlobceng"

@@ -1,0 +1,41 @@
+[gd_scene format=3 uid="uid://bfax7evb37nch"]
+
+[ext_resource type="Script" uid="uid://xcfdsnjlvkqm" path="res://Scenes/Particles/ResourceHitParticles.gd" id="1_script"]
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_hit"]
+emission_shape_scale = Vector3(3, 3, 3)
+emission_shape = 6
+emission_ring_axis = Vector3(0, 0, 1)
+emission_ring_height = 1.0
+emission_ring_radius = 1.0
+emission_ring_inner_radius = 0.0
+emission_ring_cone_angle = 90.0
+direction = Vector3(0, 1, 0)
+spread = 180.0
+initial_velocity_min = 0.8
+initial_velocity_max = 1.8
+gravity = Vector3(0, -5, 0)
+scale_min = 0.06
+scale_max = 0.14
+color = Color(0.55, 0.45, 0.35, 0.9)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_particle"]
+transparency = 1
+cull_mode = 2
+shading_mode = 0
+albedo_color = Color(0.6, 0.5, 0.4, 0.85)
+billboard_mode = 1
+
+[sub_resource type="QuadMesh" id="QuadMesh_particle"]
+material = SubResource("StandardMaterial3D_particle")
+size = Vector2(0.2, 0.2)
+
+[node name="ResourceHitParticles" type="GPUParticles3D" unique_id=1337671236]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 0, 0)
+emitting = false
+amount = 18
+one_shot = true
+explosiveness = 1.0
+process_material = SubResource("ParticleProcessMaterial_hit")
+draw_pass_1 = SubResource("QuadMesh_particle")
+script = ExtResource("1_script")

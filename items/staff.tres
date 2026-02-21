@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="Weapon" format=3 uid="uid://dd3uk5wu37sg4"]
+
+[ext_resource type="AudioStream" uid="uid://bxanrnefngxrp" path="res://attack_sword.mp3" id="1_a610o"]
+[ext_resource type="Texture2D" uid="uid://bvyxlyhq8c31p" path="res://items/icons/staff.png" id="2_a610o"]
+[ext_resource type="PackedScene" uid="uid://cwdpr3bmvea7b" path="res://items/Scenes/staff.tscn" id="3_jkvq4"]
+[ext_resource type="Script" uid="uid://brg2mqlobceng" path="res://Scripts/weapon/weapon.gd" id="4_bgddj"]
+[ext_resource type="PackedScene" uid="uid://dldrbjd00a7wx" path="res://Scenes/MagicProjectile.tscn" id="4_jkvq4"]
+
+[resource]
+script = ExtResource("4_bgddj")
+model_scene = ExtResource("3_jkvq4")
+weapon_type = 1
+damage = 1
+attack_speed = 1.0
+attack_sound = ExtResource("1_a610o")
+effect = 1
+projectile_scene = ExtResource("4_jkvq4")
+equipment_slot = 1
+item_name = "Staff"
+item_icon = ExtResource("2_a610o")
+type = 0
+max_stack = 1
+metadata/_custom_type_script = "uid://brg2mqlobceng"

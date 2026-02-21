@@ -11,23 +11,31 @@ extends Panel
 
 # ================= TIPOS DE SLOT =================
 enum SlotType {
-	INVENTORY,           # Aceita qualquer item
-	HOTBAR,             # Aceita só: armas, ferramentas, consumíveis
-	EQUIPMENT_WEAPON,   # Aceita só: armas
-	EQUIPMENT_ARMOR,    # Aceita só: armaduras (helmet, chest, legs)
-	EQUIPMENT_ACCESSORY # Aceita só: acessórios (amulet, rings)
+	INVENTORY,            # Aceita qualquer item
+	HOTBAR,              # Aceita: as 4 armas (Weapon) ou consumíveis — uso rápido
+	EQUIPMENT_WEAPON,    # Aceita qualquer Weapon (legado; preferir os 4 abaixo)
+	EQUIPMENT_ARMOR,     # Aceita só: armaduras (futuro)
+	EQUIPMENT_ACCESSORY, # Aceita só: acessórios (futuro)
+	EQUIPMENT_MELEE,     # Só Weapon com equipment_slot == MELEE (Espada)
+	EQUIPMENT_STAFF,     # Só Weapon com equipment_slot == STAFF (Cajado)
+	EQUIPMENT_AXE,       # Só Weapon com equipment_slot == AXE (Machado)
+	EQUIPMENT_PICKAXE    # Só Weapon com equipment_slot == PICKAXE (Picareta)
 }
 
 # ================= EXPORTS =================
 @export var slot_type: SlotType = SlotType.INVENTORY
 @export var slot_index: int = 0  # Índice deste slot no array do InventoryManager
+## Imagem de fundo do slot. Se definida, sobrescreve a textura padrão da cena.
+@export var slot_background: Texture2D = null
 
 # ================= REFERÊNCIAS (assign no _ready ou manualmente) =================
 @onready var item_icon: TextureRect = $PanelContainer/ItemIcon     # Mostra o ícone do item
 @onready var amount_label: Label = $AmountLabel      # Mostra quantidade (se >1)
+@onready var _bg_rect: TextureRect = $PanelContainer  # Retângulo que exibe o fundo do slot
 
 # ================= ESTADO =================
 var item_data: Dictionary = {}  # { "item": Item, "amount": int } ou vazio
+var display_spell: Spell = null  # Quando não null, slot mostra magia (modo cajado)
 var is_dragging: bool = false
 var is_swapping: bool = false  # Flag pra prevenir refresh durante swap
 var original_modulate: Color
@@ -41,9 +49,19 @@ func _ready():
 	original_modulate = modulate
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND  # Mostra que é clicável
-	
+	if slot_background and _bg_rect:
+		_bg_rect.texture = slot_background
 	# Reseta cor quando mouse sai durante drag
 	mouse_exited.connect(_on_mouse_exited)
+
+## Define a imagem de fundo do slot (pode ser chamado pela hotbar ou em código).
+func set_slot_background(texture: Texture2D) -> void:
+	if _bg_rect:
+		_bg_rect.texture = texture
+	else:
+		var rect = get_node_or_null("PanelContainer") as TextureRect
+		if rect:
+			rect.texture = texture
 
 func _on_mouse_exited() -> void:
 	# Só reseta se não tiver item sendo dropado neste frame
@@ -113,18 +131,31 @@ func _can_drop_data(_at_position: Vector2, data) -> bool:
 			return true
 		
 		SlotType.HOTBAR:
-			# Hotbar aceita só: armas, ferramentas, consumíveis
-			if item.type in [Item.Type.WEAPON, Item.Type.TOOL, Item.Type.CONSUMABLE]:
+			# Hotbar: só as 4 armas (Weapon) ou consumíveis
+			if (item is Weapon) or item.type == Item.Type.CONSUMABLE:
 				modulate = color_valid_drop
 				return true
 			modulate = color_invalid_drop
 			return false
 		
 		SlotType.EQUIPMENT_WEAPON:
-			# Slot de arma aceita só armas
-			if item.type == Item.Type.WEAPON:
+			if item is Weapon:
 				modulate = color_valid_drop
 				return true
+			modulate = color_invalid_drop
+			return false
+		
+		SlotType.EQUIPMENT_MELEE, SlotType.EQUIPMENT_STAFF, SlotType.EQUIPMENT_AXE, SlotType.EQUIPMENT_PICKAXE:
+			if item is Weapon:
+				var wanted: int = Weapon.ToolSlot.MELEE
+				match slot_type:
+					SlotType.EQUIPMENT_MELEE:   wanted = Weapon.ToolSlot.MELEE
+					SlotType.EQUIPMENT_STAFF:   wanted = Weapon.ToolSlot.STAFF
+					SlotType.EQUIPMENT_AXE:     wanted = Weapon.ToolSlot.AXE
+					SlotType.EQUIPMENT_PICKAXE: wanted = Weapon.ToolSlot.PICKAXE
+				if (item as Weapon).get_equipment_slot() == wanted:
+					modulate = color_valid_drop
+					return true
 			modulate = color_invalid_drop
 			return false
 		
@@ -206,10 +237,10 @@ func _notification(what: int) -> void:
 
 ## Define o item visual deste slot
 func set_item(data: Dictionary) -> void:
+	display_spell = null  # Limpa modo magia
 	item_data = data
 	
 	if data.is_empty():
-		# Slot vazio
 		if item_icon:
 			item_icon.texture = null
 		if amount_label:
@@ -217,18 +248,22 @@ func set_item(data: Dictionary) -> void:
 	else:
 		var item: Item = data["item"]
 		var amount: int = data.get("amount", 1)
-		
-		# Ícone (se o item tiver item_icon no resource)
 		if item_icon and item.item_icon:
 			item_icon.texture = item.item_icon
-		
-		# Quantidade
 		if amount_label:
 			if amount > 1:
 				amount_label.text = str(amount)
 				amount_label.visible = true
 			else:
 				amount_label.visible = false
+
+## Mostra uma magia neste slot (modo cajado). Passar null para limpar.
+func set_display_spell(spell: Spell) -> void:
+	display_spell = spell
+	if item_icon:
+		item_icon.texture = spell.icon if spell and spell.icon else null
+	if amount_label:
+		amount_label.visible = false
 
 ## Retorna o item atual
 func get_item() -> Dictionary:
@@ -254,9 +289,8 @@ func _update_inventory_manager() -> void:
 
 ## Atualiza o visual baseado no InventoryManager (chamado quando inventário muda)
 func refresh_from_inventory() -> void:
-	# Não atualiza se tá no meio de um swap
 	if is_swapping:
 		return
-	
+	display_spell = null
 	var data = InventoryManager.get_slot(slot_index)
 	set_item(data if not data.is_empty() else {})

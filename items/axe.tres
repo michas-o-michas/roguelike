@@ -15,4 +15,5 @@ item_name = "Machado"
 item_icon = ExtResource("2_8fi4i")
 type = 1
 max_stack = 1
+equipment_slot = 2
 metadata/_custom_type_script = "uid://brg2mqlobceng"

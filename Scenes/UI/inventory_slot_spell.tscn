@@ -1,0 +1,9 @@
+[gd_scene format=3 uid="uid://biiyrn12q0pk1"]
+
+[ext_resource type="PackedScene" uid="uid://bj0fla0h0psld" path="res://Scenes/UI/inventory_slot.tscn" id="1_aqe1h"]
+[ext_resource type="Texture2D" uid="uid://bp7jduangumxe" path="res://Assets/menu/SlotSpell.png" id="2_w4yh7"]
+
+[node name="inventory_slot_spell" unique_id=12331941 instance=ExtResource("1_aqe1h")]
+
+[node name="PanelContainer" parent="." index="0" unique_id=1545098077]
+texture = ExtResource("2_w4yh7")

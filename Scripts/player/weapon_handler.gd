@@ -33,11 +33,29 @@ signal attack_hit(target: Node3D, damage: int)
 @export_group("Referências")
 @export var camera_node: Node3D = null            # Câmera do player (para projéteis). Se vazio, tenta "Camera3D".
 
+@export_group("Slots no corpo (BoneAttachment/Pivot)")
+## Pivot (Node3D) onde fica o modelo da arma do inventário quando não está na mão.
+@export var slot_display_melee: NodePath = NodePath("")
+@export var slot_display_staff: NodePath = NodePath("")
+@export var slot_display_axe: NodePath = NodePath("")
+@export var slot_display_pickaxe: NodePath = NodePath("")
+## Escala do modelo no corpo (nas costas/quadril). Ajuste se ficar grande ou pequeno.
+@export var slot_model_scale: float = 0.5
+
 # ================= ESTADO =================
 var equipped_weapon: Weapon = null
-var weapon_model: Node3D = null         # Referência ao modelo 3D instanciado
+var weapon_model: Node3D = null         # Referência ao modelo 3D na mão
+var _slot_models: Dictionary = {}       # Weapon.ToolSlot (int) -> Node3D (modelo instanciado no pivot)
 var attack_cooldown_timer: float = 0.0
 var is_attacking: bool = false
+
+# Coleta (E em recurso): machado/picareta aplicam dano em intervalo até o recurso morrer
+var is_harvesting: bool = false
+var harvest_target: Node = null
+var harvest_timer: float = 0.0
+var harvest_start_position: Vector3 = Vector3.ZERO
+## Distância máxima em metros que o jogador pode se mover durante a coleta; além disso cancela.
+@export var harvest_move_cancel_distance: float = 0.2
 
 # ================= SWING (animação de ataque) =================
 var swing_progress: float = 0.0         # 0.0 = posição de repouso, 1.0 = fim do swing
@@ -65,14 +83,15 @@ func _ready():
 		attack_area.collision_mask = 1  # layer 1 = personagens/inimigos
 	if camera_node == null:
 		camera_node = get_parent().get_node_or_null("Camera3D") as Node3D
-	# Equipa arma padrão ao iniciar (ex.: wood_sword) para poder bater logo
-	var ws = get_tree().root.get_node_or_null("WeaponSystem")
-	if equipped_weapon == null and ws != null:
-		var default_id: String = ws.get_default_weapon_id()
-		if not default_id.is_empty():
-			var w: Weapon = ws.get_weapon(default_id)
-			if w:
-				equip(w)
+	if ToolSelectionManager:
+		ToolSelectionManager.tool_changed.connect(_update_slot_displays)
+	if InventoryManager:
+		InventoryManager.inventory_changed.connect(_update_slot_displays)
+	# Atualiza após inventário e tool estarem prontos (dois frames).
+	call_deferred("_update_slot_displays")
+	await get_tree().process_frame
+	await get_tree().process_frame
+	_update_slot_displays()
 
 # ================= EQUIPAR / DESEQUIPAR =================
 
@@ -85,13 +104,45 @@ func equip(weapon: Weapon) -> void:
 	unequip()  # Garante que desequipa antes (limpa modelo anterior)
 	equipped_weapon = weapon
 	_load_weapon_model()
+	_update_slot_displays()
 	emit_signal("weapon_equipped", weapon)
 
 ## Desequipa a arma atual
 func unequip() -> void:
 	equipped_weapon = null
 	_remove_weapon_model()
+	_update_slot_displays()
 	emit_signal("weapon_unequipped")
+
+## Inicia modo coleta: aplica dano ao recurso a cada attack_speed até morrer. Chamado após E em árvore/pedra.
+func start_harvesting(resource_node: Node) -> void:
+	if resource_node == null or not resource_node.has_method("take_hit"):
+		return
+	_stop_harvesting()
+	harvest_target = resource_node
+	is_harvesting = true
+	harvest_timer = 0.0
+	var player = get_parent() as Node3D
+	harvest_start_position = player.global_position if player else Vector3.ZERO
+	if resource_node is ResourceNode and not resource_node.depleted.is_connected(_on_harvest_target_depleted):
+		resource_node.depleted.connect(_on_harvest_target_depleted)
+	player = get_parent()
+	if player.has_method("play_attack_animation"):
+		player.play_attack_animation("Attack")
+
+func _on_harvest_target_depleted() -> void:
+	_stop_harvesting()
+
+func _stop_harvesting() -> void:
+	if harvest_target != null and is_instance_valid(harvest_target) and harvest_target is ResourceNode:
+		if harvest_target.depleted.is_connected(_on_harvest_target_depleted):
+			harvest_target.depleted.disconnect(_on_harvest_target_depleted)
+	is_harvesting = false
+	harvest_target = null
+	harvest_timer = 0.0
+	var player = get_parent()
+	if player.has_method("stop_attack_animation"):
+		player.stop_attack_animation()
 
 # ================= MODELO VISUAL =================
 
@@ -115,20 +166,106 @@ func _remove_weapon_model() -> void:
 		weapon_model.queue_free()
 		weapon_model = null
 
+## Retorna o pivot (Node3D) para o slot; usa export path ou fallback pelo nome no skeleton.
+func _get_pivot_for_slot(tool_slot: int) -> Node3D:
+	var path: NodePath
+	match tool_slot:
+		Weapon.ToolSlot.MELEE:   path = slot_display_melee
+		Weapon.ToolSlot.STAFF:   path = slot_display_staff
+		Weapon.ToolSlot.AXE:     path = slot_display_axe
+		Weapon.ToolSlot.PICKAXE: path = slot_display_pickaxe
+		_: return null
+	if not path.is_empty():
+		var n: Node = get_node_or_null(path)
+		if n is Node3D:
+			return n as Node3D
+	# Fallback: buscar pelo skeleton no player
+	var player: Node = get_parent()
+	if not player:
+		return null
+	var skeleton: Node = player.get_node_or_null("UAL2_Standard/Armature/Skeleton")
+	if not skeleton:
+		return null
+	var attach_name: String
+	match tool_slot:
+		Weapon.ToolSlot.MELEE:   attach_name = "AttachmentMelee/Node3D"
+		Weapon.ToolSlot.STAFF:   attach_name = "AttachmentStaff/Node3D"
+		Weapon.ToolSlot.AXE:     attach_name = "AttachmentAxe/Node3D"
+		Weapon.ToolSlot.PICKAXE: attach_name = "AttachmentPickaxe/Node3D"
+		_: return null
+	var pivot: Node = skeleton.get_node_or_null(attach_name)
+	return pivot as Node3D if pivot is Node3D else null
+
+## Mostra no pivot o modelo da arma equipada no inventário; some quando está em uso (na mão).
+## Não altera transform do pivot — posição/rotação ficam só na cena do player.
+## Pode ser chamada pelo sinal tool_changed(active_slot: int); o argumento é ignorado.
+func _update_slot_displays(_new_slot: int = -1) -> void:
+	if not ToolSelectionManager or not InventoryManager:
+		return
+	var active: int = ToolSelectionManager.active_tool_slot
+	for tool_slot in [Weapon.ToolSlot.MELEE, Weapon.ToolSlot.STAFF, Weapon.ToolSlot.AXE, Weapon.ToolSlot.PICKAXE]:
+		# Remove modelo antigo desse slot
+		if _slot_models.has(tool_slot):
+			var old: Node = _slot_models[tool_slot]
+			_slot_models.erase(tool_slot)
+			if is_instance_valid(old):
+				old.queue_free()
+		var pivot: Node3D = _get_pivot_for_slot(tool_slot)
+		if not pivot:
+			continue
+		var w: Weapon = InventoryManager.get_equipped_weapon(tool_slot)
+		var should_show: bool = (w != null) and (active != tool_slot)
+		if not should_show:
+			continue
+		if w.model_scene == null:
+			push_warning("WeaponHandler: '%s' não tem model_scene." % w.item_name)
+			continue
+		# Limpa filhos antigos do pivot (modelo anterior ou cena estática)
+		for child in pivot.get_children():
+			if is_instance_valid(child):
+				child.queue_free()
+		var model: Node3D = w.model_scene.instantiate() as Node3D
+		if not model:
+			continue
+		model.scale = Vector3(slot_model_scale, slot_model_scale, slot_model_scale)
+		pivot.add_child(model)
+		_slot_models[tool_slot] = model
+
 ## Retorna a arma equipada atual (ou null)
 func get_equipped() -> Weapon:
 	return equipped_weapon
 
 # ================= ATAQUE =================
 
-func _physics_process(delta):
-	# Countdown do cooldown entre ataques
+func _physics_process(delta: float) -> void:
 	if attack_cooldown_timer > 0:
 		attack_cooldown_timer -= delta
 
-	# Atualiza a animação de swing todo frame
+	# Loop de coleta (E em árvore/pedra): aplica dano a cada attack_speed até o recurso morrer
+	if is_harvesting and harvest_target != null:
+		if not is_instance_valid(harvest_target):
+			_stop_harvesting()
+		else:
+			# Cancelar se o jogador se moveu (saiu do lugar)
+			var player_node := get_parent() as Node3D
+			if player_node and (player_node.global_position - harvest_start_position).length() > harvest_move_cancel_distance:
+				_stop_harvesting()
+				return
+			harvest_timer += delta
+			if equipped_weapon != null and harvest_timer >= equipped_weapon.attack_speed:
+				harvest_timer = 0.0
+				var player = get_parent()
+				if player.has_method("play_attack_animation"):
+					player.play_attack_animation("Attack")
+				if harvest_target.has_method("take_hit"):
+					harvest_target.take_hit(equipped_weapon.damage)
+				# Para assim que o recurso acaba (health <= 0), sem esperar queue_free()
+				if harvest_target is ResourceNode and harvest_target.health <= 0:
+					_stop_harvesting()
+				elif not is_instance_valid(harvest_target):
+					_stop_harvesting()
+		return
 
-	# Única fonte de input de ataque (Player não trata mais attack/mb1)
 	if Input.is_action_just_pressed("attack") or Input.is_action_just_pressed("mb1"):
 		_try_attack()
 
@@ -148,7 +285,7 @@ func _try_attack() -> void:
 	# Notifica o Player: ferramentas (mineração) usam "Work", armas usam "Attack"
 	var player = get_parent()
 	if player.has_method("play_attack_animation"):
-		var anim_name := "Attack" if not equipped_weapon.can_mine() else "Work"
+		var anim_name := "Attack" if not equipped_weapon.can_mine() else "Attack"
 		player.play_attack_animation(anim_name)
 
 	# Toca o som do ataque
@@ -310,33 +447,39 @@ func _try_mine_target(target: Node3D) -> void:
 # ================= RANGED (PROJÉTIL) =================
 
 func _attack_ranged() -> void:
-
-	if equipped_weapon.projectile_scene == null:
+	# Magia selecionada na hotbar (modo cajado): 1-9 selecionam, clique dispara
+	var spell: Spell = SpellManager.get_selected_spell() if SpellManager else null
+	var proj_scene: PackedScene = equipped_weapon.projectile_scene
+	if spell and spell.projectile_scene != null:
+		proj_scene = spell.projectile_scene
+	if proj_scene == null:
 		push_warning("WeaponHandler: Staff sem projectile_scene assignada!")
 		return
 
-	# Instancia o projétil na posição do player
-	var projectile = equipped_weapon.projectile_scene.instantiate()
+	var projectile = proj_scene.instantiate()
 	get_tree().current_scene.add_child(projectile)
 
-	# Posiciona na câmera do player
 	var player = get_parent()
 	var cam = camera_node if camera_node != null else player.get_node_or_null("Camera3D") as Node3D
 	if cam == null:
 		push_warning("WeaponHandler: câmera não definida. Defina camera_node no Inspector.")
 		return
+	# Usar o mesmo centro da tela que o raycast (InteractionManager) para mira e projétil alinhados
+	var vp := cam.get_viewport()
+	var center := vp.get_visible_rect().size / 2
+	var direction := (cam as Camera3D).project_ray_normal(center).normalized()
+
 	projectile.global_position = cam.global_position
+	var ptype: int = equipped_weapon.projectile_type
+	if spell:
+		ptype = spell.projectile_type
 
-	# Direção: pra onde a câmera tá apontando
-	var direction = -cam.global_transform.basis.z.normalized()
-
-	# Passa os dados necessários pro projétil
 	if projectile.has_method("setup"):
 		projectile.setup(
 			direction,
 			equipped_weapon.projectile_speed,
 			equipped_weapon.damage,
-			equipped_weapon.projectile_type
+			ptype
 		)
 
 # ================= SOM =================

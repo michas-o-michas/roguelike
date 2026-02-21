@@ -19,7 +19,13 @@ signal inventory_changed         # Emitido toda vez que o inventário muda (atua
 signal coins_changed(new_amount) # Emitido quando moedas mudam
 
 # ================= CONFIGURAÇÃO =================
-@export var max_slots: int = 110         # Hotbar (0-8) + Inventário (9-28) + Equipment (100-106)
+@export var max_slots: int = 110         # Hotbar (0-8) + Inventário (9-28) + Equipment (29-34)
+
+# Índices dos 4 slots de equipamento fixos (melee, staff, axe, pickaxe)
+const SLOT_EQUIP_MELEE: int = 29
+const SLOT_EQUIP_STAFF: int = 30
+const SLOT_EQUIP_AXE: int = 31
+const SLOT_EQUIP_PICKAXE: int = 32
 
 # ================= ESTRUTURA INTERNA =================
 # Cada slot é um dicionário: { "item": Item (resource), "amount": int }
@@ -36,7 +42,13 @@ func init_coins(amount: int) -> void:
 func _ready():
 	slots.clear()
 	slots.resize(max_slots)
+	call_deferred("_give_initial_resources")
 	emit_signal("inventory_changed")
+
+## Recursos iniciais ao iniciar o jogo (50 madeira, 50 pedra). Chamado em defer para CraftingManager estar pronto.
+func _give_initial_resources() -> void:
+	add_item_by_id("wood", 50)
+	add_item_by_id("stone", 50)
 
 
 
@@ -210,9 +222,9 @@ func get_all_item_counts() -> Dictionary:
 
 # ================= UTILITÁRIOS =================
 
-## Retorna o índice do primeiro slot vazio, ou -1 se não houver
+## Retorna o índice do primeiro slot vazio (apenas hotbar 0-8 e inventário 9-28). Slots 29-32 são reservados para equipamento.
 func _get_first_empty_slot() -> int:
-	for i in range(max_slots):
+	for i in range(29):  # 0-28 = hotbar + grid
 		if slots[i] == null:
 			return i
 	return -1
@@ -222,6 +234,30 @@ func get_slot(index: int) -> Dictionary:
 	if index >= 0 and index < max_slots:
 		return slots[index] if slots[index] != null else {}
 	return {}
+
+## Retorna o índice do slot de equipamento para o tipo (Weapon.ToolSlot).
+func get_equipment_slot_index(tool_slot: int) -> int:
+	match tool_slot:
+		0: return SLOT_EQUIP_MELEE    # Weapon.ToolSlot.MELEE
+		1: return SLOT_EQUIP_STAFF    # Weapon.ToolSlot.STAFF
+		2: return SLOT_EQUIP_AXE      # Weapon.ToolSlot.AXE
+		3: return SLOT_EQUIP_PICKAXE   # Weapon.ToolSlot.PICKAXE
+		_: return -1
+
+## Retorna a arma equipada no slot de equipamento (MELEE/STAFF/AXE/PICKAXE), ou null.
+func get_equipped_weapon(tool_slot: int) -> Weapon:
+	var idx := get_equipment_slot_index(tool_slot)
+	if idx < 0:
+		return null
+	var data: Dictionary = get_slot(idx)
+	if data.is_empty():
+		return null
+	var item = data.get("item", null)
+	return item as Weapon if item is Weapon else null
+
+## True se o item pode ir nos 4 slots de equipamento (só Weapon).
+func is_equipable_weapon(item: Item) -> bool:
+	return item != null and item.can_go_in_equipment_slot()
 
 ## Limpa todo o inventário (útil pra reset/teste)
 func clear() -> void:

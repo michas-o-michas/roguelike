@@ -1,67 +1,62 @@
-# hotbar.gd (SIMPLIFICADO para UI manual)
-# Attach no Control raiz da hotbar.tscn
-#
-# Estrutura esperada no editor:
-#   Control (este script)
-#   └── HBoxContainer (name: "SlotsContainer")
-#       └── Panel x9 (cada um com inventory_slot.gd, slot_type = HOTBAR, slot_index = 0-8)
+# hotbar.gd
+# Hotbar de itens (slots 0-8 do inventário). Teclas 1-9 selecionam.
+# Magias usam a hotbar separada (HotbarSpells) com spell_1..spell_9 (F1-F9 por padrão).
 
 extends Control
 
 @export var selected_slot: int = 0
+## Imagem de fundo aplicada a todos os slots desta hotbar (opcional).
+@export var slot_background_texture: Texture2D = null
 
 var slot_nodes: Array = []
 
-func _ready():
-	# Pega todos os slots filhos do container
+func _ready() -> void:
 	var container = $Panel/SlotsContainer
 	slot_nodes = container.get_children()
-	
-	# Conecta ao InventoryManager
+	if slot_background_texture:
+		for slot in slot_nodes:
+			if slot.has_method("set_slot_background"):
+				slot.set_slot_background(slot_background_texture)
 	InventoryManager.inventory_changed.connect(_on_inventory_changed)
-	
+	if ToolSelectionManager:
+		ToolSelectionManager.tool_changed.connect(_on_tool_changed)
+	_update_hotbar_visibility()
 	_update_selection_visual()
-	
-	# Atualiza visual inicial
 	await get_tree().process_frame
-	_on_inventory_changed()
+	_apply_hotbar_mode()
 
-func _input(event):
-	# Teclas 1-9 pra trocar slot
+func _input(event: InputEvent) -> void:
 	for i in range(min(9, slot_nodes.size())):
 		if event.is_action_pressed("hotbar_%d" % (i + 1)):
 			select_slot(i)
+			_update_selection_visual()
 			break
 
 func select_slot(index: int) -> void:
 	selected_slot = index
 	_update_selection_visual()
-	_equip_item_from_slot(index)
 
 func _update_selection_visual() -> void:
-	# Destaca o slot selecionado visualmente
 	for i in range(slot_nodes.size()):
 		var slot = slot_nodes[i]
-		if i == selected_slot:
-			# Borda dourada no slot selecionado
-			slot.modulate = Color(1.2, 1.1, 0.8, 1.0)
-		else:
-			slot.modulate = Color.WHITE
+		slot.modulate = Color(1.2, 1.1, 0.8, 1.0) if i == selected_slot else Color.WHITE
 
-func _equip_item_from_slot(index: int) -> void:
-	var player = get_tree().get_first_node_in_group("player")
-	if not player or not player.has_node("WeaponHandler"):
-		return
-	
-	var slot_data = InventoryManager.get_slot(index)
-	
-	if not slot_data.is_empty() and slot_data["item"] is Weapon:
-		player.get_node("WeaponHandler").equip(slot_data["item"])
-	else:
-		player.get_node("WeaponHandler").unequip()
+func _on_tool_changed(_active_slot: int) -> void:
+	_update_hotbar_visibility()
+	_apply_hotbar_mode()
+	_update_selection_visual()
+
+func _update_hotbar_visibility() -> void:
+	# Com cajado equipado, mostra só a hotbar de magias; com outras armas, mostra esta (itens).
+	if ToolSelectionManager:
+		visible = ToolSelectionManager.active_tool_slot != Weapon.ToolSlot.STAFF
 
 func _on_inventory_changed() -> void:
-	# Atualiza todos os slots quando inventário muda
+	_apply_hotbar_mode()
+	_update_selection_visual()
+
+func _apply_hotbar_mode() -> void:
 	for i in range(slot_nodes.size()):
-		if slot_nodes[i].has_method("refresh_from_inventory"):
-			slot_nodes[i].refresh_from_inventory()
+		var slot = slot_nodes[i]
+		if slot.has_method("refresh_from_inventory"):
+			slot.refresh_from_inventory()

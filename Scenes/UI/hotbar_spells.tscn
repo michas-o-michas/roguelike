@@ -1,0 +1,109 @@
+[gd_scene format=3 uid="uid://dikrgfy08dg8c"]
+
+[ext_resource type="Script" uid="uid://cqb73o456ppnl" path="res://Scripts/UI/hotbar_spells.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://bp7jduangumxe" path="res://Assets/menu/SlotSpell.png" id="3_hfvyy"]
+[ext_resource type="PackedScene" uid="uid://bj0fla0h0psld" path="res://Scenes/UI/inventory_slot.tscn" id="3_slot"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bg"]
+draw_center = false
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[node name="HotbarSpells" type="Control" unique_id=859153562]
+layout_mode = 3
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -140.0
+offset_bottom = -52.0
+grow_horizontal = 2
+grow_vertical = 0
+size_flags_vertical = 8
+script = ExtResource("1_script")
+
+[node name="Panel" type="Panel" parent="." unique_id=1925225949]
+custom_minimum_size = Vector2(640, 80)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -320.0
+offset_top = -40.0
+offset_right = 320.0
+offset_bottom = 40.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_bg")
+
+[node name="SlotsContainer" type="HBoxContainer" parent="Panel" unique_id=1672107694]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -320.0
+offset_top = -34.0
+offset_right = 316.0
+offset_bottom = 34.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="spell_slot_1" parent="Panel/SlotsContainer" unique_id=1509655753 instance=ExtResource("3_slot")]
+layout_mode = 2
+slot_type = 1
+slot_background = ExtResource("3_hfvyy")
+
+[node name="spell_slot_2" parent="Panel/SlotsContainer" unique_id=306075965 instance=ExtResource("3_slot")]
+layout_mode = 2
+slot_type = 1
+slot_index = 1
+slot_background = ExtResource("3_hfvyy")
+
+[node name="spell_slot_3" parent="Panel/SlotsContainer" unique_id=1735054835 instance=ExtResource("3_slot")]
+layout_mode = 2
+slot_type = 1
+slot_index = 2
+slot_background = ExtResource("3_hfvyy")
+
+[node name="spell_slot_4" parent="Panel/SlotsContainer" unique_id=661257468 instance=ExtResource("3_slot")]
+layout_mode = 2
+slot_type = 1
+slot_index = 3
+slot_background = ExtResource("3_hfvyy")
+
+[node name="spell_slot_5" parent="Panel/SlotsContainer" unique_id=536139585 instance=ExtResource("3_slot")]
+layout_mode = 2
+slot_type = 1
+slot_index = 4
+slot_background = ExtResource("3_hfvyy")
+
+[node name="spell_slot_6" parent="Panel/SlotsContainer" unique_id=662491408 instance=ExtResource("3_slot")]
+layout_mode = 2
+slot_type = 1
+slot_index = 5
+slot_background = ExtResource("3_hfvyy")
+
+[node name="spell_slot_7" parent="Panel/SlotsContainer" unique_id=2086481789 instance=ExtResource("3_slot")]
+layout_mode = 2
+slot_type = 1
+slot_index = 6
+slot_background = ExtResource("3_hfvyy")
+
+[node name="spell_slot_8" parent="Panel/SlotsContainer" unique_id=888140506 instance=ExtResource("3_slot")]
+layout_mode = 2
+slot_type = 1
+slot_index = 7
+slot_background = ExtResource("3_hfvyy")
+
+[node name="spell_slot_9" parent="Panel/SlotsContainer" unique_id=1894400411 instance=ExtResource("3_slot")]
+layout_mode = 2
+slot_type = 1
+slot_index = 8
+slot_background = ExtResource("3_hfvyy")

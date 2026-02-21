@@ -1,25 +1,21 @@
 # weapon.gd
 # Recurso de arma — herda de Item.
-# Usado para: Espadas, Maças, Machados e Staffs.
+# No jogo existem só 4 tipos equipáveis (um por slot): Espada (MELEE), Cajado (STAFF), Machado (AXE), Picareta (PICKAXE).
+# Qualquer outro item é consumível, recurso ou moeda.
 #
 # Como usar:
 #   1. Cria um novo Resource no editor
 #   2. Assign este script
-#   3. Preenche os exports no Inspector
-#   4. Salva como .tres (ex: iron_sword.tres)
-#
-# Exemplo de uso no código:
-#   var sword = preload("res://items/iron_sword.tres")
-#   print(sword.item_name)  # "Espada de Ferro"
-#   print(sword.damage)     # 12
+#   3. Define equipment_slot (MELEE, STAFF, AXE ou PICKAXE) e preenche os exports
+#   4. Salva como .tres (ex: wood_sword.tres, staff_fire.tres, axe.tres, pickaxe.tres)
 
 class_name Weapon
 extends Item
 
 # ================= ENUMS =================
 enum WeaponType {
-	MELEE,      # Corpo a corpo (Espada, Maça, Machado)
-	RANGED,     # Rangeado (Staff)
+	MELEE,   # Corpo a corpo (Espada)
+	RANGED   # À distância (Cajado / Staff)
 }
 
 enum AttackEffect {
@@ -38,6 +34,14 @@ enum ProjectileType {
 	FIREBALL,       # Projétil básico (Staff de Madeira)
 	RICOCHET,       # Projétil que ricochet 1x (Staff de Cristal)
 	SPLIT,          # Projétil que se divide em 3 (Staff de Sombra)
+}
+
+## Slot de equipamento ao qual esta arma pertence (para os 4 slots fixos).
+enum ToolSlot {
+	MELEE,   # Espada
+	STAFF,   # Cajado
+	AXE,     # Machado (coleta madeira)
+	PICKAXE  # Picareta (coleta pedra)
 }
 
 # ================= EXPORTS =================
@@ -64,6 +68,9 @@ enum ProjectileType {
 
 # -- Knockback (usado por alguns efeitos) --
 @export var knockback_force: float = 0.0    # 0 = sem knockback
+
+# -- Slot de equipamento (obrigatório: um dos 4 do jogo) --
+@export var equipment_slot: ToolSlot = ToolSlot.MELEE  # MELEE=Espada, STAFF=Cajado, AXE=Machado, PICKAXE=Picareta
 
 # ================= FUNÇÕES UTILITÁRIAS =================
 
@@ -98,3 +105,11 @@ func is_aoe() -> bool:
 		AttackEffect.MINE_VERY_FAST,
 		AttackEffect.MINE_EXPLODE,
 	]
+
+## Retorna o slot de equipamento desta arma (usado para validar drag-and-drop e ToolSelectionManager).
+func get_equipment_slot() -> ToolSlot:
+	return equipment_slot
+
+## Apenas Weapon pode ir nos 4 slots de equipamento (espada, cajado, machado, picareta).
+func can_go_in_equipment_slot() -> bool:
+	return true

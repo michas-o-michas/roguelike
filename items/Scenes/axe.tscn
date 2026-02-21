@@ -43,6 +43,7 @@ blend_shape_mode = 0
 shadow_mesh = SubResource("ArrayMesh_ryxfb")
 
 [node name="Axe" type="Node3D" unique_id=1346400287]
+transform = Transform3D(1.9106853e-15, 4.371139e-08, 0.99999994, 0.99999994, -4.371139e-08, 0, 4.3711385e-08, 1, -4.3711385e-08, 0, 0, 0)
 
 [node name="Axe" type="MeshInstance3D" parent="." unique_id=1283121924]
 transform = Transform3D(1, 0, 0, 0, 1, -4.371139e-08, 0, 4.371139e-08, 1, 0, 0, -0.87216127)

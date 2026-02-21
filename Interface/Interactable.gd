@@ -10,7 +10,8 @@ func get_display_label() -> String:
 
 ## Chamado pelo player ao pressionar E
 func interact(interactor: Node) -> void:
-	pass  # sobrescreva nos filhos
+	if get_parent() is ResourceNode:
+		(get_parent() as ResourceNode).try_start_harvest(interactor)
 
 ## Opcional: chamado quando o raycast entra/sai (hover)
 func on_focus_enter() -> void:

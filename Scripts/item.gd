@@ -1,25 +1,21 @@
 # item.gd
 # Recurso base para todos os itens do jogo.
-# Herdar este script em: weapon.gd, tool_item.gd, resource_item.gd, etc.
+# Herdar este script em: weapon.gd (espada, cajado, machado, picareta), resource_item.gd, etc.
 #
-# Como usar:
-#   1. No editor, cria um novo Resource
-#   2. Assing este script
-#   3. Preenche os exports no Inspector
-#   --------------------
-#   Para criar um item novo rapidamente:
-#   Duplica um .tres existente no editor e muda os valores — não precisa mexer em código.
+# Regra do jogo: só existem 4 itens equipáveis (slots fixos) — Espada, Cajado, Machado, Picareta.
+# Todos são recurso Weapon com equipment_slot (MELEE, STAFF, AXE, PICKAXE). O resto é consumível,
+# recurso de crafting ou moeda.
 
 class_name Item
 extends Resource
 
 # ================= ENUMS =================
 enum Type {
-	WEAPON,     # Espada, Maça, Machado (pode atacar)
-	TOOL,       # Picareta, Machado (só mineração/utilidade)
-	RESOURCE,   # Madeira, Ferro, Cristal, etc.
+	WEAPON,     # Equipável em um dos 4 slots (só recurso Weapon: espada, cajado, machado, picareta)
+	RESOURCE,   # Madeira, pedra, ferro, etc. (crafting, não equipável)
 	CURRENCY,   # Moedas
-	CONSUMABLE, # Poções, comida (futuro)
+	CONSUMABLE, # Poções, comida — uso rápido (hotbar), não equipável
+	TOOL        # Obsoleto: use Weapon com AXE/PICKAXE. Mantido para .tres antigos.
 }
 
 enum Rarity {
@@ -59,3 +55,8 @@ func get_rarity_label() -> String:
 ## Verifica se o item pode empilhar
 func is_stackable() -> bool:
 	return max_stack > 1
+
+## Retorna true apenas para itens que podem ir nos 4 slots de equipamento (Espada, Cajado, Machado, Picareta).
+## Em Item retorna false; Weapon sobrescreve e retorna true.
+func can_go_in_equipment_slot() -> bool:
+	return false
