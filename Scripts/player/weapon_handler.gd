@@ -30,6 +30,9 @@ signal attack_hit(target: Node3D, damage: int)
 @export_group("Mineração (opcional)")
 @export var attack_raycast: RayCast3D = null      # Só para minerar: mirar em rocha/árvore (deixe vazio se não usar)
 
+@export_group("Referências")
+@export var camera_node: Node3D = null            # Câmera do player (para projéteis). Se vazio, tenta "Camera3D".
+
 # ================= ESTADO =================
 var equipped_weapon: Weapon = null
 var weapon_model: Node3D = null         # Referência ao modelo 3D instanciado
@@ -60,6 +63,8 @@ func _ready():
 	if attack_area != null:
 		attack_area.monitoring = true
 		attack_area.collision_mask = 1  # layer 1 = personagens/inimigos
+	if camera_node == null:
+		camera_node = get_parent().get_node_or_null("Camera3D") as Node3D
 	# Equipa arma padrão ao iniciar (ex.: wood_sword) para poder bater logo
 	var ws = get_tree().root.get_node_or_null("WeaponSystem")
 	if equipped_weapon == null and ws != null:
@@ -122,10 +127,9 @@ func _physics_process(delta):
 		attack_cooldown_timer -= delta
 
 	# Atualiza a animação de swing todo frame
-	_update_swing(delta)
 
-	# Verifica input de ataque
-	if Input.is_action_just_pressed("attack"):
+	# Única fonte de input de ataque (Player não trata mais attack/mb1)
+	if Input.is_action_just_pressed("attack") or Input.is_action_just_pressed("mb1"):
 		_try_attack()
 
 ## Tenta realizar um ataque
@@ -140,7 +144,12 @@ func _try_attack() -> void:
 
 	# Seta o cooldown baseado na velocidade da arma
 	attack_cooldown_timer = equipped_weapon.attack_speed
-	print("attacando")
+
+	# Notifica o Player: ferramentas (mineração) usam "Work", armas usam "Attack"
+	var player = get_parent()
+	if player.has_method("play_attack_animation"):
+		var anim_name := "Attack" if not equipped_weapon.can_mine() else "Work"
+		player.play_attack_animation(anim_name)
 
 	# Toca o som do ataque
 	_play_attack_sound()
@@ -154,45 +163,9 @@ func _try_attack() -> void:
 
 # ================= SWING =================
 
-## Inicia o swing quando ataca
-func _start_swing() -> void:
-	if weapon_model == null:
-		return
-	is_swinging = true
-	swing_progress = 0.0
-
-## Atualiza a rotação do modelo todo frame
-func _update_swing(delta: float) -> void:
-	if not is_swinging or weapon_model == null:
-		return
-
-	swing_progress += delta
-
-	# --- FASE 1: ida (rápida, até swing_duration) ---
-	if swing_progress <= swing_duration:
-		var t = swing_progress / swing_duration
-		# Easing out cubic — começa rápido, desacelera no fim
-		var ease_t = 1.0 - pow(1.0 - t, 3.0)
-		weapon_model.rotation_degrees.z = swing_angle * ease_t
-
-	# --- FASE 2: volta (mais lenta, com easing suave) ---
-	else:
-		var return_progress = swing_progress - swing_duration
-		if return_progress >= swing_return_duration:
-			# Voltou completamente — reseta
-			weapon_model.rotation_degrees.z = 0.0
-			is_swinging = false
-			swing_progress = 0.0
-		else:
-			var t = return_progress / swing_return_duration
-			# Easing out quart — volta suave
-			var ease_t = 1.0 - pow(1.0 - t, 4.0)
-			weapon_model.rotation_degrees.z = swing_angle * (1.0 - ease_t)
-
 # ================= MELEE (por área — estilo roguelike) =================
 
 func _attack_melee() -> void:
-	_start_swing()
 
 	var hit_targets = _get_melee_overlap_targets()
 	for target in hit_targets:
@@ -337,7 +310,6 @@ func _try_mine_target(target: Node3D) -> void:
 # ================= RANGED (PROJÉTIL) =================
 
 func _attack_ranged() -> void:
-	_start_swing()
 
 	if equipped_weapon.projectile_scene == null:
 		push_warning("WeaponHandler: Staff sem projectile_scene assignada!")
@@ -349,11 +321,14 @@ func _attack_ranged() -> void:
 
 	# Posiciona na câmera do player
 	var player = get_parent()
-	var camera = player.get_node("Camera3D")
-	projectile.global_position = camera.global_position
+	var cam = camera_node if camera_node != null else player.get_node_or_null("Camera3D") as Node3D
+	if cam == null:
+		push_warning("WeaponHandler: câmera não definida. Defina camera_node no Inspector.")
+		return
+	projectile.global_position = cam.global_position
 
 	# Direção: pra onde a câmera tá apontando
-	var direction = -camera.global_transform.basis.z.normalized()
+	var direction = -cam.global_transform.basis.z.normalized()
 
 	# Passa os dados necessários pro projétil
 	if projectile.has_method("setup"):

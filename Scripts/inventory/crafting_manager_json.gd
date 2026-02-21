@@ -27,12 +27,7 @@ var item_registry: Dictionary = {}
 var recipes: Array = []
 
 func _ready():
-	# ESCOLHA UMA OPÇÃO:
-	
-	# OPÇÃO 1: Registro manual (atual)
-	#_register_items()
-	
-	# OPÇÃO 2: Auto-registra de pasta (recomendado)
+
 	_register_items_from_folder("res://items/")
 	
 	_load_recipes_from_json()
@@ -78,80 +73,6 @@ func get_id_for_item(item: Item) -> String:
 		if reg_item and reg_item.resource_path == item.resource_path:
 			return key
 	return ""
-
-# ================= REGISTRO DE ITENS =================
-
-func _register_items():
-	# Registra todos os itens do jogo aqui (ID → Item)
-	# Você pode automatizar isso depois, mas por enquanto é manual
-	
-	# Recursos
-	var wood = Item.new()
-	wood.item_name = "Madeira"
-	wood.type = Item.Type.RESOURCE
-	wood.rarity = Item.Rarity.COMMON
-	wood.max_stack = 64
-	item_registry["wood"] = wood
-	
-	var stone = Item.new()
-	stone.item_name = "Pedra"
-	stone.type = Item.Type.RESOURCE
-	stone.rarity = Item.Rarity.COMMON
-	stone.max_stack = 64
-	item_registry["stone"] = stone
-	
-	var iron = Item.new()
-	iron.item_name = "Ferro"
-	iron.type = Item.Type.RESOURCE
-	iron.rarity = Item.Rarity.UNCOMMON
-	iron.max_stack = 64
-	item_registry["iron"] = iron
-	
-	var crystal = Item.new()
-	crystal.item_name = "Cristal"
-	crystal.type = Item.Type.RESOURCE
-	crystal.rarity = Item.Rarity.RARE
-	crystal.max_stack = 64
-	item_registry["crystal"] = crystal
-	
-	# Armas
-	var wood_sword = Weapon.new()
-	wood_sword.item_name = "Espada de Madeira"
-	wood_sword.type = Item.Type.WEAPON
-	wood_sword.rarity = Item.Rarity.COMMON
-	wood_sword.weapon_type = Weapon.WeaponType.MELEE
-	wood_sword.damage = 5
-	wood_sword.attack_speed = 0.8
-	item_registry["wood_sword"] = wood_sword
-	
-	var iron_sword = Weapon.new()
-	iron_sword.item_name = "Espada de Ferro"
-	iron_sword.type = Item.Type.WEAPON
-	iron_sword.rarity = Item.Rarity.UNCOMMON
-	iron_sword.weapon_type = Weapon.WeaponType.MELEE
-	iron_sword.damage = 15
-	iron_sword.attack_speed = 0.6
-	item_registry["iron_sword"] = iron_sword
-	
-	var crystal_sword = Weapon.new()
-	crystal_sword.item_name = "Espada de Cristal"
-	crystal_sword.type = Item.Type.WEAPON
-	crystal_sword.rarity = Item.Rarity.RARE
-	crystal_sword.weapon_type = Weapon.WeaponType.MELEE
-	crystal_sword.damage = 25
-	crystal_sword.attack_speed = 0.5
-	item_registry["crystal_sword"] = crystal_sword
-	
-	var stone_pickaxe = Weapon.new()
-	stone_pickaxe.item_name = "Picareta de Pedra"
-	stone_pickaxe.type = Item.Type.TOOL
-	stone_pickaxe.rarity = Item.Rarity.COMMON
-	stone_pickaxe.weapon_type = Weapon.WeaponType.MELEE
-	stone_pickaxe.damage = 3
-	stone_pickaxe.attack_speed = 1.0
-	item_registry["stone_pickaxe"] = stone_pickaxe
-	
-	print("  %d itens registrados" % item_registry.size())
 
 # ================= CARREGAR RECIPES =================
 
@@ -216,6 +137,22 @@ func get_recipe(index: int) -> Dictionary:
 	if index >= 0 and index < recipes.size():
 		return recipes[index]
 	return {}
+
+## Retorna o índice da receita cujo output é este id (ex.: "axe", "pickaxe"). -1 se não existir.
+func get_recipe_index_by_output_id(output_id: String) -> int:
+	for i in range(recipes.size()):
+		var r = recipes[i]
+		if r.get("output", null) and get_id_for_item(r["output"]) == output_id:
+			return i
+	return -1
+
+## Crafta por id do item de saída (ex.: craft_by_id("axe")). Retorna o Item craftado ou null.
+func craft_by_id(output_id: String) -> Item:
+	var idx = get_recipe_index_by_output_id(output_id)
+	if idx < 0:
+		emit_signal("craft_failed", "Receita não encontrada: %s" % output_id)
+		return null
+	return craft(idx)
 
 func can_craft(index: int) -> bool:
 	var recipe = get_recipe(index)

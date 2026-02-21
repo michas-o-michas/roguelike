@@ -51,19 +51,11 @@ func _ready():
 		loading_screen.z_index = 1000
 		loading_screen.process_mode = Node.PROCESS_MODE_ALWAYS
 	
-	# Procurar GameManager
+	# Procurar GameManager (autoload; não criar manualmente)
 	var game_manager = get_tree().get_first_node_in_group("game_manager")
 	if not game_manager:
-		# Tentar encontrar por nome ou criar
 		game_manager = get_node_or_null("/root/GameManager")
-		if not game_manager:
-			# Criar GameManager se não existir
-			var GameManagerScript = load("res://Scripts/GameManager.gd")
-			game_manager = GameManagerScript.new()
-			game_manager.name = "GameManager"
-			get_tree().root.add_child(game_manager)
-			game_manager.add_to_group("game_manager")
-	
+
 	# Configurar GameManager e WorldGenerator
 	if world_generator and world_generator is InfiniteWorldGenerator:
 		print("🌍 WorldGenerator encontrado!")

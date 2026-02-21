@@ -180,18 +180,8 @@ var spawner_manager: Node
 
 # Otimizações: Material compartilhado
 var shared_terrain_material: Material
-# Grama MultiMesh: material com shader de vento (compartilhado)
-var _grass_wind_material: ShaderMaterial
-# Grama em círculo (estilo Muck): segue o jogador, spawn gradual
-var _grass_circle_mi: MultiMeshInstance3D
-# Posições de mundo de cada slot (para checar distância sem ler Transform3D)
-var _grass_positions: PackedVector3Array = PackedVector3Array()
-# Slots livres (escondidos, prontos para reposicionar)
-var _grass_free_slots: Array[int] = []
-# Última posição do jogador usada para reciclar (evita recalcular quando parado)
-var _grass_last_player_pos: Vector3 = Vector3(0, -9999, 0)
-# Fallback quando um material não tem textura (1x1 branco)
-var _terrain_white_fallback: Texture2D
+# Fallback quando um material não tem textura (1x1 branco). Usado por TerrainMeshBuilder.
+var _terrain_white_fallback: Texture2D = null
 
 # Time-slicing: geração de terreno com budget de tempo
 var _terrain_build_queue: Array[Dictionary] = [] ## Fila interna de builds parciais
@@ -210,6 +200,9 @@ const COLLISION_CHUNKS_PER_FRAME := 2 ## Quantos chunks de colisão por frame
 # Cache de alturas — evita recalcular get_terrain_height para o mesmo ponto
 # Limpa chunks antigos no unload. Chave = Vector2i(floor(x), floor(z)), valor = float
 var _height_cache: Dictionary = {}
+## Reaplicar posição de spawn por alguns frames para sobrescrever qualquer reset para (0,0,0)
+var _pending_spawn_position: Vector3 = Vector3.ZERO
+var _spawn_reapply_frames: int = 0
 const HEIGHT_CACHE_MAX_SIZE := 500000 ## Limpar se exceder (evita uso excessivo de RAM)
 
 # Precalc para cor do terreno (evita recalcular a cada vértice)
@@ -252,12 +245,16 @@ func _ready():
 	add_to_group("world_generator")
 
 	if use_shared_material:
-		shared_terrain_material = _create_terrain_material()
+		shared_terrain_material = TerrainMeshBuilder.create_terrain_material(self)
 
 	if enable_water:
-		create_water()
+		water_mesh = WaterHelper.create_water(self)
 
 	player = get_tree().get_first_node_in_group("player")
+
+	var grass_mgr := GrassCircleManager.new()
+	grass_mgr.name = "GrassCircleManager"
+	add_child(grass_mgr)
 
 	poi_manager = POIManagerScript.new()
 	poi_manager.name = "POIManager"
@@ -298,13 +295,6 @@ func _setup_after_scene_load():
 		var game_manager = get_tree().get_first_node_in_group("game_manager")
 		if not game_manager:
 			game_manager = get_node_or_null("/root/GameManager")
-		if not game_manager:
-			var GameManagerScript = load("res://Scripts/GameManager.gd")
-			if GameManagerScript:
-				game_manager = GameManagerScript.new()
-				game_manager.name = "GameManager"
-				get_tree().root.add_child(game_manager)
-				game_manager.add_to_group("game_manager")
 
 		if game_manager:
 			if game_manager.has_method("set_world_generator"):
@@ -443,7 +433,14 @@ func _dequeue_chunk() -> Vector2i:
 # LOOP PRINCIPAL (_process) — Time-budget driven
 # =============================================================================
 
-func _process(delta: float):
+func _process(_delta: float):
+	# Reaplicar posição de spawn por alguns frames (evita player voltar a 0,0,0)
+	if _spawn_reapply_frames > 0 and player and is_instance_valid(player) and player.is_inside_tree():
+		player.global_position = _pending_spawn_position
+		if player is CharacterBody3D:
+			(player as CharacterBody3D).velocity = Vector3.ZERO
+		_spawn_reapply_frames -= 1
+
 	# Pós-carregamento: mundo infinito
 	if current_stage >= GenerationStage.COMPLETE:
 		if player:
@@ -454,7 +451,6 @@ func _process(delta: float):
 				_unload_far_chunks(current_chunk)
 			if _chunk_queue.size() > 0:
 				_process_chunk_queue()
-			_process_grass_circle(delta)
 		_process_vegetation_queue()
 		_process_collision_queue()
 		return
@@ -480,7 +476,7 @@ func _process(delta: float):
 		return
 
 	if enable_origin_rebase:
-		_tick_origin_rebase_when_idle(delta)
+		_tick_origin_rebase_when_idle(_delta)
 
 	var current_chunk = world_to_chunk(player.global_position)
 	if current_chunk != last_player_chunk:
@@ -577,8 +573,40 @@ func _process_vegetation_queue():
 		if not chunk_data or not chunk_data.terrain_mesh:
 			continue
 		var world_pos := chunk_to_world(chunk_pos)
-		_create_chunk_vegetation(chunk_data, world_pos)
+		VegetationBuilder.create_chunk_vegetation(self, chunk_data, world_pos)
 		processed += 1
+
+## Espera o chunk de spawn (e 4 vizinhos) ter colisão na árvore e a física processar antes de posicionar o player
+func _wait_for_spawn_collision_ready() -> void:
+	if not enable_terrain_collision:
+		await get_tree().physics_frame
+		await get_tree().physics_frame
+		return
+	var spawn_chunk: Vector2i = world_to_chunk(player_spawn_position) if player_spawn_position != Vector3.ZERO else Vector2i(0, 0)
+	var to_wait: Array[Vector2i] = [
+		spawn_chunk,
+		spawn_chunk + Vector2i(-1, 0), spawn_chunk + Vector2i(1, 0),
+		spawn_chunk + Vector2i(0, -1), spawn_chunk + Vector2i(0, 1)
+	]
+	var max_attempts := 60
+	for attempt in max_attempts:
+		_ensure_spawn_area_has_collision()
+		var all_have_collision := true
+		for cp in to_wait:
+			if not loaded_chunks.has(cp):
+				all_have_collision = false
+				break
+			var chunk_data = loaded_chunks[cp] as ChunkData
+			if not chunk_data or chunk_data.terrain_collision == null or not is_instance_valid(chunk_data.terrain_collision) or not chunk_data.terrain_collision.is_inside_tree():
+				all_have_collision = false
+				break
+		if all_have_collision:
+			break
+		await get_tree().create_timer(0.05).timeout
+	# Dar tempo à física para registrar as colisões antes de posicionar o player
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	await get_tree().physics_frame
 
 ## Garante que o chunk de spawn e os 4 vizinhos tenham colisão antes de posicionar o player (evita chão bugado)
 func _ensure_spawn_area_has_collision():
@@ -610,7 +638,19 @@ func _ensure_spawn_area_has_collision():
 		if not chunk_data or not chunk_data.terrain_mesh or chunk_data.terrain_collision != null:
 			continue
 		var world_pos := chunk_to_world(cp)
-		_create_chunk_collision(chunk_data, world_pos)
+		var static_body := ChunkCollisionBuilder.create_chunk_collision(self, chunk_data, world_pos)
+		if static_body:
+			add_child(static_body)
+			chunk_data.terrain_collision = static_body
+			if not chunks_with_collision.has(cp):
+				chunks_with_collision[cp] = true
+				if initial_chunks_needed > 0 and current_stage <= GenerationStage.COLLISION:
+					var pc = get_player_or_spawn_chunk()
+					if abs(cp.x - pc.x) <= view_distance and abs(cp.y - pc.y) <= view_distance:
+						if initial_chunks_with_collision < initial_chunks_needed:
+							initial_chunks_with_collision += 1
+							if current_stage == GenerationStage.COLLISION:
+								update_collision_progress()
 
 ## Processa até COLLISION_CHUNKS_PER_FRAME chunks da fila de colisão (prioridade: mais perto do player)
 func _process_collision_queue():
@@ -635,7 +675,19 @@ func _process_collision_queue():
 		if not chunk_data or not chunk_data.terrain_mesh:
 			continue
 		var world_pos := chunk_to_world(chunk_pos)
-		_create_chunk_collision(chunk_data, world_pos)
+		var static_body := ChunkCollisionBuilder.create_chunk_collision(self, chunk_data, world_pos)
+		if static_body:
+			add_child(static_body)
+			chunk_data.terrain_collision = static_body
+			if not chunks_with_collision.has(chunk_pos):
+				chunks_with_collision[chunk_pos] = true
+				if initial_chunks_needed > 0 and current_stage <= GenerationStage.COLLISION:
+					var pc = get_player_or_spawn_chunk()
+					if abs(chunk_pos.x - pc.x) <= view_distance and abs(chunk_pos.y - pc.y) <= view_distance:
+						if initial_chunks_with_collision < initial_chunks_needed:
+							initial_chunks_with_collision += 1
+							if current_stage == GenerationStage.COLLISION:
+								update_collision_progress()
 		processed += 1
 
 # =============================================================================
@@ -650,8 +702,8 @@ func _generate_chunk_sync(chunk_pos: Vector2i) -> void:
 	chunk_data.chunk_pos = chunk_pos
 	var world_pos = chunk_to_world(chunk_pos)
 
-	# Terreno (mesh + colisão) — tudo de uma vez, sem time-slicing por linhas
-	_build_terrain_mesh(chunk_data, world_pos)
+	# Terreno (mesh) — colisão e vegetação em segundo plano
+	TerrainMeshBuilder.build_terrain_mesh(self, chunk_data, world_pos)
 
 	# Contar para progresso se é chunk inicial
 	if initial_chunks_needed > 0 and current_stage <= GenerationStage.TERRAIN:
@@ -675,185 +727,6 @@ func _generate_chunk_sync(chunk_pos: Vector2i) -> void:
 
 	chunk_data.is_loaded = true
 	loaded_chunks[chunk_pos] = chunk_data
-
-## Constrói mesh do terreno em uma única passada otimizada (colisão/vegetação em segundo plano)
-func _build_terrain_mesh(chunk_data: ChunkData, start_pos: Vector3):
-	# Sempre mesh rápido (12 subs): colisão e vegetação são preenchidos em background
-	var subs := mini(terrain_subdivisions, 12)
-	var step := float(chunk_size) / subs
-	var vert_count := (subs + 1) * (subs + 1)
-
-	# Arrays tipados para performance
-	var vertices := PackedVector3Array()
-	vertices.resize(vert_count)
-	var colors := PackedColorArray()
-	colors.resize(vert_count)
-	chunk_data.heights.resize(vert_count)
-	chunk_data.terrain_subs = subs
-
-	# Vértices em ESPAÇO LOCAL do chunk (0..chunk_size em XZ) e position do nó = start_pos
-	# assim a mesh e a colisão usam o mesmo referencial e ficam alinhadas
-	var idx := 0
-	for z in range(subs + 1):
-		var pos_z_world := start_pos.z + z * step
-		var local_z := snappedf(z * step, 0.001)
-		for x in range(subs + 1):
-			var pos_x_world := start_pos.x + x * step
-			var local_x := snappedf(x * step, 0.001)
-			var h := get_terrain_height(pos_x_world, pos_z_world)
-			chunk_data.heights[idx] = h
-			vertices[idx] = Vector3(local_x, h, local_z)
-			colors[idx] = get_terrain_color(pos_x_world, pos_z_world, h)
-			idx += 1
-
-	# Montar mesh com SurfaceTool
-	var st := SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-
-	var row_width := subs + 1
-	for z in range(subs):
-		var row_base := z * row_width
-		for x in range(subs):
-			var i := row_base + x
-			var i1 := i + 1
-			var i_next := i + row_width
-			var i_next1 := i_next + 1
-
-			# Triângulo 1
-			st.set_color(colors[i])
-			st.add_vertex(vertices[i])
-			st.set_color(colors[i1])
-			st.add_vertex(vertices[i1])
-			st.set_color(colors[i_next])
-			st.add_vertex(vertices[i_next])
-
-			# Triângulo 2
-			st.set_color(colors[i1])
-			st.add_vertex(vertices[i1])
-			st.set_color(colors[i_next1])
-			st.add_vertex(vertices[i_next1])
-			st.set_color(colors[i_next])
-			st.add_vertex(vertices[i_next])
-
-	st.generate_normals()
-	var mesh_instance := MeshInstance3D.new()
-	mesh_instance.mesh = st.commit()
-
-	if use_shared_material and shared_terrain_material:
-		mesh_instance.material_override = shared_terrain_material
-	else:
-		var mat := StandardMaterial3D.new()
-		mat.vertex_color_use_as_albedo = true
-		mat.roughness = 0.9
-		mesh_instance.material_override = mat
-
-	mesh_instance.position = start_pos
-	add_child(mesh_instance)
-	chunk_data.terrain_mesh = mesh_instance
-
-	# Colisão é criada em segundo plano via _collision_queue (não aqui)
-
-## Cria Shape3D de heightmap a partir das alturas do chunk (muito mais rápido que trimesh).
-## Retorna { "shape": Shape3D, "scale": float } para aplicar no StaticBody3D.
-func _create_heightmap_shape(chunk_data: ChunkData, lod_level: int) -> Dictionary:
-	if chunk_data.heights.is_empty() or chunk_data.terrain_subs <= 0:
-		return {}
-	var full_size := chunk_data.terrain_subs + 1
-	var step := 1
-	match lod_level:
-		1: step = 2
-		2: step = 4
-	var w := int((float(chunk_data.terrain_subs) / float(step)) + 1.0)
-	var d := w
-	var n := w * d
-	var map_data := PackedFloat32Array()
-	map_data.resize(n)
-	var shape_scale := float(chunk_size) / float(w - 1) if w > 1 else 1.0
-	var inv_scale := 1.0 / shape_scale if shape_scale > 0.001 else 1.0
-	var idx := 0
-	for z in range(0, full_size, step):
-		for x in range(0, full_size, step):
-			var src_idx := z * full_size + x
-			map_data[idx] = chunk_data.heights[src_idx] * inv_scale
-			idx += 1
-	var shape := HeightMapShape3D.new()
-	shape.map_width = w
-	shape.map_depth = d
-	shape.map_data = map_data
-	return { "shape": shape, "scale": shape_scale }
-
-## Cria colisão com HeightMapShape3D (muito mais rápido que trimesh) e LOD por downsampling
-func _create_chunk_collision(chunk_data: ChunkData, start_pos: Vector3):
-	var lod_level := 0
-	if enable_collision_lod and player:
-		var dist := get_chunk_distance_to_player(chunk_data.chunk_pos)
-		if dist <= collision_lod_near:
-			lod_level = 0
-		elif dist <= collision_lod_far:
-			lod_level = 1
-		else:
-			lod_level = 2
-
-	chunk_data.collision_lod_level = lod_level
-
-	var result := _create_heightmap_shape(chunk_data, lod_level)
-	if result.is_empty():
-		return
-	var static_body := StaticBody3D.new()
-	# HeightMapShape3D é centralizado na origem; posicionar no centro do chunk
-	static_body.position = start_pos + Vector3(chunk_size * 0.5, 0.0, chunk_size * 0.5)
-	var s: float = result.get("scale", 1.0)
-	static_body.scale = Vector3(s, s, s)
-	var collision := CollisionShape3D.new()
-	var shape_res: Shape3D = result.get("shape", null)
-	collision.shape = shape_res
-	static_body.add_child(collision)
-	add_child(static_body)
-	chunk_data.terrain_collision = static_body
-
-	# Marcar colisão pronta
-	if not chunks_with_collision.has(chunk_data.chunk_pos):
-		chunks_with_collision[chunk_data.chunk_pos] = true
-		if initial_chunks_needed > 0 and current_stage <= GenerationStage.COLLISION:
-			var pc = get_player_or_spawn_chunk()
-			if abs(chunk_data.chunk_pos.x - pc.x) <= view_distance and abs(chunk_data.chunk_pos.y - pc.y) <= view_distance:
-				if initial_chunks_with_collision < initial_chunks_needed:
-					initial_chunks_with_collision += 1
-					if current_stage == GenerationStage.COLLISION:
-						update_collision_progress()
-
-func _create_simplified_collision(start_pos: Vector3, subdivisions: int) -> Shape3D:
-	var step := float(chunk_size) / subdivisions
-	var st := SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var verts := PackedVector3Array()
-	verts.resize((subdivisions + 1) * (subdivisions + 1))
-	var idx := 0
-	for z in range(subdivisions + 1):
-		for x in range(subdivisions + 1):
-			var px := start_pos.x + x * step
-			var pz := start_pos.z + z * step
-			verts[idx] = Vector3(px, get_terrain_height(px, pz), pz)
-			idx += 1
-	var row_w := subdivisions + 1
-	for z in range(subdivisions):
-		var row_base := z * row_w
-		for x in range(subdivisions):
-			var i := row_base + x
-			st.set_uv(Vector2.ZERO)
-			st.add_vertex(verts[i])
-			st.set_uv(Vector2.RIGHT)
-			st.add_vertex(verts[i + 1])
-			st.set_uv(Vector2.DOWN)
-			st.add_vertex(verts[i + row_w])
-			st.set_uv(Vector2.RIGHT)
-			st.add_vertex(verts[i + 1])
-			st.set_uv(Vector2.ONE)
-			st.add_vertex(verts[i + row_w + 1])
-			st.set_uv(Vector2.DOWN)
-			st.add_vertex(verts[i + row_w])
-	st.generate_normals()
-	return st.commit().create_trimesh_shape()
 
 # =============================================================================
 # SISTEMA DE PROGRESSO
@@ -911,7 +784,7 @@ func update_collision_progress():
 		if not cd or not cd.terrain_mesh:
 			continue
 		var wp := chunk_to_world(cp)
-		var res := _create_heightmap_shape(cd, cd.collision_lod_level)
+		var res := ChunkCollisionBuilder.create_heightmap_shape(cd, cd.collision_lod_level, chunk_size)
 		if not res.is_empty():
 			var sb := StaticBody3D.new()
 			sb.position = wp + Vector3(chunk_size * 0.5, 0.0, chunk_size * 0.5)
@@ -977,15 +850,11 @@ func start_player_instantiation():
 	emit_signal("stage_changed", GenerationStage.PLAYER, "Instanciando player...")
 	emit_signal("progress_updated", 70.0, GenerationStage.PLAYER, "Instanciando player...")
 
-	# Garantir colisão na área de spawn antes de posicionar o player (evita nascer no chão bugado)
-	_ensure_spawn_area_has_collision()
-
-	await get_tree().process_frame
-	await get_tree().process_frame
-	await get_tree().create_timer(0.3).timeout
+	# Garantir colisão na área de spawn e esperar a física processar antes de posicionar o player
+	await _wait_for_spawn_collision_ready()
 
 	if not player and player_scene:
-		instantiate_player()
+		await instantiate_player()
 	elif player:
 		_disable_player()
 		await get_tree().process_frame
@@ -1046,23 +915,27 @@ func position_player_on_terrain():
 	if not player or not player.is_inside_tree():
 		return
 
-	# Garantir colisão na área de spawn para o raycast acertar o chão
+	# Garantir colisão na área de spawn antes de posicionar
 	_ensure_spawn_area_has_collision()
 
+	# Sempre usar o ponto de spawn exportado para XZ (evita usar 0,0,0 do player antes de ser movido)
 	var spawn_pos := player_spawn_position
 	if spawn_pos == Vector3.ZERO:
 		spawn_pos = chunk_to_world(Vector2i(0, 0))
 
-	if player.is_inside_tree():
-		var cp := player.global_position
-		if cp != Vector3.ZERO and cp.length() > 0.1:
-			spawn_pos.x = cp.x
-			spawn_pos.z = cp.z
+	# Altura = superfície do terreno + offset; nunca abaixo de 2 para evitar nascer no chão
+	var terrain_y := get_terrain_height(spawn_pos.x, spawn_pos.z)
+	spawn_pos.y = maxf(terrain_y + 2.0, 2.0)
 
-	spawn_pos.y = 200.0
-	player.call_deferred("set", "global_position", spawn_pos)
-	if player is CharacterBody3D:
-		(player as CharacterBody3D).velocity = Vector3.ZERO
+	if player.has_method("position_on_terrain"):
+		player.position_on_terrain(spawn_pos)
+	else:
+		player.global_position = spawn_pos
+		if player is CharacterBody3D:
+			(player as CharacterBody3D).velocity = Vector3.ZERO
+	# Forçar reaplicação por vários frames para não ser sobrescrito por (0,0,0)
+	_pending_spawn_position = spawn_pos
+	_spawn_reapply_frames = 8
 
 # =============================================================================
 # MOBS
@@ -1091,6 +964,8 @@ func start_mobs_instantiation():
 				start_mobs_instantiation()
 			return
 
+		# Só posicionar e habilitar o player depois da colisão do spawn estar ativa na física
+		await _wait_for_spawn_collision_ready()
 		if player:
 			position_player_on_terrain()
 		_enable_player()
@@ -1183,7 +1058,7 @@ func update_collision_lod(player_chunk: Vector2i):
 			chunk_data.terrain_collision.queue_free()
 			chunk_data.collision_lod_level = new_lod
 
-			var res := _create_heightmap_shape(chunk_data, new_lod)
+			var res := ChunkCollisionBuilder.create_heightmap_shape(chunk_data, new_lod, chunk_size)
 			if not res.is_empty():
 				var sb := StaticBody3D.new()
 				sb.position = wp + Vector3(chunk_size * 0.5, 0.0, chunk_size * 0.5)
@@ -1228,124 +1103,8 @@ func setup_noise():
 	temperature_noise.noise_type = FastNoiseLite.TYPE_PERLIN
 	temperature_noise.frequency = 0.012
 
-## Extrai a textura de albedo de um Material (StandardMaterial3D). Retorna null se não houver.
-func _get_albedo_texture_from_material(m: Material) -> Texture2D:
-	if m is StandardMaterial3D:
-		var std := m as StandardMaterial3D
-		if std.albedo_texture:
-			return std.albedo_texture
-	return null
-
-## Retorna textura de albedo do material ou fallback 1x1 branco (evita shader quebrado).
-func _get_terrain_layer_texture(m: Material) -> Texture2D:
-	var tex := _get_albedo_texture_from_material(m)
-	if tex:
-		return tex
-	if not _terrain_white_fallback:
-		var img := Image.create(1, 1, false, Image.FORMAT_RGBA8)
-		img.fill(Color.WHITE)
-		_terrain_white_fallback = ImageTexture.create_from_image(img)
-	return _terrain_white_fallback
-
-## Cria o material do terreno: com materiais por camada (se WorldTheme tiver) ou só cor por vértice.
-func _create_terrain_material() -> Material:
-	if world_theme and world_theme.use_terrain_textures:
-		var has_any := (
-			world_theme.material_sand != null or world_theme.material_grass != null
-			or world_theme.material_rock != null or world_theme.material_snow != null
-		)
-		if has_any:
-			var shader_path := "res://world_generator_v2/shader/terrain_textured.gdshader"
-			if not ResourceLoader.exists(shader_path):
-				shader_path = "res://shaders/terrain_textured.gdshader"
-			var shader_res := load(shader_path) as Shader
-			if shader_res:
-				var mat := ShaderMaterial.new()
-				mat.shader = shader_res
-				mat.set_shader_parameter("texture_sand", _get_terrain_layer_texture(world_theme.material_sand))
-				mat.set_shader_parameter("texture_grass", _get_terrain_layer_texture(world_theme.material_grass))
-				mat.set_shader_parameter("texture_rock", _get_terrain_layer_texture(world_theme.material_rock))
-				mat.set_shader_parameter("texture_snow", _get_terrain_layer_texture(world_theme.material_snow))
-				mat.set_shader_parameter("water_level", water_level)
-				mat.set_shader_parameter("beach_level", beach_level + 3.0)
-				mat.set_shader_parameter("grass_level", grass_level)
-				mat.set_shader_parameter("rock_start", rock_start_height)
-				mat.set_shader_parameter("rock_end", rock_start_height + rock_thickness)
-				var snow_start_val := (rock_start_height + rock_thickness) if snow_start_height < 0 else snow_start_height
-				mat.set_shader_parameter("snow_start", snow_start_val)
-				mat.set_shader_parameter("transition_width", maxf(world_theme.transition_width, 2.0))
-				var softness := 2.0
-				if "transition_softness" in world_theme:
-					softness = world_theme.transition_softness
-				var noise_amt := 2.0
-				if "transition_noise" in world_theme:
-					noise_amt = world_theme.transition_noise
-				mat.set_shader_parameter("transition_softness", clampf(softness, 0.5, 3.0))
-				mat.set_shader_parameter("transition_noise", clampf(noise_amt, 0.0, 5.0))
-				mat.set_shader_parameter("texture_scale_uv", world_theme.texture_scale if world_theme.texture_scale > 0 else 0.05)
-				mat.set_shader_parameter("use_vertex_cwolor_tint", true)
-				_log("🖼️ Terreno usando materiais do WorldTheme (transições suaves por altura)")
-				return mat
-			else:
-				push_warning("Shader de terreno não encontrado, usando cor por vértice.")
-		elif debug_log:
-			_log("⚠️ use_terrain_textures ativo mas nenhum material atribuído, usando cor por vértice")
-
-	var mat := StandardMaterial3D.new()
-	mat.vertex_color_use_as_albedo = true
-	mat.roughness = 0.9
-	return mat
-
-func create_water():
-	if world_theme and world_theme.liquid_type == WorldTheme.LiquidType.NONE:
-		return
-
-	water_mesh = MeshInstance3D.new()
-	var plane := PlaneMesh.new()
-	plane.size = Vector2(water_size, water_size)
-	plane.subdivide_width = 50
-	plane.subdivide_depth = 50
-	water_mesh.mesh = plane
-
-	var liquid_level := water_level
-	if world_theme and world_theme.use_custom_levels:
-		liquid_level = world_theme.custom_water_level
-	# Offset maior + sem receber sombras = sombras na água param de tremer
-	const WATER_VISUAL_OFFSET := 0.12
-	water_mesh.position = Vector3(0.0, liquid_level + WATER_VISUAL_OFFSET, 0.0)
-
-	var water_mat: Material = null
-	if world_theme and "water_material" in world_theme and world_theme.water_material:
-		water_mat = world_theme.water_material
-	else:
-		water_mat = load("res://materials/Water.tres") as Material
-	if water_mat:
-		water_mesh.material_override = water_mat
-	else:
-		push_warning("Material res://materials/Water.tres não encontrado; água sem aparência.")
-
-	# Não projetar sombra; receber sombras desativado no próprio shader da água (evita tremor)
-	water_mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	add_child(water_mesh)
-
-	var water_body := StaticBody3D.new()
-	var water_collision := CollisionShape3D.new()
-	var water_shape := BoxShape3D.new()
-	water_shape.size = Vector3(water_size, 0.5, water_size)
-	water_collision.shape = water_shape
-	water_collision.position.y = liquid_level - 0.25
-	water_body.add_child(water_collision)
-	add_child(water_body)
-
 func get_liquid_name(type: WorldTheme.LiquidType) -> String:
-	match type:
-		WorldTheme.LiquidType.WATER: return "Água"
-		WorldTheme.LiquidType.LAVA: return "Lava"
-		WorldTheme.LiquidType.ACID: return "Ácido"
-		WorldTheme.LiquidType.OIL: return "Óleo"
-		WorldTheme.LiquidType.BLOOD: return "Sangue"
-		WorldTheme.LiquidType.CRYSTAL: return "Cristal Líquido"
-		_: return "Desconhecido"
+	return WaterHelper.get_liquid_name(type)
 
 # =============================================================================
 # COORDENADAS E REBASE DA ORIGEM (só quando parado)
@@ -1576,291 +1335,6 @@ func get_terrain_color(x: float, z: float, height: float) -> Color:
 
 	# Neve
 	return Color(0.92, 0.92, 0.95)
-
-# =============================================================================
-# VEGETAÇÃO
-# =============================================================================
-
-func _create_chunk_vegetation(chunk_data: ChunkData, start_pos: Vector3):
-	var vegetation_density := 1.0
-	if player:
-		var dist := get_chunk_distance_to_player(chunk_data.chunk_pos)
-		if dist > visual_lod_far:
-			vegetation_density = 0.3
-		elif dist > visual_lod_near:
-			vegetation_density = 0.6
-
-	var biome_cache := {}
-	var end_x := start_pos.x + chunk_size
-	var end_z := start_pos.z + chunk_size
-	var max_points := max_vegetation_points_per_chunk
-
-	# Montar lista de células do grid e embaralhar para não criar fileiras vazias
-	var cells: Array[Vector2] = []
-	var x := start_pos.x
-	while x < end_x:
-		var z := start_pos.z
-		while z < end_z:
-			cells.append(Vector2(x, z))
-			z += spawn_spacing
-		x += spawn_spacing
-	cells.shuffle()
-
-	var points_done := 0
-	for cell in cells:
-		if max_points > 0 and points_done >= max_points:
-			break
-		if vegetation_density < 1.0 and randf() > vegetation_density:
-			continue
-
-		var pos_x := cell.x + randf_range(0.0, spawn_spacing)
-		var pos_z := cell.y + randf_range(0.0, spawn_spacing)
-		var height := get_terrain_height(pos_x, pos_z)
-
-		if height < beach_level + 1.0:
-			continue
-
-		var position := Vector3(pos_x, height, pos_z)
-		var cache_key := Vector2i(int(pos_x / 20.0), int(pos_z / 20.0))
-		var current_biome: BiomeData
-
-		if biome_cache.has(cache_key):
-			current_biome = biome_cache[cache_key]
-		else:
-			current_biome = get_biome_at_position(pos_x, pos_z, height)
-			biome_cache[cache_key] = current_biome
-
-		if current_biome:
-			_spawn_biome_item(current_biome, position, chunk_data)
-		points_done += 1
-
-	# Partículas ambientais fixas no chunk (não seguem o jogador; descarregam com o chunk)
-	if enable_ambient_particles and ChunkAmbientParticlesScene:
-		var center_x := start_pos.x + chunk_size * 0.5
-		var center_z := start_pos.z + chunk_size * 0.5
-		var center_y := get_terrain_height(center_x, center_z) + 3.0
-		var particles := ChunkAmbientParticlesScene.instantiate()
-		particles.position = Vector3(center_x, center_y, center_z)
-		add_child(particles)
-		chunk_data.objects.append(particles)
-
-func _get_grass_wind_material() -> ShaderMaterial:
-	if _grass_wind_material == null and grass_mesh:
-		var shader := load("res://world_generator_v2/shader/grass_wind.gdshader") as Shader
-		if shader:
-			_grass_wind_material = ShaderMaterial.new()
-			_grass_wind_material.shader = shader
-			_grass_wind_material.set_shader_parameter("wind_strength", grass_wind_strength)
-			_grass_wind_material.set_shader_parameter("wind_speed", grass_wind_speed)
-			var grass_color := Color(0.25, 0.55, 0.25)
-			if world_theme:
-				grass_color = world_theme.grass_low_color
-			_grass_wind_material.set_shader_parameter("base_color", grass_color)
-			# Usar textura e cor do material do mesh da grama (cor natural da grama)
-			var tint := grass_color
-			var tex: Texture2D = null
-			if grass_mesh.get_surface_count() > 0:
-				var mat := grass_mesh.surface_get_material(0)
-				if mat:
-					tex = _get_albedo_texture_from_material(mat)
-					if mat is StandardMaterial3D:
-						tint = (mat as StandardMaterial3D).albedo_color
-			if tex:
-				_grass_wind_material.set_shader_parameter("albedo_texture", tex)
-			_grass_wind_material.set_shader_parameter("albedo_tint", tint)
-	return _grass_wind_material
-
-func _setup_grass_circle():
-	if not player or not grass_mesh or _grass_circle_mi != null:
-		return
-	var mm := MultiMesh.new()
-	mm.transform_format = MultiMesh.TRANSFORM_3D
-	mm.instance_count = grass_circle_count
-	mm.mesh = grass_mesh
-
-	_grass_positions.resize(grass_circle_count)
-	_grass_free_slots.clear()
-
-	# Iniciar todos os slots escondidos; o preenchimento é gradual em _process_grass_circle
-	# (evita travar: antes fazia milhares de get_terrain_height em um único frame)
-	for i in grass_circle_count:
-		var tr := Transform3D()
-		tr.origin = Vector3(0, -1000, 0)
-		tr.basis = Basis().scaled(Vector3(0.001, 0.001, 0.001))
-		mm.set_instance_transform(i, tr)
-		_grass_positions[i] = Vector3(0, -1000, 0)
-		_grass_free_slots.append(i)
-
-	_grass_circle_mi = MultiMeshInstance3D.new()
-	_grass_circle_mi.multimesh = mm
-	if grass_with_animation:
-		var wind_mat := _get_grass_wind_material()
-		if wind_mat:
-			_grass_circle_mi.material_override = wind_mat
-	add_child(_grass_circle_mi)
-	_grass_circle_mi.position = Vector3.ZERO
-	_grass_last_player_pos = player.global_position
-
-func _process_grass_circle(_delta: float):
-	if not enable_grass_multimesh or not grass_mesh or not player:
-		return
-	if _grass_circle_mi == null:
-		_setup_grass_circle()
-	if _grass_circle_mi == null:
-		return
-
-	var mm: MultiMesh = _grass_circle_mi.multimesh
-	if mm == null:
-		return
-
-	var player_pos := player.global_position
-	var radius_sq := grass_circle_radius * grass_circle_radius
-
-	# --- FASE 1: Coletar slots que saíram do raio ---
-	# (Só comparação de distância, muito barato. Thread não vale: o custo pesado é
-	# get_terrain_height e set_instance_transform, que têm de rodar na main thread.)
-	for i in grass_circle_count:
-		var gp := _grass_positions[i]
-		if gp.y < -500.0:
-			continue  # Já está livre/escondido
-		var dx := gp.x - player_pos.x
-		var dz := gp.z - player_pos.z
-		if (dx * dx + dz * dz) > radius_sq:
-			# Saiu do círculo — esconder e marcar como livre
-			var tr := Transform3D()
-			tr.origin = Vector3(0, -1000, 0)
-			tr.basis = Basis().scaled(Vector3(0.001, 0.001, 0.001))
-			mm.set_instance_transform(i, tr)
-			_grass_positions[i] = Vector3(0, -1000, 0)
-			_grass_free_slots.append(i)
-
-	# --- FASE 2: Reposicionar slots livres na faixa externa (longe do jogador) ---
-	# Preferência para a frente; raio entre grass_spawn_min_ratio e 100% do raio
-	var spawned := 0
-	var max_tries_per_slot := 6
-	var forward_2d := Vector2(-player.global_transform.basis.z.x, -player.global_transform.basis.z.z)
-	if forward_2d.length_squared() < 0.01:
-		forward_2d = Vector2(1.0, 0.0)
-	else:
-		forward_2d = forward_2d.normalized()
-	var angle_fwd := atan2(forward_2d.y, forward_2d.x)
-	var r_min := grass_circle_radius * grass_spawn_min_ratio
-	var r_range := grass_circle_radius - r_min
-
-	while spawned < grass_spawn_per_frame and _grass_free_slots.size() > 0:
-		var slot: int = _grass_free_slots.pop_back()
-		var placed := false
-
-		for _try in max_tries_per_slot:
-			# 70% na frente, 30% em qualquer direção (garante achar terreno válido)
-			var angle: float
-			if randf() < 0.7:
-				angle = angle_fwd + randf_range(-PI / 2.0, PI / 2.0)
-			else:
-				angle = randf() * TAU
-			var r := r_min + sqrt(randf()) * r_range
-			var wx := player_pos.x + cos(angle) * r
-			var wz := player_pos.z + sin(angle) * r
-			var h := get_terrain_height(wx, wz)
-
-			if h <= water_level or h < beach_level + 1.0 or h >= grass_max_height:
-				continue
-
-			var tr := Transform3D()
-			tr.origin = Vector3(wx, h, wz)
-			tr.basis = Basis(Vector3.UP, randf() * TAU)
-			var s := randf_range(grass_min_scale, grass_max_scale)
-			tr.basis = tr.basis.scaled(Vector3(s, s, s))
-			mm.set_instance_transform(slot, tr)
-			_grass_positions[slot] = Vector3(wx, h, wz)
-			placed = true
-			break
-
-		if not placed:
-			_grass_free_slots.append(slot)
-		else:
-			spawned += 1
-
-	_grass_last_player_pos = player_pos
-
-
-func _spawn_biome_item(biome: BiomeData, position: Vector3, chunk_data: ChunkData):
-	# Um único item por posição para evitar árvores em cima de pedras etc.
-	var total_weight := 1.0  # peso "não spawnar nada"
-	for item in biome.biome_items:
-		if item and not item.variants.is_empty():
-			total_weight += item.spawn_chance
-
-	var roll := randf() * total_weight
-	if roll < 1.0:
-		return  # não coloca nada neste ponto
-	roll -= 1.0
-
-	for item in biome.biome_items:
-		if not item or item.variants.is_empty():
-			continue
-		if roll < item.spawn_chance:
-			var variant := get_random_variant(item.variants)
-			if variant and variant.scene:
-				var obj := variant.scene.instantiate()
-				obj.position = position
-				obj.rotation.y = randf_range(0, TAU)
-				var s := randf_range(item.min_scale, item.max_scale)
-				obj.scale = Vector3(s, s, s)
-				add_child(obj)
-				chunk_data.objects.append(obj)
-
-				for sub_item in item.sub_items:
-					if not sub_item:
-						continue
-					var count := sub_item.spawn_count
-					for _i in count:
-						if randf() > sub_item.spawn_chance:
-							continue
-						var offset := Vector3(
-							randf_range(-sub_item.spawn_radius, sub_item.spawn_radius),
-							0.0,
-							randf_range(-sub_item.spawn_radius, sub_item.spawn_radius)
-						)
-						var sub_pos := position + offset
-						sub_pos.y = get_terrain_height(sub_pos.x, sub_pos.z) + sub_item.height_offset
-						var sub_variant := get_random_variant(sub_item.variants)
-						if sub_variant and sub_variant.scene:
-							var sub_obj := sub_variant.scene.instantiate()
-							sub_obj.position = sub_pos
-							sub_obj.rotation.y = randf_range(0, TAU)
-							var sub_s := randf_range(sub_item.min_scale, sub_item.max_scale)
-							sub_obj.scale = Vector3(sub_s, sub_s, sub_s)
-							add_child(sub_obj)
-							chunk_data.objects.append(sub_obj)
-			return
-		roll -= item.spawn_chance
-
-func get_random_variant(variants: Array[ItemVariant]) -> ItemVariant:
-	if variants.is_empty():
-		return null
-	var total_weight := 0.0
-	for variant in variants:
-		if variant:
-			total_weight += get_rarity_weight(variant.rarity)
-	var roll := randf() * total_weight
-	var current_weight := 0.0
-	for variant in variants:
-		if not variant:
-			continue
-		current_weight += get_rarity_weight(variant.rarity)
-		if roll <= current_weight:
-			return variant
-	return variants[0]
-
-func get_rarity_weight(rarity: ItemVariant.Rarity) -> float:
-	match rarity:
-		ItemVariant.Rarity.COMMON: return 10.0
-		ItemVariant.Rarity.UNCOMMON: return 5.0
-		ItemVariant.Rarity.RARE: return 2.0
-		ItemVariant.Rarity.EPIC: return 0.5
-		ItemVariant.Rarity.LEGENDARY: return 0.1
-	return 1.0
 
 # =============================================================================
 # BIOMAS E DIFICULDADE

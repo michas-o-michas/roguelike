@@ -5,12 +5,20 @@
 	  "output": "axe",
 	  "output_amount": 1,
 	  "inputs": [
-		{"item": "wood", "amount": 5}
+		{"item": "wood", "amount": 1}
 	  ]
 	},
 	{
 	  "name": "Picareta",
 	  "output": "pickaxe",
+	  "output_amount": 1,
+	  "inputs": [
+		{"item": "stone", "amount": 1}
+	  ]
+	},
+	{
+	  "name": "Espada",
+	  "output": "wood_sword",
 	  "output_amount": 1,
 	  "inputs": [
 		{"item": "stone", "amount": 5}

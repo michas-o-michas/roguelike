@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="AnimalSpawnerData" format=3 uid="uid://clpq5lxgnutv5"]
+
+[ext_resource type="Script" uid="uid://el3it5rlbpge" path="res://world_generator_v2/animal_spawner_data.gd" id="1_script"]
+[ext_resource type="PackedScene" uid="uid://dgsjsutvtlgdh" path="res://Scenes/enemies/wolf_spawner.tscn" id="2_scene"]
+
+[resource]
+script = ExtResource("1_script")
+spawner_name = "Lobos"
+spawner_scene = ExtResource("2_scene")

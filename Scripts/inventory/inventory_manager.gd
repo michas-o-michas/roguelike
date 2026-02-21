@@ -191,7 +191,7 @@ func get_item_count_by_id(id: String) -> int:
 		return 0
 	return get_item_count(item)
 
-## Retorna dicionário id (string) → quantidade total. Útil para UI legada (ex.: UIManager).
+## Retorna dicionário id (string) → quantidade total. Útil para UI ou debug.
 func get_all_item_counts() -> Dictionary:
 	var counts: Dictionary = {}
 	if not CraftingManager:

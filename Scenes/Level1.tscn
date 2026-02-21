@@ -12,6 +12,7 @@
 [ext_resource type="Resource" uid="uid://bqpqu6d4gt3re" path="res://world_generator_v2/POIData/temple.tres" id="7_wjxug"]
 [ext_resource type="ArrayMesh" uid="uid://08aj7yowiacx" path="res://grass4.tres" id="8_bqkvc"]
 [ext_resource type="Script" uid="uid://el3it5rlbpge" path="res://world_generator_v2/animal_spawner_data.gd" id="9_3la1u"]
+[ext_resource type="Resource" uid="uid://clpq5lxgnutv5" path="res://world_generator_v2/spawners/wolf_spawner_data.tres" id="10_wolfspawner"]
 [ext_resource type="Script" uid="uid://bbwcjlccr203h" path="res://Scripts/SkillManager.gd" id="18_fc4x2"]
 [ext_resource type="Script" uid="uid://cwbxmv6ud8e5u" path="res://Skills/skill.gd" id="19_r3dg4"]
 [ext_resource type="Resource" uid="uid://qinafm4w04qx" path="res://Skills/hp_level1.tres" id="20_k2w6b"]
@@ -87,10 +88,8 @@ poi_check_interval = 1.0
 poi_min_spacing = 1.0
 poi_per_area_chance = 1.0
 pois = Array[ExtResource("6_rarx8")]([ExtResource("7_wjxug")])
-spawner_check_interval = 15.0
-spawner_min_spacing = 10.0
 spawner_per_area_chance = 1.0
-animal_spawners = Array[ExtResource("9_3la1u")]([])
+animal_spawners = Array[ExtResource("9_3la1u")]([ExtResource("10_wolfspawner")])
 player_scene = ExtResource("1_gxb1y")
 player_spawn_position = Vector3(0, 66, 0)
 

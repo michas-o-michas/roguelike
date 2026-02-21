@@ -1,4 +1,6 @@
 extends CharacterBody3D
+# Player: movimento, câmera, animação, vida (via HealthComponent).
+# Nós esperados: HealthComponent, WeaponHandler, Camera3D, AttackArea, StepAudio, RayCast3D.
 
 # ================= MOVIMENTO =================
 @export var speed := 8.0
@@ -43,9 +45,18 @@ var jump_buffered := false
 
 var rotation_x := 0.0
 
-# ================= ATRIBUTOS =================
-var base_health := 100
-var health := base_health
+# ================= VIDA E DANO (HealthComponent) =================
+@export var base_health := 100
+@export var invincibility_duration_after_hit := 0.8
+var _invincibility_timer := 0.0
+
+## Usados por SkillManager (buffs). Movimento usa speed/sprint_speed; dano real vem da arma (weapon_handler).
+var base_speed := 8.0
+var damage := 0
+var base_damage := 0
+var attack_speed := 1.0
+var base_attack_speed := 1.0
+var base_max_jumps := 1
 
 # ================= PASSOS =================
 var step_timer := 0.0
@@ -70,15 +81,34 @@ var flying := false
 ## Teleporte: definido por pads/portais; aplicado no início do próximo _physics_process.
 var _pending_teleport: Vector3 = Vector3.INF
 
+## Offset em metros acima do ponto de colisão ao fazer snap no chão (evita enterrar).
+@export var ground_snap_height_offset: float = 0.05
+
+@onready var _health_component: HealthComponent = get_node_or_null("HealthComponent") as HealthComponent
+
 func request_teleport(global_pos: Vector3) -> void:
 	_pending_teleport = global_pos
 
+## Chamado pelo gerador de mundo (ou outro sistema) para posicionar o jogador em cima do terreno.
+## Define a posição e ativa o RayCast para, no próximo frame, ajustar à superfície real.
+func position_on_terrain(global_pos: Vector3) -> void:
+	global_position = global_pos
+	velocity = Vector3.ZERO
+	var ray := get_node_or_null("RayCast3D") as RayCast3D
+	if ray:
+		ray.enabled = true
 
 func _ready():
+	base_speed = speed
+	base_max_jumps = max_jumps
+	if _health_component:
+		_health_component.max_health = base_health
+		_health_component.current_health = base_health
+		_health_component.died.connect(_on_died)
+	else:
+		push_warning("Player: HealthComponent não encontrado. Adicione o nó HealthComponent como filho do Player para vida/dano.")
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	add_to_group("player")
-	position.y = 100
-
 	if animation_tree:
 		animation_tree.active = true
 		set_animation("Idle")
@@ -95,6 +125,36 @@ func play_attack_animation(anim_state_name: String = "Attack") -> void:
 	set_animation(anim_state_name)
 	is_attacking = true
 	_attack_end_time = Time.get_ticks_msec() / 1000.0 + attack_anim_duration
+
+## Chamado pelo SkillManager após aplicar bônus da skill (ex.: para UI ou efeitos).
+func apply_skill(_skill) -> void:
+	pass
+
+## Retorna o HealthComponent (para SkillManager e UI). Retorna null se não houver.
+func get_health_component() -> HealthComponent:
+	return _health_component
+
+## Recebe dano. Delega ao HealthComponent; ativa i-frames após o hit.
+func take_damage(amount: float, armor_piercing: float = 0.0, _attacker: Node = null) -> float:
+	if _health_component == null:
+		return 0.0
+	var taken := _health_component.take_damage(amount, armor_piercing, _attacker)
+	if taken > 0:
+		_health_component.is_invincible = true
+		_invincibility_timer = invincibility_duration_after_hit
+	return taken
+
+## Cura o jogador. Delega ao HealthComponent.
+func heal(amount: float) -> float:
+	if _health_component == null:
+		return 0.0
+	return _health_component.heal(amount)
+
+func _is_dead() -> bool:
+	return _health_component != null and _health_component.is_dead
+
+func _on_died() -> void:
+	set_animation("Death")
 
 func _set(property, value):
 	if property == "creative_mode":
@@ -135,15 +195,32 @@ func get_camera_pivot_global() -> Vector3:
 func get_camera_target_global_position() -> Vector3:
 	return global_position + transform.basis * _get_camera_target_position()
 
-
-
+## Usa o RayCast3D para colar os pés na superfície (ponto de colisão, não a posição do corpo rígido).
+func _try_snap_to_ground_surface() -> void:
+	var ray := get_node_or_null("RayCast3D") as RayCast3D
+	if not ray or not ray.enabled or not ray.is_colliding():
+		return
+	var hit_point: Vector3 = ray.get_collision_point()
+	global_position = hit_point + Vector3(0.0, ground_snap_height_offset, 0.0)
+	velocity = Vector3.ZERO
+	ray.enabled = false
 
 func _physics_process(delta):
+	_try_snap_to_ground_surface()
 	# Aplicar teleporte pendente antes de qualquer movimento (evita ser sobrescrito)
 	if _pending_teleport != Vector3.INF:
 		global_position = _pending_teleport
 		velocity = Vector3.ZERO
 		_pending_teleport = Vector3.INF
+		return
+
+	if _is_dead():
+		set_animation("Death")
+		velocity.x = move_toward(velocity.x, 0, deaccel * delta)
+		velocity.z = move_toward(velocity.z, 0, deaccel * delta)
+		if not is_on_floor():
+			velocity.y -= gravity * delta
+		move_and_slide()
 		return
 
 	var input_dir = Input.get_vector("a", "d", "w", "s")
@@ -198,8 +275,12 @@ func _physics_process(delta):
 	else:
 		if velocity.y < 0:
 			velocity.y = 0
-	if Input.is_action_just_pressed("attack") or Input.is_action_just_pressed("mb1"):
-		play_attack_animation("Attack")
+
+	# I-frames: após levar dano, invencibilidade por um curto tempo
+	if _invincibility_timer > 0:
+		_invincibility_timer -= delta
+		if _invincibility_timer <= 0 and _health_component:
+			_health_component.is_invincible = false
 
 	var current_speed := speed
 	var step_current := step_interval
@@ -245,7 +326,7 @@ func _physics_process(delta):
 	if is_attacking:
 		if Time.get_ticks_msec() / 1000.0 >= _attack_end_time:
 			is_attacking = false
-	elif health <= 0:
+	elif _is_dead():
 		set_animation("Death")
 	elif is_dashing:
 		set_animation("Dash")

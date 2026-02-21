@@ -1,0 +1,9 @@
+[gd_scene format=3 uid="uid://dgsjsutvtlgdh"]
+
+[ext_resource type="Script" uid="uid://cmkm567j2sdxa" path="res://Scripts/enemies/mob_spawner.gd" id="1_wh5er"]
+[ext_resource type="Resource" uid="uid://dwolfdata01" path="res://data/mobs/wolf.tres" id="2_mobdata"]
+
+[node name="WolfSpawner" type="Node3D" unique_id=1076301937]
+script = ExtResource("1_wh5er")
+mob_data = ExtResource("2_mobdata")
+max_mobs = 6

@@ -67,7 +67,13 @@ func check_and_spawn_spawners(world_gen: InfiniteWorldGenerator) -> void:
 				continue
 
 		var position = Vector3(pos_x, height + 5, pos_z)
+		if not spawner_data.spawner_scene:
+			push_warning("SpawnerManager: spawner_scene está vazio em '%s'" % spawner_data.spawner_name)
+			continue
 		var spawner = spawner_data.spawner_scene.instantiate()
+		if not spawner:
+			push_warning("SpawnerManager: falha ao instanciar cena do spawner '%s'" % spawner_data.spawner_name)
+			continue
 		spawner.position = position
 		world_gen.add_child(spawner)
 
@@ -105,5 +111,3 @@ func _check_spacing(pos: Vector2, min_spacing: float) -> bool:
 		if pos.distance_to(other_pos) < min_spacing:
 			return false
 	return true
-
-

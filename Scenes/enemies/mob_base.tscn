@@ -1,0 +1,27 @@
+[gd_scene load_steps=4 format=3 uid="uid://bqxmobbase01"]
+
+[ext_resource type="Script" path="res://Scripts/enemies/mob_base.gd" id="1_mob"]
+[ext_resource type="PackedScene" uid="uid://dp0uqj3jtf5cv" path="res://Componentes/HealthComponent.tscn" id="2_health"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_mob"]
+radius = 0.4
+height = 1.2
+
+[node name="MobBase" type="CharacterBody3D"]
+collision_layer = 1
+collision_mask = 1
+script = ExtResource("1_mob")
+debug_log = true
+detection_radius = 30.0
+attack_radius = 1.8
+attack_cooldown_time = 1.0
+provocation_radius = 4.0
+flee_radius = 8.0
+
+[node name="HealthComponent" parent="." instance=ExtResource("2_health")]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+shape = SubResource("CapsuleShape3D_mob")
+
+[node name="Model" type="Node3D" parent="."]

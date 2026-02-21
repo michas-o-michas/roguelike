@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3 uid="uid://bmobspawner01"]
+
+[ext_resource type="Script" path="res://Scripts/enemies/mob_spawner.gd" id="1_spawner"]
+
+[node name="MobSpawner" type="Node3D"]
+script = ExtResource("1_spawner")
+debug_log = true
+activation_distance = 80.0
+max_mobs = 4
+spawn_interval = 8.0
+spawn_radius = 6.0

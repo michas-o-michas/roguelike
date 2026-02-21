@@ -37,6 +37,7 @@ material = SubResource("StandardMaterial3D_cb0yx")
 
 [node name="Tree" type="StaticBody3D" unique_id=61243902]
 script = ExtResource("1_gtca3")
+drop_amount = 5
 
 [node name="VisualRoot" type="Node3D" parent="." unique_id=1262567211]
 

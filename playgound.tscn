@@ -1,10 +1,9 @@
 [gd_scene format=4 uid="uid://ch0eejl2qm6lv"]
 
 [ext_resource type="Script" uid="uid://d2chl4stsv18o" path="res://playgound.gd" id="1_xwb8w"]
-[ext_resource type="PackedScene" uid="uid://y7pgqj2m0epu" path="res://Assets/teste/grama/grass_02.glb" id="3_h02br"]
+[ext_resource type="PackedScene" uid="uid://dgsjsutvtlgdh" path="res://Scenes/enemies/wolf_spawner.tscn" id="4_pvwtc"]
 [ext_resource type="PackedScene" uid="uid://chmt2wxe13a3o" path="res://Player/player.tscn" id="4_xwb8w"]
 [ext_resource type="PackedScene" uid="uid://nql47rn6v1pw" path="res://Scenes/Landingpad.tscn" id="5_qdibi"]
-[ext_resource type="PackedScene" uid="uid://b0swsr3ygq4j" path="res://Assets/Coin/Coin.fbx" id="6_qdibi"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_h02br"]
 sky_horizon_color = Color(0.53434706, 0.53197336, 0.6919441, 1)
@@ -104,9 +103,6 @@ shape = SubResource("ConcavePolygonShape3D_tprpm")
 transform = Transform3D(1, 0, 0, 0, 0.31684116, -0.94847864, 0, 0.94847864, 0.31684116, 0.3624022, 0.16201513, -1.9566237)
 mesh = SubResource("ArrayMesh_nyaa2")
 
-[node name="Sketchfab_Scene" parent="." unique_id=1590201832 instance=ExtResource("3_h02br")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.63826466, 0.07709188, -3.287671)
-
 [node name="Player" parent="." unique_id=267460793 instance=ExtResource("4_xwb8w")]
 
 [node name="TeleportIn" parent="." unique_id=1535864988 node_paths=PackedStringArray("destination_pad") instance=ExtResource("5_qdibi")]
@@ -118,5 +114,5 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 37.715122, 0, 0)
 destination_pad = NodePath("../TeleportIn")
 pad_type = 1
 
-[node name="Coin" parent="." unique_id=316194691 instance=ExtResource("6_qdibi")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -34.44416, 0.36414054, -0.71154785)
+[node name="WolfSpawner" parent="." unique_id=1076301937 instance=ExtResource("4_pvwtc")]
+transform = Transform3D(1, 0, 0, 0, 0.99999475, 0.003246307, 0, -0.003246307, 0.99999475, 0, 0, 0)
