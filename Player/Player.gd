@@ -127,6 +127,9 @@ func _ready():
 		_movement_visual = get_node_or_null(movement_visual_path) as Node3D
 		if _movement_visual:
 			_movement_visual.rotation.y = movement_visual_back_offset
+	# Aplicar bônus de atributos (StatsManager)
+	if StatsManager:
+		StatsManager.apply_to_player(self)
 
 func set_animation(anim_name: String) -> void:
 	if not animation_tree:

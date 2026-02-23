@@ -24,9 +24,12 @@ extends Control
 @onready var close_button = $PanelContainer/Window/Header/CloseButton
 @onready var inv_tab = $PanelContainer/Window/TabsBar/Tabs/InventoryTab
 @onready var craft_tab = $PanelContainer/Window/TabsBar/Tabs/CraftingTab
+@onready var status_tab = $PanelContainer/Window/TabsBar/Tabs/StatusTab
 @onready var inv_content = $PanelContainer/Window/InventoryContent
 @onready var craft_content = $PanelContainer/Window/MarginContainer/CraftingContent
+@onready var status_content = $PanelContainer/Window/StatusContent
 @onready var coins_label = $PanelContainer/Window/Header/CoinsLabel
+@onready var placeholder_sprite = $PanelContainer/Window/Placeholder
 
 var current_tab: String = "inventory"
 
@@ -38,6 +41,8 @@ func _ready():
 	close_button.pressed.connect(_toggle)
 	inv_tab.pressed.connect(func(): _switch_tab("inventory"))
 	craft_tab.pressed.connect(func(): _switch_tab("crafting"))
+	if status_tab:
+		status_tab.pressed.connect(func(): _switch_tab("status"))
 	InventoryManager.inventory_changed.connect(_on_inventory_changed)
 	InventoryManager.coins_changed.connect(_on_coins_changed)
 	_switch_tab("inventory")
@@ -91,6 +96,11 @@ func _switch_tab(tab_id: String) -> void:
 	# Mostra/esconde conteúdo
 	inv_content.visible = (tab_id == "inventory")
 	craft_content.visible = (tab_id == "crafting")
+	if status_content:
+		status_content.visible = (tab_id == "status")
+	# Esconde silhueta na aba Status para ver a lista de atributos
+	if placeholder_sprite:
+		placeholder_sprite.visible = (tab_id != "status")
 	
 	var active_style := StyleBoxFlat.new()
 	active_style.bg_color = Color(0.28, 0.2, 0.12, 1)
@@ -102,16 +112,15 @@ func _switch_tab(tab_id: String) -> void:
 	inactive_style.border_color = Color(0.25, 0.2, 0.15, 1)
 	inactive_style.set_border_width_all(1)
 	inactive_style.set_corner_radius_all(4)
-	if tab_id == "inventory":
-		inv_tab.add_theme_stylebox_override("normal", active_style)
-		craft_tab.add_theme_stylebox_override("normal", inactive_style)
-		inv_tab.add_theme_color_override("font_color", Color(0.95, 0.88, 0.75, 1))
-		craft_tab.add_theme_color_override("font_color", Color(0.6, 0.57, 0.52, 1))
-	else:
-		inv_tab.add_theme_stylebox_override("normal", inactive_style)
-		craft_tab.add_theme_stylebox_override("normal", active_style)
-		inv_tab.add_theme_color_override("font_color", Color(0.6, 0.57, 0.52, 1))
-		craft_tab.add_theme_color_override("font_color", Color(0.95, 0.88, 0.75, 1))
+	var active_color := Color(0.95, 0.88, 0.75, 1)
+	var inactive_color := Color(0.6, 0.57, 0.52, 1)
+	inv_tab.add_theme_stylebox_override("normal", active_style if tab_id == "inventory" else inactive_style)
+	inv_tab.add_theme_color_override("font_color", active_color if tab_id == "inventory" else inactive_color)
+	craft_tab.add_theme_stylebox_override("normal", active_style if tab_id == "crafting" else inactive_style)
+	craft_tab.add_theme_color_override("font_color", active_color if tab_id == "crafting" else inactive_color)
+	if status_tab:
+		status_tab.add_theme_stylebox_override("normal", active_style if tab_id == "status" else inactive_style)
+		status_tab.add_theme_color_override("font_color", active_color if tab_id == "status" else inactive_color)
 	SoundManager.play("ui_inventory_select")
 
 
@@ -133,7 +142,10 @@ func _style_tabs() -> void:
 	var hover_style := normal_style.duplicate()
 	hover_style.bg_color = Color(0.18, 0.14, 0.1, 1)
 	hover_style.border_color = Color(0.45, 0.35, 0.22, 1)
-	for tab in [inv_tab, craft_tab]:
+	var tabs: Array = [inv_tab, craft_tab]
+	if status_tab:
+		tabs.append(status_tab)
+	for tab in tabs:
 		if tab:
 			tab.add_theme_stylebox_override("normal", normal_style.duplicate())
 			tab.add_theme_stylebox_override("hover", hover_style.duplicate())

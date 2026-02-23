@@ -5,6 +5,7 @@
 [ext_resource type="FontFile" uid="uid://cfhotyty164nn" path="res://Assets/menu/Cinzel,Poppins,Raleway/Cinzel/Cinzel-VariableFont_wght.ttf" id="3_sxwjb"]
 [ext_resource type="Script" uid="uid://cdnjxp74inlvk" path="res://Scripts/UI/crafting_ui.gd" id="4_kyjlm"]
 [ext_resource type="Texture2D" uid="uid://dy20vbvd557ls" path="res://Assets/icons/placeholder.png" id="5_sfqc8"]
+[ext_resource type="Script" path="res://Scripts/UI/stats_ui.gd" id="6_stats"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kyjlm"]
 bg_color = Color(0.02, 0.02, 0.025, 0.75)
@@ -194,6 +195,13 @@ theme_override_fonts/font = ExtResource("3_sxwjb")
 theme_override_font_sizes/font_size = 14
 text = "Crafting"
 
+[node name="StatusTab" type="Button" parent="PanelContainer/Window/TabsBar/Tabs" unique_id=3000001]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("3_sxwjb")
+theme_override_font_sizes/font_size = 14
+text = "Status"
+
 [node name="MarginContainer" type="MarginContainer" parent="PanelContainer/Window" unique_id=1103760123]
 layout_mode = 1
 anchors_preset = 15
@@ -221,6 +229,20 @@ grow_vertical = 2
 
 [node name="RecipesList" type="VBoxContainer" parent="PanelContainer/Window/MarginContainer/CraftingContent/ScrollContainer" unique_id=1122965751]
 layout_mode = 2
+
+[node name="StatusContent" type="Control" parent="PanelContainer/Window" unique_id=3000002]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 63.0
+offset_right = -16.0
+offset_bottom = -16.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("6_stats")
+visible = false
 
 [node name="InventoryContent" type="Control" parent="PanelContainer/Window" unique_id=1124085328]
 custom_minimum_size = Vector2(340, 270)

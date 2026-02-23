@@ -45,10 +45,11 @@ func _ready():
 	call_deferred("_give_initial_resources")
 	emit_signal("inventory_changed")
 
-## Recursos iniciais ao iniciar o jogo (50 madeira, 50 pedra). Chamado em defer para CraftingManager estar pronto.
+## Recursos iniciais ao iniciar o jogo (50 madeira, 50 pedra, 1000 moedas). Chamado em defer para CraftingManager estar pronto.
 func _give_initial_resources() -> void:
 	add_item_by_id("wood", 50)
 	add_item_by_id("stone", 50)
+	add_coins(1000)
 
 
 

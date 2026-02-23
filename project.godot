@@ -32,6 +32,7 @@ MobRegistry="*res://Scripts/enemies/mob_registry.gd"
 ToolSelectionManager="*res://Scripts/ToolSelectionManager.gd"
 SpellManager="*res://Scripts/SpellManager.gd"
 DissolutionHelper="*res://Scripts/dissolution_helper.gd"
+StatsManager="*res://Scripts/StatsManager.gd"
 
 [display]
 
