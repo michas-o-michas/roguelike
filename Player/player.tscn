@@ -67,6 +67,7 @@
 [ext_resource type="PackedScene" uid="uid://b88vtgx7jfyd6" path="res://Scenes/UI/player_health_bar.tscn" id="64_healthbar"]
 [ext_resource type="PackedScene" uid="uid://cj5ch3shs6uen" path="res://Scenes/UI/player_attack_cooldown_bar.tscn" id="65_cooldown"]
 [ext_resource type="PackedScene" uid="uid://interaction_prompt" path="res://Scenes/UI/interaction_prompt.tscn" id="66_prompt"]
+[ext_resource type="PackedScene" uid="uid://compass_ui_01" path="res://Scenes/UI/compass.tscn" id="67_compass"]
 
 [sub_resource type="SeparationRayShape3D" id="SeparationRayShape3D_o28un"]
 length = 0.25932503
@@ -739,6 +740,8 @@ texture = ExtResource("8_qpoj2")
 expand_mode = 1
 
 [node name="PlayerHealthBar" parent="UI" unique_id=485555041 instance=ExtResource("64_healthbar")]
+
+[node name="Compass" parent="UI" unique_id=4000001 instance=ExtResource("67_compass")]
 
 [node name="PlayerAttackCooldownBar" parent="UI" unique_id=485555042 instance=ExtResource("65_cooldown")]
 offset_top = -136.0
