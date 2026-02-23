@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="PropVariantSet" format=3]
+
+[ext_resource type="Script" uid="uid://4tfo552xqm56" path="res://Scripts/PropVariantSet.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://Assets/Stylized Nature MegaKit[Standard]/FBX (Unity)/Rock_Medium_1.fbx" id="r1"]
+[ext_resource type="PackedScene" path="res://Assets/Stylized Nature MegaKit[Standard]/FBX (Unity)/Rock_Medium_2.fbx" id="r2"]
+[ext_resource type="PackedScene" path="res://Assets/Stylized Nature MegaKit[Standard]/FBX (Unity)/Rock_Medium_3.fbx" id="r3"]
+[ext_resource type="PackedScene" path="res://Assets/Stylized Nature MegaKit[Standard]/FBX/Pebble_Round_1.fbx" id="p1"]
+[ext_resource type="PackedScene" path="res://Assets/Stylized Nature MegaKit[Standard]/FBX/Pebble_Round_2.fbx" id="p2"]
+[ext_resource type="PackedScene" path="res://Assets/Stylized Nature MegaKit[Standard]/FBX/Pebble_Round_3.fbx" id="p3"]
+[ext_resource type="PackedScene" path="res://Assets/Stylized Nature MegaKit[Standard]/FBX/Pebble_Square_1.fbx" id="s1"]
+[ext_resource type="PackedScene" path="res://Assets/Stylized Nature MegaKit[Standard]/FBX/Pebble_Square_2.fbx" id="s2"]
+[ext_resource type="PackedScene" path="res://Assets/Stylized Nature MegaKit[Standard]/FBX/Pebble_Square_3.fbx" id="s3"]
+
+[resource]
+script = ExtResource("1_script")
+variant_name = "Pedras"
+variant_scenes = Array[PackedScene]([ExtResource("r1"), ExtResource("r2"), ExtResource("r3"), ExtResource("p1"), ExtResource("p2"), ExtResource("p3"), ExtResource("s1"), ExtResource("s2"), ExtResource("s3")])

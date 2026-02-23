@@ -22,36 +22,29 @@ extends Control
 
 @onready var window = $PanelContainer/Window
 @onready var close_button = $PanelContainer/Window/Header/CloseButton
-@onready var inv_tab = $PanelContainer/Window/Tabs/InventoryTab
-@onready var craft_tab = $PanelContainer/Window/Tabs/CraftingTab
+@onready var inv_tab = $PanelContainer/Window/TabsBar/Tabs/InventoryTab
+@onready var craft_tab = $PanelContainer/Window/TabsBar/Tabs/CraftingTab
 @onready var inv_content = $PanelContainer/Window/InventoryContent
 @onready var craft_content = $PanelContainer/Window/MarginContainer/CraftingContent
-@onready var coins_label = $PanelContainer/Window/Header/CoinsLabel  # Ajuste o caminho
+@onready var coins_label = $PanelContainer/Window/Header/CoinsLabel
 
 var current_tab: String = "inventory"
 
 func _ready():
 	visible = is_open
 	z_index = 50 if is_open else 0
-	
-	# Conecta botões
+	_style_tabs()
+	_style_close_button()
 	close_button.pressed.connect(_toggle)
 	inv_tab.pressed.connect(func(): _switch_tab("inventory"))
 	craft_tab.pressed.connect(func(): _switch_tab("crafting"))
-	
-	# Conecta sinais do InventoryManager
 	InventoryManager.inventory_changed.connect(_on_inventory_changed)
 	InventoryManager.coins_changed.connect(_on_coins_changed)
-	
-	# Inicializa tabs
 	_switch_tab("inventory")
 	_on_coins_changed(InventoryManager.get_coins())
 	
-	# IMPORTANTE: Carrega itens do InventoryManager nos slots visuais
 	_load_all_slots()
-	
-	# Atualiza visual inicial dos slots
-	await get_tree().process_frame  # Espera 1 frame pra garantir que slots existem
+	await get_tree().process_frame
 	_refresh_all_slots()
 
 func _refresh_all_slots() -> void:
@@ -99,13 +92,26 @@ func _switch_tab(tab_id: String) -> void:
 	inv_content.visible = (tab_id == "inventory")
 	craft_content.visible = (tab_id == "crafting")
 	
-	# Atualiza cor das tabs (dourado = ativa, cinza = inativa)
+	var active_style := StyleBoxFlat.new()
+	active_style.bg_color = Color(0.28, 0.2, 0.12, 1)
+	active_style.border_color = Color(0.65, 0.45, 0.25, 1)
+	active_style.set_border_width_all(1)
+	active_style.set_corner_radius_all(4)
+	var inactive_style := StyleBoxFlat.new()
+	inactive_style.bg_color = Color(0.1, 0.08, 0.06, 1)
+	inactive_style.border_color = Color(0.25, 0.2, 0.15, 1)
+	inactive_style.set_border_width_all(1)
+	inactive_style.set_corner_radius_all(4)
 	if tab_id == "inventory":
-		inv_tab.modulate = Color(1.2, 1.1, 0.7)
-		craft_tab.modulate = Color(0.6, 0.6, 0.6)
+		inv_tab.add_theme_stylebox_override("normal", active_style)
+		craft_tab.add_theme_stylebox_override("normal", inactive_style)
+		inv_tab.add_theme_color_override("font_color", Color(0.95, 0.88, 0.75, 1))
+		craft_tab.add_theme_color_override("font_color", Color(0.6, 0.57, 0.52, 1))
 	else:
-		inv_tab.modulate = Color(0.6, 0.6, 0.6)
-		craft_tab.modulate = Color(1.2, 1.1, 0.7)
+		inv_tab.add_theme_stylebox_override("normal", inactive_style)
+		craft_tab.add_theme_stylebox_override("normal", active_style)
+		inv_tab.add_theme_color_override("font_color", Color(0.6, 0.57, 0.52, 1))
+		craft_tab.add_theme_color_override("font_color", Color(0.95, 0.88, 0.75, 1))
 	SoundManager.play("ui_inventory_select")
 
 
@@ -115,7 +121,43 @@ func _on_inventory_changed() -> void:
 
 func _on_coins_changed(amount: int) -> void:
 	if coins_label:
-		coins_label.text = "Moedas: %d" % amount
+		coins_label.text = "🪙  %d" % amount
+		coins_label.tooltip_text = "Moedas"
+
+func _style_tabs() -> void:
+	var normal_style := StyleBoxFlat.new()
+	normal_style.bg_color = Color(0.1, 0.08, 0.06, 1)
+	normal_style.border_color = Color(0.25, 0.2, 0.15, 1)
+	normal_style.set_border_width_all(1)
+	normal_style.set_corner_radius_all(4)
+	var hover_style := normal_style.duplicate()
+	hover_style.bg_color = Color(0.18, 0.14, 0.1, 1)
+	hover_style.border_color = Color(0.45, 0.35, 0.22, 1)
+	for tab in [inv_tab, craft_tab]:
+		if tab:
+			tab.add_theme_stylebox_override("normal", normal_style.duplicate())
+			tab.add_theme_stylebox_override("hover", hover_style.duplicate())
+			var pressed_style := hover_style.duplicate()
+			pressed_style.bg_color = Color(0.22, 0.17, 0.11, 1)
+			tab.add_theme_stylebox_override("pressed", pressed_style)
+			tab.add_theme_color_override("font_color", Color(0.75, 0.7, 0.65, 1))
+			tab.add_theme_color_override("font_hover_color", Color(0.95, 0.9, 0.82, 1))
+
+func _style_close_button() -> void:
+	if not close_button:
+		return
+	var normal_style := StyleBoxFlat.new()
+	normal_style.bg_color = Color(0.15, 0.1, 0.08, 1)
+	normal_style.border_color = Color(0.35, 0.25, 0.18, 1)
+	normal_style.set_border_width_all(1)
+	normal_style.set_corner_radius_all(4)
+	close_button.add_theme_stylebox_override("normal", normal_style)
+	var hover_style := normal_style.duplicate()
+	hover_style.bg_color = Color(0.5, 0.2, 0.15, 1)
+	hover_style.border_color = Color(0.7, 0.35, 0.25, 1)
+	close_button.add_theme_stylebox_override("hover", hover_style)
+	close_button.add_theme_color_override("font_color", Color(0.9, 0.85, 0.8, 1))
+	close_button.add_theme_color_override("font_hover_color", Color(1, 0.95, 0.9, 1))
 
 func _load_all_slots() -> void:
 	# Carrega todos os slots do InventoryManager pra UI

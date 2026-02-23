@@ -1,0 +1,41 @@
+[gd_scene load_steps=7 format=3 uid="uid://collectible_rock"]
+
+[ext_resource type="Script" path="res://Scripts/ResourceNode.gd" id="1_resource"]
+[ext_resource type="Script" path="res://Interface/Interactable.gd" id="2_interact"]
+[ext_resource type="Resource" path="res://Scenes/Vegetacao/CollectibleVariants/RockVariants.tres" id="3_variants"]
+[ext_resource type="Script" path="res://Scripts/PropWithVariants.gd" id="4_variants"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_rock"]
+size = Vector3(1.0, 1.0, 1.0)
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_interact"]
+radius = 0.6
+height = 1.2
+
+[node name="CollectibleRock" type="StaticBody3D"]
+script = ExtResource("1_resource")
+resource_id = "stone"
+drop_amount = 2
+max_health = 5
+required_tool = 3
+
+[node name="VisualRoot" type="Node3D" parent="."]
+
+[node name="VariantLoader" type="Node" parent="."]
+script = ExtResource("4_variants")
+variant_set = ExtResource("3_variants")
+visual_root_path = NodePath("../VisualRoot")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+shape = SubResource("BoxShape3D_rock")
+
+[node name="Node3D" type="Node3D" parent="."]
+script = ExtResource("2_interact")
+interact_label = "Pedra"
+
+[node name="Area3D" type="Area3D" parent="Node3D"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Node3D/Area3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+shape = SubResource("CapsuleShape3D_interact")

@@ -13,6 +13,7 @@ extends Control
 
 # Referência ao container das receitas
 @onready var recipes_list = $ScrollContainer/RecipesList
+@onready var scroll_container = $ScrollContainer
 
 # ================= CORES =================
 var color_panel_light: Color = Color("#1d2025")
@@ -28,12 +29,18 @@ var color_rarity_rare: Color = Color("#8a6aaa")
 
 # ================= INICIALIZAÇÃO =================
 func _ready():
-	# Conecta sinais
+	recipes_list.add_theme_constant_override("separation", 10)
+	if scroll_container is ScrollContainer:
+		var style := StyleBoxFlat.new()
+		style.bg_color = Color(0.06, 0.05, 0.05, 0.5)
+		style.corner_radius_top_left = 4
+		style.corner_radius_top_right = 4
+		style.corner_radius_bottom_left = 4
+		style.corner_radius_bottom_right = 4
+		scroll_container.add_theme_stylebox_override("panel", style)
 	InventoryManager.inventory_changed.connect(_refresh_recipes)
 	CraftingManager.craft_success.connect(_on_craft_success)
 	CraftingManager.craft_failed.connect(_on_craft_failed)
-	
-	# Carrega receitas
 	_refresh_recipes()
 
 # ================= ATUALIZAR RECEITAS =================
@@ -47,11 +54,11 @@ func _refresh_recipes() -> void:
 	var recipes = CraftingManager.get_all_recipes()
 	
 	if recipes.is_empty():
-		# Mensagem se não tiver receitas
-		var empty_label = Label.new()
+		var empty_label := Label.new()
 		empty_label.text = "Nenhuma receita disponível"
 		empty_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		empty_label.add_theme_color_override("font_color", color_text_dim)
+		empty_label.add_theme_font_size_override("font_size", 14)
 		recipes_list.add_child(empty_label)
 		return
 	

@@ -62,16 +62,23 @@ func tick(delta: float) -> bool:
 		stop_harvesting()
 		return false
 	var weapon: Weapon = handler.get("equipped_weapon") as Weapon
-	if not weapon:
-		return false
+	var damage: int = 1
+	var attack_speed: float = 0.6
+	if _target is ResourceNode and (_target as ResourceNode).required_tool == Weapon.ToolSlot.NONE:
+		pass  # Coleta manual: usa padrão (1 de dano, 0.6s)
+	elif weapon:
+		damage = weapon.damage
+		attack_speed = weapon.attack_speed
+	else:
+		return false  # Recurso exige ferramenta mas não há arma equipada
 	_timer += delta
-	if _timer < weapon.attack_speed:
+	if _timer < attack_speed:
 		return true
 	_timer = 0.0
 	if player and player.has_method("play_attack_animation"):
 		player.play_attack_animation("Work")
 	if _target.has_method("take_hit"):
-		_target.take_hit(weapon.damage)
+		_target.take_hit(damage)
 	if _target is ResourceNode and _target.health <= 0:
 		stop_harvesting()
 	elif not is_instance_valid(_target):

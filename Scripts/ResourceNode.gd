@@ -86,15 +86,24 @@ func get_display_name() -> String:
 		return resource_id.capitalize()
 	return display_name
 
-## Chamado quando o jogador pressiona E neste recurso. Auto-seleciona machado/picareta, adiciona HealthComponent se não houver e inicia coleta.
+## Nome da ferramenta necessária em português (para o prompt de interação). Vazio se NONE.
+func get_required_tool_label() -> String:
+	match required_tool:
+		Weapon.ToolSlot.AXE: return "Machado"
+		Weapon.ToolSlot.PICKAXE: return "Picareta"
+		Weapon.ToolSlot.NONE: return "Mãos"
+		_: return ""
+
+## Chamado quando o jogador pressiona E neste recurso. Auto-seleciona machado/picareta (ou nada se NONE), adiciona HealthComponent se não houver e inicia coleta.
 func try_start_harvest(interactor: Node) -> void:
 	if ToolSelectionManager == null or InventoryManager == null:
 		return
-	var w: Weapon = InventoryManager.get_equipped_weapon(required_tool)
-	if w == null:
-		return  # Jogador não tem a ferramenta
+	if required_tool != Weapon.ToolSlot.NONE:
+		var w: Weapon = InventoryManager.get_equipped_weapon(required_tool)
+		if w == null:
+			return  # Jogador não tem a ferramenta
+		ToolSelectionManager.set_active_tool(required_tool)
 	_ensure_health_component()
-	ToolSelectionManager.set_active_tool(required_tool)
 	var wh = interactor.get_node_or_null("WeaponHandler") if interactor else null
 	if wh and wh.has_method("start_harvesting"):
 		wh.start_harvesting(self)

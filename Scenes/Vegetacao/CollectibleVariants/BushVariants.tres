@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="PropVariantSet" format=3]
+
+[ext_resource type="Script" uid="uid://4tfo552xqm56" path="res://Scripts/PropVariantSet.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://Assets/Stylized Nature MegaKit[Standard]/FBX/Bush_Common.fbx" id="b1"]
+[ext_resource type="PackedScene" path="res://Assets/Stylized Nature MegaKit[Standard]/FBX/Bush_Common_Flowers.fbx" id="b2"]
+
+[resource]
+script = ExtResource("1_script")
+variant_name = "Arbustos"
+variant_scenes = Array[PackedScene]([ExtResource("b1"), ExtResource("b2")])

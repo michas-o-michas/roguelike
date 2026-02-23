@@ -11,14 +11,14 @@
 #   ├── HBoxContainer "InputsContainer" ← ÚNICO que é preenchido dinamicamente
 #   └── Button "CraftButton"
 
-extends Panel
-@onready var icon_label: Label = $OutputContainer/OutputIcon/IconLabel
+extends PanelContainer
 
 # Referências (assign automaticamente via @onready)
-@onready var output_icon_label: Label = $OutputContainer/OutputIcon/IconLabel
-@onready var output_name_label: Label = $OutputContainer/OutputName
-@onready var inputs_container: HBoxContainer = $InputsContainer
-@onready var craft_button: Button = $CraftButton
+@onready var output_icon_label: Label = $MainRow/OutputSection/OutputIcon/IconCenter/IconLabel
+@onready var output_icon_texture: TextureRect = $MainRow/OutputSection/OutputIcon/IconCenter/ItemIcon
+@onready var output_name_label: Label = $MainRow/OutputSection/OutputName
+@onready var inputs_container: HBoxContainer = $MainRow/InputsSection/InputsContainer
+@onready var craft_button: Button = $MainRow/CraftButton
 
 # Dados da receita
 var recipe: Dictionary
@@ -48,12 +48,20 @@ func _refresh() -> void:
 	if recipe.is_empty():
 		return
 	
-	# === OUTPUT ===
-	output_icon_label.text = recipe["output"].item_name.substr(0, 2).to_upper()
-	output_icon_label.add_theme_color_override("font_color", color_text)
-	output_icon_label.add_theme_font_size_override("font_size", 18)
-	output_name_label.text = recipe["output"].item_name
-	output_name_label.add_theme_color_override("font_color", _get_rarity_color(recipe["output"].rarity))
+	# === OUTPUT (ícone do item ou fallback com 2 letras) ===
+	var output_item: Item = recipe["output"]
+	if output_item.item_icon != null:
+		output_icon_texture.texture = output_item.item_icon
+		output_icon_texture.visible = true
+		output_icon_label.visible = false
+	else:
+		output_icon_texture.visible = false
+		output_icon_label.visible = true
+		output_icon_label.text = output_item.item_name.substr(0, 2).to_upper()
+		output_icon_label.add_theme_color_override("font_color", color_text)
+		output_icon_label.add_theme_font_size_override("font_size", 18)
+	output_name_label.text = output_item.item_name
+	output_name_label.add_theme_color_override("font_color", _get_rarity_color(output_item.rarity))
 	output_name_label.add_theme_font_size_override("font_size", 16)
 	
 	# === INPUTS (limpa e cria dinamicamente) ===
@@ -61,36 +69,56 @@ func _refresh() -> void:
 		child.queue_free()
 	
 	for input in recipe["inputs"]:
-		var have = InventoryManager.get_item_count(input["item"])
-		var need = input["amount"]
-		var enough = have >= need
+		var input_item: Item = input["item"]
+		var have := InventoryManager.get_item_count(input_item)
+		var need: int = input["amount"]
+		var enough := have >= need
 		
-		# Panel do input
-		var input_panel = Panel.new()
-		input_panel.custom_minimum_size = Vector2(110, 36)
+		var input_row := HBoxContainer.new()
+		input_row.add_theme_constant_override("separation", 6)
 		
-		var style = StyleBoxFlat.new()
-		style.bg_color = color_slot
-		style.border_width_left = 2
-		style.border_width_right = 2
-		style.border_width_top = 2
-		style.border_width_bottom = 2
-		style.border_color = color_craft_ok if enough else color_craft_fail
-		style.corner_radius_top_left = 4
-		style.corner_radius_top_right = 4
-		style.corner_radius_bottom_left = 4
-		style.corner_radius_bottom_right = 4
-		input_panel.add_theme_stylebox_override("panel", style)
+		# Ícone do ingrediente (ou quadrado com iniciais)
+		var icon_panel := PanelContainer.new()
+		icon_panel.custom_minimum_size = Vector2(32, 32)
+		var icon_style := StyleBoxFlat.new()
+		icon_style.bg_color = color_slot
+		icon_style.border_width_left = 1
+		icon_style.border_width_right = 1
+		icon_style.border_width_top = 1
+		icon_style.border_width_bottom = 1
+		icon_style.border_color = color_craft_ok if enough else color_craft_fail
+		icon_style.corner_radius_top_left = 4
+		icon_style.corner_radius_top_right = 4
+		icon_style.corner_radius_bottom_left = 4
+		icon_style.corner_radius_bottom_right = 4
+		icon_panel.add_theme_stylebox_override("panel", icon_style)
+		var icon_center := CenterContainer.new()
+		icon_panel.add_child(icon_center)
+		if input_item.item_icon != null:
+			var tex := TextureRect.new()
+			tex.custom_minimum_size = Vector2(26, 26)
+			tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			tex.texture = input_item.item_icon
+			icon_center.add_child(tex)
+		else:
+			var init_label := Label.new()
+			init_label.text = input_item.item_name.substr(0, 2).to_upper()
+			init_label.add_theme_font_size_override("font_size", 11)
+			init_label.add_theme_color_override("font_color", color_text)
+			init_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			init_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			icon_center.add_child(init_label)
+		input_row.add_child(icon_panel)
 		
-		# Label dentro do panel
-		var label = Label.new()
-		label.text = "%s\n%d/%d" % [input["item"].item_name, have, need]
-		label.position = Vector2(6, 6)
-		label.add_theme_font_size_override("font_size", 12)
-		label.add_theme_color_override("font_color", color_craft_ok if enough else color_craft_fail)
-		input_panel.add_child(label)
+		var amount_label := Label.new()
+		amount_label.text = "%s  %d/%d" % [input_item.item_name, have, need]
+		amount_label.add_theme_font_size_override("font_size", 13)
+		amount_label.add_theme_color_override("font_color", color_craft_ok if enough else color_craft_fail)
+		amount_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		input_row.add_child(amount_label)
 		
-		inputs_container.add_child(input_panel)
+		inputs_container.add_child(input_row)
 	
 	# === BOTÃO ===
 	var can_craft = CraftingManager.can_craft(recipe_index)
@@ -102,12 +130,14 @@ func _refresh() -> void:
 	# Tooltip
 	if not can_craft:
 		var missing = CraftingManager.get_missing_inputs(recipe_index)
-		var tooltip_text = "Falta:\n"
+		var tip := "Falta:\n"
 		for m in missing:
 			if not m["enough"]:
 				var need_more = m["need"] - m["have"]
-				tooltip_text += "- %s x%d\n" % [m["item"].item_name, need_more]
-		craft_button.tooltip_text = tooltip_text
+				tip += "- %s x%d\n" % [m["item"].item_name, need_more]
+		craft_button.tooltip_text = tip
+	else:
+		craft_button.tooltip_text = ""
 
 func _on_craft_button_pressed() -> void:
 	var result = CraftingManager.craft(recipe_index)

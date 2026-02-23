@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="Item" format=3 uid="uid://cpetals01"]
+
+[ext_resource type="Script" uid="uid://beqbc0sl3fert" path="res://Scripts/item.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://c24rw48d8igtv" path="res://items/icons/stone.png" id="2_icon"]
+
+[resource]
+script = ExtResource("1_script")
+item_name = "petals"
+item_icon = ExtResource("2_icon")
+type = 1
+rarity = 0
+stack_size = 64
+max_stack = 64
+metadata/_custom_type_script = "uid://beqbc0sl3fert"

@@ -3,7 +3,10 @@ extends Node
 ## Uma única regra: o raycast é a linha do centro da tela — mesma direção do crosshair e dos projéteis.
 ## Alcance fixo (ex.: 20 m), não depende do zoom da câmera.
 
+## Label fixo no topo (nome · ferramenta).
 @export var prompt_label: Label = null
+## Painel flutuante "E para coletar" (posicionado na tela conforme o alvo).
+@export var prompt_label_floating: Control = null
 @export var camera: Camera3D
 @export var ray_cast_3d: RayCast3D
 
@@ -65,7 +68,8 @@ func _do_raycast() -> void:
 		var resource_node: ResourceNode = _get_resource_node(found)
 		if resource_node and ray_cast_3d.is_colliding():
 			resource_node.raycast_position = ray_cast_3d.get_collision_point()
-		_show_prompt(_get_prompt_text(found))
+		var world_pos: Vector3 = ray_cast_3d.get_collision_point() if ray_cast_3d.is_colliding() else found.global_position
+		_show_prompt(_get_prompt_text(found), world_pos)
 		return
 
 	_clear_outline()
@@ -116,7 +120,12 @@ func _update_crosshair_position() -> void:
 func _get_prompt_text(interactable: Interactable) -> String:
 	var parent = interactable.get_parent()
 	if parent is ResourceNode:
-		return (parent as ResourceNode).get_display_name()
+		var rn: ResourceNode = parent as ResourceNode
+		var name_text := interactable.get_display_label()
+		var tool_text := rn.get_required_tool_label()
+		if tool_text.is_empty():
+			return name_text
+		return name_text + " · " + tool_text
 	return interactable.get_display_label()
 
 
@@ -151,15 +160,34 @@ func _input(event: InputEvent) -> void:
 		current_interactable.interact(owner)
 
 
-func _show_prompt(text: String) -> void:
+func _show_prompt(text: String, world_pos: Vector3) -> void:
 	if prompt_label:
-		prompt_label.text = "[E] " + text
+		prompt_label.text = text
 		prompt_label.visible = true
+		var box: CanvasItem = prompt_label.get_parent()
+		if box:
+			box.visible = true
+	if prompt_label_floating and camera:
+		prompt_label_floating.visible = true
+		var viewport_size := camera.get_viewport().get_visible_rect().size
+		var screen_pos: Vector2 = camera.unproject_position(world_pos)
+		screen_pos += Vector2(156, -128)
+		screen_pos.x = clampf(screen_pos.x, 80, viewport_size.x - 80)
+		screen_pos.y = clampf(screen_pos.y, 40, viewport_size.y - 40)
+		var sz := prompt_label_floating.size
+		if sz.x <= 0:
+			sz = prompt_label_floating.custom_minimum_size
+		prompt_label_floating.position = screen_pos - sz / 2
 
 
 func _hide_prompt() -> void:
 	if prompt_label:
 		prompt_label.visible = false
+		var box: CanvasItem = prompt_label.get_parent()
+		if box:
+			box.visible = false
+	if prompt_label_floating:
+		prompt_label_floating.visible = false
 
 
 func _apply_outline(interactable: Interactable) -> void:

@@ -29,7 +29,8 @@
 	  "output": "staff",
 	  "output_amount": 1,
 	  "inputs": [
-		{"item": "stone", "amount": 5}
+		{"item": "stone", "amount": 5},
+		{"item": "wood", "amount": 5},
 	  ]
 	}
   ]

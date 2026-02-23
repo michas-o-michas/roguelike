@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="PropVariantSet" format=3]
+
+[ext_resource type="Script" uid="uid://4tfo552xqm56" path="res://Scripts/PropVariantSet.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://Assets/Stylized Nature MegaKit[Standard]/FBX (Unity)/Flower_3_Single.fbx" id="f1"]
+[ext_resource type="PackedScene" path="res://Assets/Stylized Nature MegaKit[Standard]/FBX (Unity)/Flower_3_Group.fbx" id="f2"]
+[ext_resource type="PackedScene" path="res://Assets/Stylized Nature MegaKit[Standard]/FBX (Unity)/Flower_4_Single.fbx" id="f3"]
+[ext_resource type="PackedScene" path="res://Assets/Stylized Nature MegaKit[Standard]/FBX (Unity)/Flower_4_Group.fbx" id="f4"]
+[ext_resource type="PackedScene" path="res://Assets/Stylized Nature MegaKit[Standard]/FBX/Petal_1.fbx" id="p1"]
+[ext_resource type="PackedScene" path="res://Assets/Stylized Nature MegaKit[Standard]/FBX/Petal_2.fbx" id="p2"]
+[ext_resource type="PackedScene" path="res://Assets/Stylized Nature MegaKit[Standard]/FBX/Petal_3.fbx" id="p3"]
+[ext_resource type="PackedScene" path="res://Assets/Stylized Nature MegaKit[Standard]/FBX/Petal_4.fbx" id="p4"]
+[ext_resource type="PackedScene" path="res://Assets/Stylized Nature MegaKit[Standard]/FBX/Petal_5.fbx" id="p5"]
+
+[resource]
+script = ExtResource("1_script")
+variant_name = "Flores"
+variant_scenes = Array[PackedScene]([ExtResource("f1"), ExtResource("f2"), ExtResource("f3"), ExtResource("f4"), ExtResource("p1"), ExtResource("p2"), ExtResource("p3"), ExtResource("p4"), ExtResource("p5")])

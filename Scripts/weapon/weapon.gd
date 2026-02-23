@@ -37,11 +37,13 @@ enum ProjectileType {
 }
 
 ## Slot de equipamento ao qual esta arma pertence (para os 4 slots fixos).
+## NONE = coleta com as mãos (grama→fibra, arbusto→fruta, flor→pétalas).
 enum ToolSlot {
 	MELEE,   # Espada
 	STAFF,   # Cajado
 	AXE,     # Machado (coleta madeira)
-	PICKAXE  # Picareta (coleta pedra)
+	PICKAXE, # Picareta (coleta pedra)
+	NONE     # Sem ferramenta (coleta manual)
 }
 
 # ================= EXPORTS =================
