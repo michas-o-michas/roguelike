@@ -13,7 +13,15 @@ var timer: float = 0.0
 
 func _ready():
 	start_position = global_position
-	look_at(get_viewport().get_camera_3d().global_position)
+	_face_camera()
+
+func _face_camera() -> void:
+	var cam = get_viewport().get_camera_3d()
+	if not cam:
+		return
+	look_at(cam.global_position)
+	# look_at aponta -Z para a câmera; Label3D desenha em +Z, então gira 180° para o texto ficar legível
+	rotate_object_local(Vector3.UP, PI)
 
 func _process(delta):
 	timer += delta
@@ -33,9 +41,10 @@ func _process(delta):
 
 func set_value(value: float):
 	label.text = str(int(value))
-	
+	start_position = global_position
+	_face_camera()
 	# Cores baseadas no tipo de dano
 	if value > 0:
-		label.modulate = Color.RED
+		label.modulate = Color(1.0, 0.35, 0.2)
 	else:
-		label.modulate = Color.GREEN  # Para cura
+		label.modulate = Color(0.2, 1.0, 0.4)  # Cura

@@ -131,15 +131,18 @@ func _focus_exit_resource(interactable: Interactable) -> void:
 		resource_node.remove_health_bar()
 
 
+## Só considera o nó atingido e seus filhos — não sobe ao pai (evita "E Teleportar" ao mirar em mobs).
 func _find_interactable(node: Node) -> Interactable:
-	var n := node
-	while n:
-		if n is Interactable:
-			return n as Interactable
-		for child in n.get_children():
-			if child is Interactable:
-				return child as Interactable
-		n = n.get_parent()
+	if not node:
+		return null
+	if node is Interactable:
+		return node as Interactable
+	for child in node.get_children():
+		if child is Interactable:
+			return child as Interactable
+		var found := _find_interactable(child)
+		if found:
+			return found
 	return null
 
 

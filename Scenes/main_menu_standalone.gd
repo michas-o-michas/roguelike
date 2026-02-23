@@ -44,6 +44,8 @@ func _ready():
 		quit_button.pressed.connect(_on_quit_button_pressed)
 		quit_button.process_mode = Node.PROCESS_MODE_ALWAYS
 		print("✅ QuitButton conectado")
+	if SoundManager:
+		SoundManager.connect_buttons_sound(self)
 
 func set_start_callback(callback: Callable):
 	start_callback = callback

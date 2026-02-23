@@ -117,6 +117,8 @@ pad_type = 1
 
 [node name="WolfSpawner" parent="." unique_id=1076301937 instance=ExtResource("4_pvwtc")]
 transform = Transform3D(1, 0, 0, 0, 0.99999475, 0.003246307, 0, -0.003246307, 0.99999475, 0, 0, 0)
+max_mobs = 50
+spawn_interval = 1.0
 
 [node name="_StaticBody3D_76" parent="." unique_id=61243902 instance=ExtResource("5_xwb8w")]
 transform = Transform3D(1.7482656, 0, 3.4274395, 0, 3.847567, 0, -3.4274395, 0, 1.7482656, 16.822517, 0.13557625, 6.4079742)

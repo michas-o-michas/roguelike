@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://c7k2inventorytest01"]
+
+[ext_resource type="Script" path="res://Tests/test_inventory_crafting.gd" id="1_script"]
+
+[node name="TestInventoryCrafting" type="Node"]
+script = ExtResource("1_script")

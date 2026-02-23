@@ -24,20 +24,21 @@ signal invincibility_changed(is_invincible: bool)
 @export var can_be_healed: bool = true
 
 
-# IMPORTANTE: setter para reagir a mudanças no inspector
+# Variável de apoio para evitar recursão no setter e garantir que health_changed dispare corretamente.
+var _backing_health: float = 100.0
+
 @export var current_health: float:
+	get:
+		return _backing_health
 	set(value):
-		var old = current_health
-		current_health = clamp(value, 0, max_health)
-
+		var old := _backing_health
+		_backing_health = clampf(value, 0, max_health)
 		if Engine.is_editor_hint():
-			# No editor, só atualiza sem lógica de morte
-			health_changed.emit(old, current_health)
+			health_changed.emit(old, _backing_health)
 		else:
-			if old != current_health:
-				health_changed.emit(old, current_health)
-
-			if current_health <= 0 and not is_dead:
+			if old != _backing_health:
+				health_changed.emit(old, _backing_health)
+			if _backing_health <= 0 and not is_dead:
 				die()
 
 
@@ -46,12 +47,10 @@ var is_dead: bool = false
 
 func _ready():
 	if start_with_max:
-		current_health = max_health
+		_backing_health = max_health
 	else:
-		current_health = clamp(current_health, 0, max_health)
-
-	# Emitir estado inicial correto
-	health_changed.emit(current_health, current_health)
+		_backing_health = clampf(_backing_health, 0, max_health)
+	health_changed.emit(_backing_health, _backing_health)
 
 
 func take_damage(amount: float, armor_piercing: float = 0.0, attacker: Node = null) -> float:
@@ -69,15 +68,11 @@ func take_damage(amount: float, armor_piercing: float = 0.0, attacker: Node = nu
 	if total_damage > 0 and total_damage < 1:
 		total_damage = 1.0
 
-	var old_health = current_health
+	# Jogador: ativa invencibilidade já neste frame para evitar 2+ golpes no mesmo instante (ex.: 2 lobos).
+	if get_parent().is_in_group("player"):
+		is_invincible = true
 	current_health = max(current_health - total_damage, 0.0)
-
-	health_changed.emit(old_health, current_health)
 	damage_taken.emit(total_damage)
-
-	if current_health <= 0 and not is_dead:
-		die()
-
 	return total_damage
 
 
@@ -85,12 +80,10 @@ func heal(amount: float) -> float:
 	if is_dead or not can_be_healed:
 		return 0.0
 
-	var old_health = current_health
 	var actual_heal = min(amount, max_health - current_health)
 
 	if actual_heal > 0:
 		current_health += actual_heal
-		health_changed.emit(old_health, current_health)
 		healed.emit(actual_heal)
 
 	return actual_heal

@@ -31,6 +31,7 @@ SoundManager="*res://Scenes/SoundManager.gd"
 MobRegistry="*res://Scripts/enemies/mob_registry.gd"
 ToolSelectionManager="*res://Scripts/ToolSelectionManager.gd"
 SpellManager="*res://Scripts/SpellManager.gd"
+DissolutionHelper="*res://Scripts/dissolution_helper.gd"
 
 [display]
 
@@ -43,7 +44,7 @@ window/vsync/vsync_mode=0
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/mixamo_animation_retargeter/plugin.cfg")
+enabled=PackedStringArray("res://addons/export_include_recipes_items/plugin.cfg")
 
 [filesystem]
 

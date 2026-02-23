@@ -11,6 +11,10 @@ enum Rarity { COMMON, RARE, EPIC }
 
 var opened := false
 
+## Chamado pelo Interactable quando o jogador pressiona E (permite baú como interação).
+func on_interact(interactor: Node) -> void:
+	open(interactor)
+
 func open(player):
 	if opened:
 		print('opened',opened)
@@ -24,6 +28,8 @@ func open(player):
 	if not InventoryManager.spend_coins(cost):
 		return
 	print("Baú aberto! Moedas gastas:", cost)
+	if SoundManager and SoundManager.has_sfx(&"chest_open"):
+		SoundManager.play_sfx_id(&"chest_open")
 
 	# Pega o SkillManager da cena
 	var manager: SkillManager = get_node(skill_manager_path)

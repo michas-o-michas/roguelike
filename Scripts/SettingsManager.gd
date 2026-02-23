@@ -27,6 +27,7 @@ var _loaded: bool = false
 
 func _ready() -> void:
 	_config = ConfigFile.new()
+	_ensure_audio_buses()
 	load_from_disk()
 	apply_all()
 
@@ -140,6 +141,19 @@ func save_to_disk() -> Error:
 	_config.set_value("environment", "fog_enabled", _fog_enabled)
 	_config.set_value("environment", "ssr_enabled", _ssr_enabled)
 	return _config.save(CONFIG_PATH)
+
+
+# -----------------------------------------------------------------------------
+# Áudio — garantir buses Music e SFX (sliders funcionam)
+# -----------------------------------------------------------------------------
+
+func _ensure_audio_buses() -> void:
+	if AudioServer.get_bus_index("Music") < 0:
+		AudioServer.add_bus(1)
+		AudioServer.set_bus_name(1, "Music")
+	if AudioServer.get_bus_index("SFX") < 0:
+		AudioServer.add_bus(2)
+		AudioServer.set_bus_name(2, "SFX")
 
 
 # -----------------------------------------------------------------------------

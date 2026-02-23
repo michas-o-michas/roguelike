@@ -120,7 +120,10 @@ vertical_alignment = 1
 [node name="MasterVolumeSlider" type="HSlider" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/AudioSection/MasterVolumeContainer" unique_id=120999710]
 layout_mode = 2
 size_flags_horizontal = 3
+min_value = 0.0
+max_value = 100.0
 value = 100.0
+step = 1.0
 
 [node name="MasterVolumeValue" type="Label" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/AudioSection/MasterVolumeContainer" unique_id=2101769300]
 custom_minimum_size = Vector2(40, 0)
@@ -147,7 +150,10 @@ vertical_alignment = 1
 [node name="MusicVolumeSlider" type="HSlider" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/AudioSection/MusicVolumeContainer" unique_id=881363209]
 layout_mode = 2
 size_flags_horizontal = 3
+min_value = 0.0
+max_value = 100.0
 value = 80.0
+step = 1.0
 
 [node name="MusicVolumeValue" type="Label" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/AudioSection/MusicVolumeContainer" unique_id=760546113]
 custom_minimum_size = Vector2(40, 0)
@@ -174,7 +180,10 @@ vertical_alignment = 1
 [node name="SFXVolumeSlider" type="HSlider" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/AudioSection/SFXVolumeContainer" unique_id=1782511270]
 layout_mode = 2
 size_flags_horizontal = 3
+min_value = 0.0
+max_value = 100.0
 value = 100.0
+step = 1.0
 
 [node name="SFXVolumeValue" type="Label" parent="Panel/VBoxContainer/ScrollContainer/SettingsContent/AudioSection/SFXVolumeContainer" unique_id=1852333108]
 custom_minimum_size = Vector2(40, 0)

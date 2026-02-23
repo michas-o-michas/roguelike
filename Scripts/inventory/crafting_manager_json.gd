@@ -27,34 +27,29 @@ var item_registry: Dictionary = {}
 var recipes: Array = []
 
 func _ready():
-
 	_register_items_from_folder("res://items/")
-	
 	_load_recipes_from_json()
 	print("✅ CraftingManager carregado com %d receitas" % recipes.size())
 
-# ================= OPÇÃO 2: AUTO REGISTRO =================
+# ================= REGISTRO POR PASTA =================
 
 func _register_items_from_folder(folder_path: String):
 	var dir = DirAccess.open(folder_path)
 	if not dir:
 		push_warning("Pasta de itens não encontrada: %s" % folder_path)
 		return
-	
+
 	dir.list_dir_begin()
 	var file_name = dir.get_next()
-	
 	while file_name != "":
 		if not dir.current_is_dir() and file_name.ends_with(".tres"):
 			var full_path = folder_path + file_name
 			var item = load(full_path) as Item
 			if item:
-				# ID = nome do arquivo sem extensão
 				var item_id = file_name.replace(".tres", "")
 				item_registry[item_id] = item
 				print("  Item registrado: %s → %s" % [item_id, item.item_name])
 		file_name = dir.get_next()
-	
 	dir.list_dir_end()
 	print("  Total: %d itens registrados" % item_registry.size())
 
@@ -81,23 +76,23 @@ func _load_recipes_from_json():
 	if not file:
 		push_error("recipes.json não encontrado!")
 		return
-	
-	var json_text = file.get_as_text()
+
+	var json_text := file.get_as_text()
 	file.close()
-	
+
 	var json = JSON.new()
 	var error = json.parse(json_text)
-	
+
 	if error != OK:
-		push_error("Erro ao parsear recipes.json: %s" % json.get_error_message())
+		push_error("Erro ao parsear recipes: %s" % json.get_error_message())
 		return
-	
+
 	var data = json.data
-	
+
 	if not data.has("recipes"):
-		push_error("recipes.json não tem campo 'recipes'")
+		push_error("recipes não tem campo 'recipes'")
 		return
-	
+
 	for recipe_data in data["recipes"]:
 		var recipe = _parse_recipe(recipe_data)
 		if recipe:

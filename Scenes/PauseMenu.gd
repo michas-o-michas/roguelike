@@ -31,6 +31,8 @@ func _ready() -> void:
 		settings_button.pressed.connect(_on_settings_pressed)
 	if quit_button:
 		quit_button.pressed.connect(_on_quit_pressed)
+	if SoundManager:
+		SoundManager.connect_buttons_sound(self)
 
 
 func _reparent_to_root() -> void:

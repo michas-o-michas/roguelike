@@ -1,0 +1,62 @@
+[gd_scene format=3 uid="uid://chealthbar3d"]
+
+[ext_resource type="Script" uid="uid://b8aqgnxprwb2k" path="res://Componentes/HealthBar3D.gd" id="1_script"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_border"]
+transparency = 1
+cull_mode = 2
+shading_mode = 0
+albedo_color = Color(0.93, 0.79, 0, 1)
+
+[sub_resource type="QuadMesh" id="QuadMesh_border"]
+size = Vector2(0.88, 0.12)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_back"]
+transparency = 1
+cull_mode = 2
+shading_mode = 0
+albedo_color = Color(0, 0, 0, 0.59)
+
+[sub_resource type="QuadMesh" id="QuadMesh_back"]
+size = Vector2(0.8, 0.08)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_damage"]
+transparency = 1
+cull_mode = 2
+shading_mode = 0
+albedo_color = Color(0.59, 0, 0, 1)
+
+[sub_resource type="QuadMesh" id="QuadMesh_damage"]
+size = Vector2(0.8, 0.08)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fill"]
+transparency = 1
+cull_mode = 2
+shading_mode = 0
+albedo_color = Color(0, 0.55, 0, 1)
+
+[sub_resource type="QuadMesh" id="QuadMesh_fill"]
+size = Vector2(0.8, 0.08)
+
+[node name="HealthBar3D" type="Node3D" unique_id=1754539607]
+script = ExtResource("1_script")
+
+[node name="Border" type="MeshInstance3D" parent="." unique_id=2110639495]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.02)
+material_override = SubResource("StandardMaterial3D_border")
+mesh = SubResource("QuadMesh_border")
+
+[node name="Back" type="MeshInstance3D" parent="." unique_id=126106986]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.01)
+material_override = SubResource("StandardMaterial3D_back")
+mesh = SubResource("QuadMesh_back")
+
+[node name="DamageBar" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+material_override = SubResource("StandardMaterial3D_damage")
+mesh = SubResource("QuadMesh_damage")
+
+[node name="Fill" type="MeshInstance3D" parent="." unique_id=686074351]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.01)
+material_override = SubResource("StandardMaterial3D_fill")
+mesh = SubResource("QuadMesh_fill")

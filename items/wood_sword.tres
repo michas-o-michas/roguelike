@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="Weapon" format=3 uid="uid://dty3m422lyon1"]
 
-[ext_resource type="AudioStream" uid="uid://bxanrnefngxrp" path="res://attack_sword.mp3" id="1_3ol82"]
+[ext_resource type="AudioStream" uid="uid://bxanrnefngxrp" path="res://Assets/sounds/player/attack_sword.mp3" id="1_3ol82"]
 [ext_resource type="PackedScene" uid="uid://cv7xrvawqq1pt" path="res://items/Scenes/sword.tscn" id="2_3ol82"]
 [ext_resource type="Texture2D" uid="uid://6nnujhk75hsu" path="res://items/icons/sword.png" id="2_qtt24"]
 [ext_resource type="Script" uid="uid://brg2mqlobceng" path="res://Scripts/weapon/weapon.gd" id="3_qtt24"]
@@ -8,12 +8,12 @@
 [resource]
 script = ExtResource("3_qtt24")
 model_scene = ExtResource("2_3ol82")
-damage = 1
-attack_speed = 1.0
+damage = 12
+attack_speed = 0.72
 attack_sound = ExtResource("1_3ol82")
+knockback_force = 3.8
 item_name = "Espada"
 item_icon = ExtResource("2_qtt24")
 type = 0
 max_stack = 1
-equipment_slot = 0
 metadata/_custom_type_script = "uid://brg2mqlobceng"

@@ -47,13 +47,11 @@ var equipped_weapon: Weapon = null
 var weapon_model: Node3D = null         # Referência ao modelo 3D na mão
 var _slot_models: Dictionary = {}       # Weapon.ToolSlot (int) -> Node3D (modelo instanciado no pivot)
 var attack_cooldown_timer: float = 0.0
+var _attack_done_this_frame: bool = false  # Evita som/ataque duplicado no mesmo frame (ex.: "attack" e "mb1" juntos)
 var is_attacking: bool = false
+## Direção do último ataque melee (trava o hit ao pressionar ataque — não segue o movimento).
+var _melee_attack_forward: Vector3 = Vector3.FORWARD
 
-# Coleta (E em recurso): machado/picareta aplicam dano em intervalo até o recurso morrer
-var is_harvesting: bool = false
-var harvest_target: Node = null
-var harvest_timer: float = 0.0
-var harvest_start_position: Vector3 = Vector3.ZERO
 ## Distância máxima em metros que o jogador pode se mover durante a coleta; além disso cancela.
 @export var harvest_move_cancel_distance: float = 0.2
 
@@ -64,11 +62,45 @@ var is_swinging: bool = false
 @export var swing_duration: float = 0.15 # Tempo do swing ida (rápido)
 @export var swing_return_duration: float = 0.25 # Tempo da volta (mais lento, com easing)
 
-# ================= ÁUDIO =================
+# ================= MÓDULOS (harvest e projéteis) =================
+var _harvest_controller: Node = null
+var _projectile_launcher: Node = null
+
+# ================= RASTRO DA ESPADA =================
+var _sword_trail: Node = null
 @onready var audio_player: AudioStreamPlayer3D = $AttackAudio
+
+func _setup_sword_trail() -> void:
+	if hand_marker == null:
+		return
+	var trail_script := load("res://Scripts/player/SwordTrail.gd") as GDScript
+	if trail_script == null:
+		return
+	_sword_trail = Node3D.new()
+	_sword_trail.set_script(trail_script)
+	_sword_trail.name = "SwordTrail"
+	add_child(_sword_trail)
+	_sword_trail.set_tip_source(hand_marker)
+
+func _apply_weapon_trail_settings(weapon: Weapon) -> void:
+	if _sword_trail == null or not weapon:
+		return
+	_sword_trail.tip_offset = weapon.trail_tip_offset
+	_sword_trail.trail_color = weapon.trail_color
+	_sword_trail.ribbon_width = weapon.trail_ribbon_width
+	_sword_trail.trail_duration = weapon.trail_duration
+	_sword_trail.point_lifetime = weapon.trail_point_lifetime
 
 # ================= INICIALIZAÇÃO =================
 func _ready():
+	if _harvest_controller == null:
+		_harvest_controller = preload("res://Scripts/player/HarvestController.gd").new()
+		_harvest_controller.name = "HarvestController"
+		add_child(_harvest_controller)
+	if _projectile_launcher == null:
+		_projectile_launcher = preload("res://Scripts/player/ProjectileLauncher.gd").new()
+		_projectile_launcher.name = "ProjectileLauncher"
+		add_child(_projectile_launcher)
 	if hand_marker == null:
 		hand_marker = get_node_or_null("../Character/CharacterArmature/Skeleton3D/HandMarker") as Node3D
 		if hand_marker == null:
@@ -87,11 +119,18 @@ func _ready():
 		ToolSelectionManager.tool_changed.connect(_update_slot_displays)
 	if InventoryManager:
 		InventoryManager.inventory_changed.connect(_update_slot_displays)
+	if audio_player:
+		audio_player.bus = &"SFX"
+	# Rastro na ponta da espada (efeito vento ao atacar)
+	_setup_sword_trail()
 	# Atualiza após inventário e tool estarem prontos (dois frames).
 	call_deferred("_update_slot_displays")
 	await get_tree().process_frame
 	await get_tree().process_frame
 	_update_slot_displays()
+	# Aplica o rastro da arma equipada inicialmente (se houver)
+	if equipped_weapon:
+		_apply_weapon_trail_settings(equipped_weapon)
 
 # ================= EQUIPAR / DESEQUIPAR =================
 
@@ -104,6 +143,7 @@ func equip(weapon: Weapon) -> void:
 	unequip()  # Garante que desequipa antes (limpa modelo anterior)
 	equipped_weapon = weapon
 	_load_weapon_model()
+	_apply_weapon_trail_settings(weapon)
 	_update_slot_displays()
 	emit_signal("weapon_equipped", weapon)
 
@@ -116,33 +156,12 @@ func unequip() -> void:
 
 ## Inicia modo coleta: aplica dano ao recurso a cada attack_speed até morrer. Chamado após E em árvore/pedra.
 func start_harvesting(resource_node: Node) -> void:
-	if resource_node == null or not resource_node.has_method("take_hit"):
-		return
-	_stop_harvesting()
-	harvest_target = resource_node
-	is_harvesting = true
-	harvest_timer = 0.0
-	var player = get_parent() as Node3D
-	harvest_start_position = player.global_position if player else Vector3.ZERO
-	if resource_node is ResourceNode and not resource_node.depleted.is_connected(_on_harvest_target_depleted):
-		resource_node.depleted.connect(_on_harvest_target_depleted)
-	player = get_parent()
-	if player.has_method("play_attack_animation"):
-		player.play_attack_animation("Attack")
-
-func _on_harvest_target_depleted() -> void:
-	_stop_harvesting()
+	if _harvest_controller and _harvest_controller.has_method("start_harvesting"):
+		_harvest_controller.start_harvesting(resource_node)
 
 func _stop_harvesting() -> void:
-	if harvest_target != null and is_instance_valid(harvest_target) and harvest_target is ResourceNode:
-		if harvest_target.depleted.is_connected(_on_harvest_target_depleted):
-			harvest_target.depleted.disconnect(_on_harvest_target_depleted)
-	is_harvesting = false
-	harvest_target = null
-	harvest_timer = 0.0
-	var player = get_parent()
-	if player.has_method("stop_attack_animation"):
-		player.stop_attack_animation()
+	if _harvest_controller and _harvest_controller.has_method("stop_harvesting"):
+		_harvest_controller.stop_harvesting()
 
 # ================= MODELO VISUAL =================
 
@@ -235,35 +254,23 @@ func _update_slot_displays(_new_slot: int = -1) -> void:
 func get_equipped() -> Weapon:
 	return equipped_weapon
 
+## Retorna o progresso do cooldown de ataque: 0 = acabou de atacar, 1 = pronto. Para barra na UI.
+func get_attack_cooldown_progress() -> float:
+	if equipped_weapon == null:
+		return 1.0
+	if equipped_weapon.attack_speed <= 0.0:
+		return 1.0
+	return clampf(1.0 - (attack_cooldown_timer / equipped_weapon.attack_speed), 0.0, 1.0)
+
 # ================= ATAQUE =================
 
 func _physics_process(delta: float) -> void:
 	if attack_cooldown_timer > 0:
 		attack_cooldown_timer -= delta
 
-	# Loop de coleta (E em árvore/pedra): aplica dano a cada attack_speed até o recurso morrer
-	if is_harvesting and harvest_target != null:
-		if not is_instance_valid(harvest_target):
-			_stop_harvesting()
-		else:
-			# Cancelar se o jogador se moveu (saiu do lugar)
-			var player_node := get_parent() as Node3D
-			if player_node and (player_node.global_position - harvest_start_position).length() > harvest_move_cancel_distance:
-				_stop_harvesting()
-				return
-			harvest_timer += delta
-			if equipped_weapon != null and harvest_timer >= equipped_weapon.attack_speed:
-				harvest_timer = 0.0
-				var player = get_parent()
-				if player.has_method("play_attack_animation"):
-					player.play_attack_animation("Attack")
-				if harvest_target.has_method("take_hit"):
-					harvest_target.take_hit(equipped_weapon.damage)
-				# Para assim que o recurso acaba (health <= 0), sem esperar queue_free()
-				if harvest_target is ResourceNode and harvest_target.health <= 0:
-					_stop_harvesting()
-				elif not is_instance_valid(harvest_target):
-					_stop_harvesting()
+	_attack_done_this_frame = false
+
+	if _harvest_controller and _harvest_controller.has_method("tick") and _harvest_controller.tick(delta):
 		return
 
 	if Input.is_action_just_pressed("attack") or Input.is_action_just_pressed("mb1"):
@@ -271,24 +278,47 @@ func _physics_process(delta: float) -> void:
 
 ## Tenta realizar um ataque
 func _try_attack() -> void:
+	# Só um ataque por frame (evita som duplo quando "attack" e "mb1" disparam juntos)
+	if _attack_done_this_frame:
+		return
 	# Sem arma equipada — não faz nada
 	if equipped_weapon == null:
 		return
-
-	# Ainda no cooldown — não faz nada
-	if attack_cooldown_timer > 0:
+	# Ainda no cooldown — não ataca nem toca som
+	if attack_cooldown_timer > 0.001:
 		return
 
+	_attack_done_this_frame = true
 	# Seta o cooldown baseado na velocidade da arma
 	attack_cooldown_timer = equipped_weapon.attack_speed
 
-	# Notifica o Player: ferramentas (mineração) usam "Work", armas usam "Attack"
-	var player = get_parent()
-	if player.has_method("play_attack_animation"):
-		var anim_name := "Attack" if not equipped_weapon.can_mine() else "Attack"
+	var player = get_parent() as Node3D
+	# Trava a direção do ataque na direção da câmera; só vira o personagem se estiver muito desalinhado (evita câmera “pulando”)
+	if camera_node and is_instance_valid(camera_node):
+		var cam_fwd := -camera_node.global_transform.basis.z
+		cam_fwd.y = 0
+		if cam_fwd.length_squared() > 0.01:
+			cam_fwd = cam_fwd.normalized()
+			_melee_attack_forward = cam_fwd
+			# Só faz look_at se o personagem estiver bem desviado da mira (evita snap da câmera a cada golpe)
+			if player:
+				var cur_fwd = -player.global_transform.basis.z
+				cur_fwd.y = 0
+				if cur_fwd.length_squared() > 0.01:
+					cur_fwd = cur_fwd.normalized()
+					if cur_fwd.dot(cam_fwd) < 0.92:
+						player.look_at(player.global_position + cam_fwd)
+	else:
+		_melee_attack_forward = -player.global_transform.basis.z if player else Vector3.FORWARD
+		_melee_attack_forward.y = 0
+		if _melee_attack_forward.length_squared() > 0.01:
+			_melee_attack_forward = _melee_attack_forward.normalized()
+
+	# Notifica o Player: animação de ataque e som sempre ao atacar
+	if player and player.has_method("play_attack_animation"):
+		var anim_name := "Attack" if not equipped_weapon.can_mine() else "Work"
 		player.play_attack_animation(anim_name)
 
-	# Toca o som do ataque
 	_play_attack_sound()
 
 	# Roteia para melee ou ranged
@@ -303,6 +333,10 @@ func _try_attack() -> void:
 # ================= MELEE (por área — estilo roguelike) =================
 
 func _attack_melee() -> void:
+	# Rastro na ponta da espada (configurado por arma: cor, largura, etc.)
+	if _sword_trail and _sword_trail.has_method("start_trail") and equipped_weapon and equipped_weapon.trail_enabled and not equipped_weapon.can_mine():
+		_apply_weapon_trail_settings(equipped_weapon)
+		_sword_trail.start_trail()
 
 	var hit_targets = _get_melee_overlap_targets()
 	for target in hit_targets:
@@ -328,18 +362,9 @@ func _attack_melee() -> void:
 func _is_enemy(node: Node) -> bool:
 	return node.is_in_group("enemy") or node.is_in_group("enemies")
 
-## Retorna lista de corpos na área de melee (inimigos + árvores/recursos na frente do player)
-## Se attack_area estiver atribuído, usa get_overlapping_bodies(); senão usa hitbox em código.
+## Retorna lista de alvos do melee usando a direção TRAVADA no momento do ataque (não segue o movimento).
+## Usa shape query na direção _melee_attack_forward para combate mais dinâmico e acertos consistentes.
 func _get_melee_overlap_targets() -> Array:
-	# Prioridade: Area3D (AttackArea)
-	if attack_area != null:
-		var targets: Array = []
-		for body in attack_area.get_overlapping_bodies():
-			if is_instance_valid(body) and (_is_enemy(body) or body.has_method("take_hit")):
-				targets.append(body)
-		return targets
-
-	# Fallback: hitbox em código
 	var player = get_parent() as Node3D
 	if player == null:
 		return []
@@ -348,19 +373,20 @@ func _get_melee_overlap_targets() -> Array:
 	if space_state == null:
 		return []
 
-	var forward = -player.global_transform.basis.z
-	forward.y = 0.0
-	forward = forward.normalized()
+	var forward := _melee_attack_forward
 	if forward.length_squared() < 0.01:
-		forward = -player.global_transform.basis.z.normalized()
+		forward = -player.global_transform.basis.z
+		forward.y = 0
+		forward = forward.normalized()
 
-	# Caixa na frente do player (centro um pouco à frente para acertar melhor)
-	var origin = player.global_position + Vector3(0.0, 1.0, 0.0) + forward * (melee_range * 0.6)
+	# Caixa na frente na direção do ataque (alcance um pouco maior para combate mais frenético)
+	var range_mult := 1.15
+	var origin = player.global_position + Vector3(0.0, 1.0, 0.0) + forward * (melee_range * 0.5 * range_mult)
 	var basis := Basis.looking_at(forward, Vector3.UP)
 	var shape_transform := Transform3D(basis, origin)
 
 	var box := BoxShape3D.new()
-	box.size = melee_half_extents * 2.0
+	box.size = Vector3(melee_half_extents.x * 2.2, melee_half_extents.y * 2.0, melee_range * range_mult)
 
 	var params := PhysicsShapeQueryParameters3D.new()
 	params.shape = box
@@ -382,19 +408,17 @@ func _get_melee_overlap_targets() -> Array:
 func _apply_damage(target: Node3D) -> void:
 	var damage = equipped_weapon.damage
 	var player = get_parent()
+	var knockback := equipped_weapon.knockback_force if equipped_weapon else 0.0
 
 	if target.has_method("take_damage"):
-		target.take_damage(damage, player)
+		target.take_damage(damage, player, knockback)
 		emit_signal("attack_hit", target, damage)
 
 ## Aplica efeitos específicos do ataque melee (stun, knockback, etc.)
 func _apply_melee_effect(target: Node3D) -> void:
 	var effect = equipped_weapon.effect
 
-	# --- Knockback ---
-	if equipped_weapon.knockback_force > 0 and target is CharacterBody3D:
-		var direction = (target.global_position - get_parent().global_position).normalized()
-		target.velocity += direction * equipped_weapon.knockback_force
+	# Knockback é aplicado no próprio mob em take_damage (persiste e não é sobrescrito pela AI)
 
 	# --- Stun ---
 	if equipped_weapon.has_stun():
@@ -447,40 +471,8 @@ func _try_mine_target(target: Node3D) -> void:
 # ================= RANGED (PROJÉTIL) =================
 
 func _attack_ranged() -> void:
-	# Magia selecionada na hotbar (modo cajado): 1-9 selecionam, clique dispara
-	var spell: Spell = SpellManager.get_selected_spell() if SpellManager else null
-	var proj_scene: PackedScene = equipped_weapon.projectile_scene
-	if spell and spell.projectile_scene != null:
-		proj_scene = spell.projectile_scene
-	if proj_scene == null:
-		push_warning("WeaponHandler: Staff sem projectile_scene assignada!")
-		return
-
-	var projectile = proj_scene.instantiate()
-	get_tree().current_scene.add_child(projectile)
-
-	var player = get_parent()
-	var cam = camera_node if camera_node != null else player.get_node_or_null("Camera3D") as Node3D
-	if cam == null:
-		push_warning("WeaponHandler: câmera não definida. Defina camera_node no Inspector.")
-		return
-	# Usar o mesmo centro da tela que o raycast (InteractionManager) para mira e projétil alinhados
-	var vp := cam.get_viewport()
-	var center := vp.get_visible_rect().size / 2
-	var direction := (cam as Camera3D).project_ray_normal(center).normalized()
-
-	projectile.global_position = cam.global_position
-	var ptype: int = equipped_weapon.projectile_type
-	if spell:
-		ptype = spell.projectile_type
-
-	if projectile.has_method("setup"):
-		projectile.setup(
-			direction,
-			equipped_weapon.projectile_speed,
-			equipped_weapon.damage,
-			ptype
-		)
+	if _projectile_launcher and _projectile_launcher.has_method("launch"):
+		_projectile_launcher.launch()
 
 # ================= SOM =================
 

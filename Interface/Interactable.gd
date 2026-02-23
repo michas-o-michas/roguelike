@@ -8,10 +8,16 @@ extends Node3D
 func get_display_label() -> String:
 	return interact_label
 
-## Chamado pelo player ao pressionar E
+## Chamado pelo player ao pressionar E.
+## Ordem: se o pai tiver on_interact(interactor), usa; senão, se for ResourceNode, inicia coleta.
+## Baús, NPCs e portais: implemente on_interact(interactor) no nó pai do Interactable.
 func interact(interactor: Node) -> void:
-	if get_parent() is ResourceNode:
-		(get_parent() as ResourceNode).try_start_harvest(interactor)
+	var parent: Node = get_parent()
+	if parent.has_method("on_interact"):
+		parent.on_interact(interactor)
+		return
+	if parent is ResourceNode:
+		(parent as ResourceNode).try_start_harvest(interactor)
 
 ## Opcional: chamado quando o raycast entra/sai (hover)
 func on_focus_enter() -> void:

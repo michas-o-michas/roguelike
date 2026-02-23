@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://bj0fla0h0psld"]
 
 [ext_resource type="Script" uid="uid://bcfiidggh5q4o" path="res://Scripts/UI/inventory_slot.gd" id="1_brh76"]
-[ext_resource type="Texture2D" uid="uid://cuaor831o8s2d" path="res://Assets/menu/slot.png" id="2_nxjtc"]
+[ext_resource type="Texture2D" uid="uid://bay7sp3jv8g0f" path="res://Assets/menu/Slot2.png" id="2_tmbq5"]
 [ext_resource type="FontFile" uid="uid://cfhotyty164nn" path="res://Assets/menu/Cinzel,Poppins,Raleway/Cinzel/Cinzel-VariableFont_wght.ttf" id="3_tmbq5"]
 
 [node name="inventory_slot" type="Panel" unique_id=12331941]
@@ -29,7 +29,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-texture = ExtResource("2_nxjtc")
+texture = ExtResource("2_tmbq5")
 expand_mode = 1
 
 [node name="ItemIcon" type="TextureRect" parent="PanelContainer" unique_id=1912474077]

@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://b3ta1gunljg3b"
+path="res://.godot/imported/WASD Sound Grass Run 06.wav-ba78b90fbcc91ef641ebae1840e5247d.sample"
+
+[deps]
+
+source_file="res://Assets/sounds/player/WASD Sound Grass Run 06.wav"
+dest_files=["res://.godot/imported/WASD Sound Grass Run 06.wav-ba78b90fbcc91ef641ebae1840e5247d.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

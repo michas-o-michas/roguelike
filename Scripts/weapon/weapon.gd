@@ -69,6 +69,15 @@ enum ToolSlot {
 # -- Knockback (usado por alguns efeitos) --
 @export var knockback_force: float = 0.0    # 0 = sem knockback
 
+# -- Rastro na ponta (efeito ao atacar; só para melee sem mineração) --
+@export_group("Trail")
+@export var trail_enabled: bool = true
+@export var trail_color: Color = Color(0.85, 0.92, 1.0, 0.7)
+@export var trail_ribbon_width: float = 0.06
+@export var trail_duration: float = 0.45
+@export var trail_point_lifetime: float = 0.35
+@export var trail_tip_offset: Vector3 = Vector3(0, 0, -0.9)
+
 # -- Slot de equipamento (obrigatório: um dos 4 do jogo) --
 @export var equipment_slot: ToolSlot = ToolSlot.MELEE  # MELEE=Espada, STAFF=Cajado, AXE=Machado, PICKAXE=Picareta
 

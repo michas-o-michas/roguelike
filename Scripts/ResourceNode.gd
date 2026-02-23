@@ -47,6 +47,7 @@ func _process(delta: float) -> void:
 			)
 
 func take_hit(damage):
+	SoundManager.play("working")
 	_spawn_hit_particles()
 	_shake_timer = hit_shake_duration
 	if _health_component:
@@ -68,6 +69,7 @@ func _spawn_hit_particles() -> void:
 
 func die() -> void:
 	remove_health_bar()
+	SoundManager.play(&"harvest_complete")
 	emit_signal("depleted")
 	InventoryManager.add_item_by_id(resource_id, drop_amount)
 	queue_free()

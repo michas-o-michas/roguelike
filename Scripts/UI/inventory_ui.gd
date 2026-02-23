@@ -75,6 +75,7 @@ func _input(event):
 	elif event.is_action_pressed("ui_cancel") and is_open:
 		_toggle()
 
+
 func _toggle() -> void:
 	is_open = !is_open
 	visible = is_open
@@ -86,6 +87,10 @@ func _toggle() -> void:
 	else:
 		z_index = 0
 		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+		if current_tab != "inventory":
+			_switch_tab("inventory")
+
+	SoundManager.play("ui_inventory_open")
 
 func _switch_tab(tab_id: String) -> void:
 	current_tab = tab_id
@@ -101,6 +106,8 @@ func _switch_tab(tab_id: String) -> void:
 	else:
 		inv_tab.modulate = Color(0.6, 0.6, 0.6)
 		craft_tab.modulate = Color(1.2, 1.1, 0.7)
+	SoundManager.play("ui_inventory_select")
+
 
 func _on_inventory_changed() -> void:
 	# Atualiza visual de todos os slots

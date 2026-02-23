@@ -66,10 +66,14 @@ func _refresh_recipes() -> void:
 func _on_craft_success(item: Item) -> void:
 	print("✅ Craftou: ", item.item_name)
 	# Pode adicionar efeito visual aqui (ex: animação, som)
+	if SoundManager and SoundManager.has_sfx(&"ui_inventory_select"):
+		SoundManager.play_sfx_id(&"ui_inventory_select")
 
 func _on_craft_failed(reason: String) -> void:
 	print("❌ Craft falhou: ", reason)
 	# Pode mostrar mensagem de erro na UI
+
+
 
 # ================= UTILITÁRIOS =================
 

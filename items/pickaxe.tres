@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="Weapon" format=3 uid="uid://bb1lowoqsxfj1"]
 
-[ext_resource type="AudioStream" uid="uid://bxanrnefngxrp" path="res://attack_sword.mp3" id="1_nns10"]
+[ext_resource type="AudioStream" uid="uid://bxanrnefngxrp" path="res://Assets/sounds/player/attack_sword.mp3" id="1_nns10"]
 [ext_resource type="Texture2D" uid="uid://cjstdle4bc75o" path="res://items/icons/pickaxe.png" id="2_upg28"]
 [ext_resource type="PackedScene" uid="uid://dmcb5bem6n8yc" path="res://items/Scenes/pickaxe.tscn" id="3_nns10"]
 [ext_resource type="Script" uid="uid://brg2mqlobceng" path="res://Scripts/weapon/weapon.gd" id="4_l6olv"]

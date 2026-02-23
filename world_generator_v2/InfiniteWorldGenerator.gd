@@ -9,16 +9,7 @@ class_name InfiniteWorldGenerator
 const POIManagerScript = preload("res://world_generator_v2/poi/POIManager.gd")
 const SpawnerManagerScript = preload("res://world_generator_v2/spawners/SpawnerManager.gd")
 const ChunkAmbientParticlesScene = preload("res://effects/AmbientParticles.tscn")
-
-# Constantes de suavização do terreno (get_terrain_height)
-const TERRAIN_BEACH_ZONE_TOP := 15.0
-const TERRAIN_DEEP_THRESHOLD := -5.0
-const TERRAIN_BEACH_SMOOTH_DIST := 12.0
-const TERRAIN_RAMP_FACTOR_ABOVE := 0.2
-const TERRAIN_SMOOTH_STRENGTH_MAX := 0.7
-const TERRAIN_FINAL_TRANSITION_ZONE := 10.0
-const TERRAIN_FINAL_RAMP := 0.25
-const TERRAIN_BOTTOM_SMOOTH_ZONE := 3.0
+const TerrainHeightModuleScript = preload("res://world_generator_v2/WorldGeneratorTerrainHeight.gd")
 
 # =============================================================================
 # CONFIGURAÇÃO GERAL
@@ -197,18 +188,11 @@ var _collision_queue: Array[Vector2i] = []
 var _collision_queue_set: Dictionary = {}
 const COLLISION_CHUNKS_PER_FRAME := 2 ## Quantos chunks de colisão por frame
 
-# Cache de alturas — evita recalcular get_terrain_height para o mesmo ponto
-# Limpa chunks antigos no unload. Chave = Vector2i(floor(x), floor(z)), valor = float
-var _height_cache: Dictionary = {}
+# Módulo de altura/cor do terreno (cache e cálculos pesados)
+var _terrain_height_module: Node = null
 ## Reaplicar posição de spawn por alguns frames para sobrescrever qualquer reset para (0,0,0)
 var _pending_spawn_position: Vector3 = Vector3.ZERO
 var _spawn_reapply_frames: int = 0
-const HEIGHT_CACHE_MAX_SIZE := 500000 ## Limpar se exceder (evita uso excessivo de RAM)
-
-# Precalc para cor do terreno (evita recalcular a cada vértice)
-var _rock_start_cached: float = 99999.0
-var _rock_end_cached: float = 99999.0
-var _snow_start_cached: float = 99999.0
 
 # =============================================================================
 # ESTADO INTERNO
@@ -241,7 +225,9 @@ func _log(msg: String, arg1 = null, arg2 = null, arg3 = null, arg4 = null, arg5 
 func _ready():
 	_log("🎬 InfiniteWorldGenerator._ready()")
 	setup_noise()
-	_cache_terrain_layer_values()
+	_terrain_height_module = TerrainHeightModuleScript.new()
+	_terrain_height_module.name = "TerrainHeightModule"
+	add_child(_terrain_height_module)
 	add_to_group("world_generator")
 
 	if use_shared_material:
@@ -266,15 +252,6 @@ func _ready():
 	set_process(true)
 	set_physics_process(true)
 	call_deferred("_setup_after_scene_load")
-
-## Precalcula valores de camadas do terreno para evitar recalcular em cada vértice
-func _cache_terrain_layer_values():
-	_rock_start_cached = rock_start_height if enable_rock_layer else 99999.0
-	_rock_end_cached = _rock_start_cached + rock_thickness if enable_rock_layer else 99999.0
-	if enable_snow_layer:
-		_snow_start_cached = (rock_start_height + rock_thickness) if snow_start_height < 0 else snow_start_height
-	else:
-		_snow_start_cached = 99999.0
 
 func _setup_after_scene_load():
 	await get_tree().process_frame
@@ -334,11 +311,14 @@ func start_world_generation(player_to_instantiate: Node3D = null) -> bool:
 	_terrain_build_queue.clear()
 	_is_processing_queue = false
 	_origin_rebase_idle_timer = 0.0
-	_height_cache.clear()
+	if _terrain_height_module and _terrain_height_module.has_method("clear_height_cache_if_needed"):
+		_terrain_height_module.clear_height_cache_if_needed()
 	_vegetation_queue.clear()
 	_vegetation_queue_set.clear()
 	_collision_queue.clear()
 	_collision_queue_set.clear()
+	if _terrain_height_module and _terrain_height_module.has_method("clear_height_cache_if_needed"):
+		_terrain_height_module.clear_height_cache_if_needed()
 
 	if player_to_instantiate:
 		player = player_to_instantiate
@@ -1022,10 +1002,8 @@ func unload_chunk(chunk_pos: Vector2i):
 	_vegetation_queue_set.erase(chunk_pos)
 	_collision_queue_set.erase(chunk_pos)
 
-	# Limpar cache de alturas na região do chunk
-	# (Não vale iterar todo o cache; fazemos flush periódico se ficar grande)
-	if _height_cache.size() > HEIGHT_CACHE_MAX_SIZE:
-		_height_cache.clear()
+	if _terrain_height_module and _terrain_height_module.has_method("clear_height_cache_if_needed"):
+		_terrain_height_module.clear_height_cache_if_needed()
 
 # =============================================================================
 # LOD DE COLISÃO DINÂMICO
@@ -1151,190 +1129,14 @@ func get_chunk_distance_to_player(chunk_pos: Vector2i) -> int:
 # =============================================================================
 
 func get_terrain_height(x: float, z: float) -> float:
-	# Cache lookup — chave inteira para agrupar pontos próximos
-	var cache_key := Vector2i(int(x * 10.0), int(z * 10.0))
-	if _height_cache.has(cache_key):
-		return _height_cache[cache_key]
-
-	var h := _compute_terrain_height(x, z)
-	_height_cache[cache_key] = h
-	return h
-
-## Cálculo real de altura (pesado, por isso cacheamos)
-func _compute_terrain_height(x: float, z: float) -> float:
-	var noise_value := noise.get_noise_2d(x, z)
-	var amplitude := noise_amplitude
-	var frequency := 1.0
-	var height := noise_value * amplitude
-
-	for i in range(1, octaves):
-		frequency *= lacunarity
-		amplitude *= persistence
-		height += noise.get_noise_2d(x * frequency, z * frequency) * amplitude
-
-	# Redistribuição de altura
-	if height > 0:
-		var normalized := height / noise_amplitude
-		normalized = pow(normalized, height_redistribution)
-		height = normalized * noise_amplitude
-	else:
-		var normalized = abs(height) / noise_amplitude
-		normalized = pow(normalized, 1.5)
-		height = -normalized * noise_amplitude
-
-	height += 3.0
-
-	# Suavização de água e praia — pular quando água desativada (ganho grande de performance)
-	if enable_water:
-		var distance_from_water := height - water_level
-		var deep_water_zone := -water_depth_limit
-
-		if distance_from_water >= deep_water_zone and distance_from_water <= TERRAIN_BEACH_ZONE_TOP:
-			var smooth_distance = abs(distance_from_water)
-			if distance_from_water < TERRAIN_DEEP_THRESHOLD:
-				var depth_factor := clampf((abs(distance_from_water) - (-TERRAIN_DEEP_THRESHOLD)) / (water_depth_limit - (-TERRAIN_DEEP_THRESHOLD)), 0.0, 1.0)
-				depth_factor = depth_factor * depth_factor
-				var deep_noise := noise.get_noise_2d(x * 0.0004, z * 0.0004)
-				var target_depth := water_level - 4.0 + (deep_noise * 2.0)
-				height = lerpf(height, target_depth, depth_factor * 0.8)
-			elif distance_from_water >= TERRAIN_DEEP_THRESHOLD and distance_from_water <= TERRAIN_BEACH_ZONE_TOP:
-				var smooth_strength := 1.0 - clampf(smooth_distance / TERRAIN_BEACH_SMOOTH_DIST, 0.0, 1.0)
-				smooth_strength = smooth_strength * smooth_strength
-				var beach_noise := noise.get_noise_2d(x * 0.0006, z * 0.0006)
-				var target_height: float
-				if distance_from_water > 0:
-					target_height = water_level + (distance_from_water * TERRAIN_RAMP_FACTOR_ABOVE) + (beach_noise * 1.2)
-				else:
-					var depth_t = abs(distance_from_water) / (-TERRAIN_DEEP_THRESHOLD)
-					depth_t = depth_t * depth_t
-					target_height = lerpf(water_level - 1.0, water_level - 3.0, depth_t) + (beach_noise * 1.2)
-				height = lerpf(height, target_height, smooth_strength * TERRAIN_SMOOTH_STRENGTH_MAX)
-
-		var min_height := water_level - water_depth_limit
-		if height < min_height:
-			height = min_height
-
-		distance_from_water = height - water_level
-		if distance_from_water >= -TERRAIN_BOTTOM_SMOOTH_ZONE and distance_from_water <= TERRAIN_FINAL_TRANSITION_ZONE:
-			var smooth_noise_val := noise.get_noise_2d(x * 0.0005, z * 0.0005)
-			var water_proximity := 1.0 - clampf(abs(distance_from_water) / TERRAIN_FINAL_TRANSITION_ZONE, 0.0, 1.0)
-			water_proximity = water_proximity * water_proximity
-
-			var smooth_height: float
-			if distance_from_water > 0:
-				smooth_height = water_level + (distance_from_water * TERRAIN_FINAL_RAMP) + (smooth_noise_val * 0.8)
-			else:
-				smooth_height = water_level - 1.5 + (smooth_noise_val * 0.8)
-			height = lerpf(height, smooth_height, water_proximity * 0.6)
-
-		if height < water_level - TERRAIN_BOTTOM_SMOOTH_ZONE:
-			var depth_noise := noise.get_noise_2d(x * 0.0008, z * 0.0008)
-			var depth_factor := clampf((water_level - TERRAIN_BOTTOM_SMOOTH_ZONE - height) / 5.0, 0.0, 1.0)
-			var smooth_bottom := water_level - TERRAIN_BOTTOM_SMOOTH_ZONE + (depth_noise * 1.5)
-			height = lerpf(height, smooth_bottom, depth_factor * 0.6)
-
-	return height
-
-# =============================================================================
-# COR DO TERRENO (usa valores precalculados)
-# =============================================================================
+	if _terrain_height_module and _terrain_height_module.has_method("get_terrain_height"):
+		return _terrain_height_module.get_terrain_height(x, z)
+	return 0.0
 
 func get_terrain_color(x: float, z: float, height: float) -> Color:
-	var moisture := (moisture_noise.get_noise_2d(x, z) + 1.0) * 0.5
-
-	var w_level := water_level
-	var expanded_beach_level := beach_level + 3.0
-	var g_level := grass_level
-	var m_level := rock_start_height
-
-	var rock_start := _rock_start_cached
-	var rock_end := _rock_end_cached
-	var s_start := _snow_start_cached
-
-	# Debug: camadas em cores vivas
-	if show_layer_debug:
-		if height < w_level: return Color.BLUE
-		elif height < expanded_beach_level: return Color.YELLOW
-		elif height < g_level: return Color.GREEN
-		elif height < rock_start: return Color.DARK_GREEN
-		elif height < rock_end: return Color.GRAY
-		else: return Color.WHITE
-
-	# Usar tema se disponível
-	#if world_theme and world_theme.use_custom_terrain_colors:
-		#return world_theme.get_terrain_color_for_height(height, moisture, w_level, expanded_beach_level, g_level, rock_start, rock_end, s_start, snow_transition)
-
-	# Abaixo da água
-	if height < w_level:
-		var depth := (w_level - height) / water_depth_limit
-		depth = clampf(depth, 0.0, 1.0)
-		var shallow := Color(0.15, 0.3, 0.5)
-		var deep := Color(0.05, 0.1, 0.2)
-		return shallow.lerp(deep, depth * depth)
-
-	# Transição água → praia
-	if height < expanded_beach_level:
-		var t := (height - w_level) / (expanded_beach_level - w_level)
-		t = clampf(t, 0.0, 1.0)
-		t = t * t * (3.0 - 2.0 * t) # smoothstep
-
-		var shallow_water := Color(0.15, 0.3, 0.5)
-		var wet_sand := Color(0.6, 0.55, 0.45)
-		var dry_sand := Color(0.85, 0.8, 0.65)
-
-		if t < 0.3:
-			var st := t / 0.3
-			st = st * st
-			return shallow_water.lerp(wet_sand, st)
-		else:
-			var st := (t - 0.3) / 0.7
-			st = st * st * (3.0 - 2.0 * st)
-			return wet_sand.lerp(dry_sand, st)
-
-	# Transição praia → grama
-	if height < g_level + 5.0:
-		var t := (height - expanded_beach_level) / ((g_level + 5.0) - expanded_beach_level)
-		t = clampf(t, 0.0, 1.0)
-		t = t * t * t * (t * (t * 6.0 - 15.0) + 10.0) # perlin smoothstep
-		var sand := Color(0.85, 0.8, 0.65)
-		var grass := Color(0.4, 0.65, 0.35).lerp(Color(0.35, 0.6, 0.3), moisture)
-		return sand.lerp(grass, t)
-
-	# Grama baixa
-	if height < m_level * 0.4:
-		var grass_light := Color(0.35, 0.6, 0.3)
-		var grass_dark := Color(0.28, 0.5, 0.25)
-		return grass_light.lerp(grass_dark, moisture * 0.5)
-
-	# Grama média
-	if height < m_level * 0.7:
-		var t := (height - m_level * 0.4) / (m_level * 0.3)
-		t = clampf(t, 0.0, 1.0)
-		return Color(0.28, 0.5, 0.25).lerp(Color(0.3, 0.48, 0.25), t)
-
-	# Transição grama → rocha
-	if height < rock_start:
-		var distance_to_rock := rock_start - (m_level * 0.7)
-		if distance_to_rock > 0:
-			var t := (height - m_level * 0.7) / distance_to_rock
-			t = clampf(t, 0.0, 1.0)
-			t = t * t
-			return Color(0.3, 0.48, 0.25).lerp(Color(0.35, 0.4, 0.3), t)
-		return Color(0.3, 0.48, 0.25)
-
-	# Rocha
-	if height < rock_end:
-		return Color(0.5, 0.5, 0.5)
-
-	# Transição rocha → neve
-	if height < s_start + snow_transition:
-		var t := (height - rock_end) / snow_transition
-		t = clampf(t, 0.0, 1.0)
-		t = t * t
-		return Color(0.5, 0.5, 0.5).lerp(Color(0.92, 0.92, 0.95), t)
-
-	# Neve
-	return Color(0.92, 0.92, 0.95)
+	if _terrain_height_module and _terrain_height_module.has_method("get_terrain_color"):
+		return _terrain_height_module.get_terrain_color(x, z, height)
+	return Color.GRAY
 
 # =============================================================================
 # BIOMAS E DIFICULDADE

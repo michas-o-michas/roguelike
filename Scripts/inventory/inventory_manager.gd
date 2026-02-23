@@ -69,6 +69,8 @@ func get_coins() -> int:
 func add_coins(amount: int) -> void:
 	coins += amount
 	emit_signal("coins_changed", coins)
+	SoundManager.play("new_coin")
+
 
 ## Tenta gastar moedas — retorna true se teve saldo suficiente
 func spend_coins(amount: int) -> bool:
@@ -88,6 +90,7 @@ func add_item(item: Item, amount: int = 1) -> bool:
 		add_coins(amount)
 		return true
 
+
 	# Se o item empilha, tenta completar um slot existente primeiro
 	if item.is_stackable():
 		for i in range(max_slots):
@@ -99,6 +102,8 @@ func add_item(item: Item, amount: int = 1) -> bool:
 					slot["amount"] += to_add
 					amount -= to_add
 					emit_signal("inventory_changed")
+					SoundManager.play("new_item")
+
 					if amount <= 0:
 						return true
 
@@ -118,6 +123,7 @@ func add_item(item: Item, amount: int = 1) -> bool:
 			amount -= 1
 
 	emit_signal("inventory_changed")
+	SoundManager.play("new_item")
 	return true
 
 # ================= REMOVER ITENS =================

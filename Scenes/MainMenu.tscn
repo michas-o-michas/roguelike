@@ -7,6 +7,7 @@
 [ext_resource type="StyleBox" uid="uid://86wbxar6gxav" path="res://Interface/btn-normal.tres" id="5_xim88"]
 [ext_resource type="StyleBox" uid="uid://b2x8a2uu5145i" path="res://Interface/btn-pressed.tres" id="6_koqhg"]
 [ext_resource type="StyleBox" uid="uid://bk66fuuyv7wp5" path="res://Interface/bnt-hover.tres" id="7_cmrfp"]
+[ext_resource type="AudioStream" uid="uid://dcobdymhcson2" path="res://Assets/sounds/music/street-corner-jazz-cafe-338559.mp3" id="8_menu_music"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bg"]
 bg_color = Color(0.1, 0.1, 0.15, 0.95)
@@ -28,6 +29,12 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_main")
+
+[node name="MenuMusic" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("8_menu_music")
+bus = &"Music"
+autoplay = true
+volume_db = -6.0
 
 [node name="Control" type="Control" parent="." unique_id=1175456227]
 process_mode = 4

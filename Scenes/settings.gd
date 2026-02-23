@@ -30,6 +30,8 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	_connect_signals()
 	_sync_ui_from_manager()
+	if SoundManager:
+		SoundManager.connect_buttons_sound(self)
 
 
 func _connect_signals() -> void:

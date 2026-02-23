@@ -1,0 +1,13 @@
+[gd_resource type="ShaderMaterial" format=3 uid="uid://d0whygh53tpwg"]
+
+[ext_resource type="Shader" uid="uid://b8hlol24rewph" path="res://materials/dissolution.gdshader" id="1_shader"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_shader")
+shader_parameter/albedo_color = Color(0.5, 0.45, 0.4, 1)
+shader_parameter/dissolve = 0.0
+shader_parameter/fragment_scale = 0.11
+shader_parameter/edge_width = 0.09
+shader_parameter/edge_color = Color(0.5, 0.82, 1, 1)
+shader_parameter/edge_emissive = 0.25

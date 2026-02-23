@@ -1,136 +1,88 @@
-# Como criar um mob (ex.: lobo, urso, coelho)
+# Como criar um mob (lobo, vaca, coelho, zumbi, atirador…)
 
-O sistema usa **5 peças** que se encaixam assim:
+O sistema é **genérico**: uma **receita** (.tres) diz qual **cena** instanciar e com quais stats. O **spawner** usa a receita e coloca o bicho no mundo.
+
+---
+
+## Fluxo (quem usa o quê)
 
 ```
-Level1 (ou sua cena de mundo)
-  └── animal_spawners = [ wolf_spawner_data.tres, ... ]
-           │
-           ▼
-wolf_spawner_data.tres (AnimalSpawnerData)
-  └── spawner_scene = wolf_spawner.tscn
-           │
-           ▼
-wolf_spawner.tscn (instância do MobSpawner)
-  └── mob_data = wolf.tres
-           │
-           ▼
-wolf.tres (MobData)
-  └── mob_scene = wolf.tscn   +  stats (vida, dano, comportamento)
-           │
-           ▼
-wolf.tscn (instância do mob_base.tscn)
-  └── é a cena que aparece no mundo (o bicho em si)
+MobData (wolf.tres)  ←  "receita": id, nome, qual cena, vida, dano, comportamento
+    │
+    │  mob_scene = wolf.tscn   (aponta para a cena)
+    ▼
+wolf.tscn  ←  a cena do bicho (modelo, animações, colisão). NÃO precisa ter wolf.tres dentro.
+    │
+    │  O spawner instancia wolf.tscn e chama set_mob_data(wolf.tres)
+    ▼
+No jogo: lobo aparece com stats e comportamento do wolf.tres
 ```
 
-Ou seja: **o mundo** spawne **spawners**; cada **spawner** usa um **MobData** para spawne a **cenas do mob**.
+- **MobData (.tres)** = receita: "spawnar a cena X com esses stats e esse comportamento".
+- **Cena do mob (.tscn)** = o bicho em si. **Não** coloque o .tres na cena; o spawner seta o MobData ao instanciar.
+- Na cena do mob, o campo **mob_data** no Inspector é **opcional**: use só para testar a cena sozinha no editor (rodar a cena do lobo e ter vida/dano). No jogo, o spawner sempre seta.
 
 ---
 
-## Passo 1: Criar a cena do mob (o bicho em si)
+## Passo 1: Criar a cena do mob
 
-**O que é:** a cena que representa o inimigo no mundo (CharacterBody3D com vida, colisão, etc.).
+1. **Scene → New Inherited Scene** → base: `res://Scenes/enemies/mob_base.tscn`.
+2. Salve como `Scenes/enemies/<nome>.tscn` (ex.: `wolf.tscn`, `cow.tscn`, `zombie.tscn`).
+3. Adicione modelo 3D, colisão, etc. no nó **Model** (ou na raiz, conforme a base).
+4. **Animações (opcional):** adicione na raiz os nós **AnimationTree** e **AnimationPlayer** (com esses nomes). O script usa automaticamente; não precisa preencher paths. O AnimationTree deve ter `anim_player` apontando para o AnimationPlayer.
+5. **Não preencha** `mob_data` na cena (deixe vazio). Só preencha se for testar a cena sozinha no editor.
 
-**Como fazer:**
-
-1. No Godot: **Scene → New Inherited Scene** (ou “Nova cena herdada”).
-2. Escolha **`res://Scenes/enemies/mob_base.tscn`** como cena base.
-3. Salve como **`Scenes/enemies/<nome>.tscn`** (ex.: `wolf.tscn`, `bear.tscn`, `rabbit.tscn`).
-4. (Opcional) Renomeie o nó raiz no Inspector: ex. "Wolf", "Bear".
-5. (Opcional) Adicione um modelo 3D como filho do nó **Model** dentro da cena (o mob_base já tem esse nó vazio).
-
-**Resultado:** você tem uma cena que **herda** de `mob_base.tscn`. Não precisa de script novo; o comportamento vem do MobData que vamos criar.
+**Resultado:** uma cena que é o "corpo" do mob (visual + física). Ela não referencia nenhum .tres.
 
 ---
 
-## Passo 2: Criar o recurso MobData (.tres)
+## Passo 2: Criar a receita (MobData .tres)
 
-**O que é:** a “ficha” do mob: id, nome, qual cena usar, vida, dano, defesa, velocidade e **comportamento** (passivo, agressivo, etc.).
+1. Clique direito em `data/mobs/` → **New Resource** → **MobData** (ou Resource e escolha o script).
+2. Salve como `data/mobs/<id>.tres` (ex.: `wolf.tres`, `cow.tres`).
+3. No Inspector:
+   - **Id:** `wolf` (nome interno).
+   - **Display Name:** `Lobo`.
+   - **Mob Scene:** arraste a cena do **Passo 1** (ex.: `Scenes/enemies/wolf.tscn`). É a única ligação: a receita aponta para a cena.
+   - **Behaviour:** PASSIVE / AGGRESSIVE / PASSIVE_AGGRESSIVE / NEUTRAL.
+   - **Attack Type:** MELEE (corpo a corpo) ou RANGED (atirador — use cena com lógica de projétil).
+   - **Max Health, Damage, Defense, Speed**, etc.
+   - **Detection Radius:** ex. 30 (raio em que detecta o jogador).
+   - **Attack Radius / Attack Cooldown:** para MELEE.
+   - **Difficulty Tier:** 1–10.
 
-**Como fazer:**
-
-1. No Godot: **clique direito na pasta `data/mobs/`** (crie a pasta se não existir) → **New Resource**.
-2. Procure por **MobData** (ou “Resource” e depois no Inspector escolha **Script** = `res://Scripts/enemies/mob_data.gd`).
-3. Salve como **`data/mobs/<id>.tres`** (ex.: `wolf.tres`, `bear.tres`). O **id** é o nome interno do mob (ex.: `"wolf"`).
-4. No Inspector, preencha:
-   - **Id:** `wolf` (mesmo nome do arquivo, sem .tres).
-   - **Display Name:** `Lobo` (nome bonito para UI/debug).
-   - **Mob Scene:** arraste a cena do **Passo 1** (ex.: `Scenes/enemies/wolf.tscn`).
-   - **Behaviour:**  
-     - `0` = PASSIVE (não ataca; pode fugir)  
-     - `1` = AGGRESSIVE (persegue e ataca)  
-     - `2` = PASSIVE_AGGRESSIVE (só ataca se for atacado ou jogador muito perto)  
-     - `3` = NEUTRAL (só revida quando atacado)
-   - **Max Health:** ex. `50`.
-   - **Damage:** ex. `12` (dano ao jogador quando encostar).
-   - **Defense:** ex. `0`.
-   - **Speed:** ex. `6`.
-   - **Difficulty Tier:** `1` a `10` (1 = fácil perto do spawn; o SpawnerManager usa isso para decidir onde spawne).
-
-**Resultado:** um arquivo `.tres` que define “quem é” o mob e qual cena instanciar.
+**Resultado:** um .tres que diz "instanciar wolf.tscn com esses stats". A cena não aponta de volta para o .tres.
 
 ---
 
-## Passo 3: Criar a cena do spawner desse mob
-
-**O que é:** um nó que fica no mundo e, quando o jogador se aproxima, cria várias cópias do seu mob (ex.: lobos). Cada tipo de mob tem a **mesma** lógica de spawn, mas com **MobData** diferente.
-
-**Como fazer:**
+## Passo 3: Criar o spawner desse mob
 
 1. **Scene → New Scene** → raiz **Node3D**.
-2. Com a raiz selecionada, no Inspector clique em **Attach Script** e escolha **`res://Scripts/enemies/mob_spawner.gd`** (ou arraste o script para o nó).
-3. No Inspector, no script do **MobSpawner**, defina:
-   - **Mob Data:** arraste o recurso do **Passo 2** (ex.: `data/mobs/wolf.tres`).
-   - (Opcional) **Activation Distance**, **Max Mobs**, **Spawn Interval**, **Spawn Radius** — já têm valores padrão.
-4. Salve a cena como **`Scenes/enemies/<nome>_spawner.tscn`** (ex.: `wolf_spawner.tscn`).
+2. Anexe o script `res://Scripts/enemies/mob_spawner.gd`.
+3. No Inspector do spawner: **Mob Data** = arraste o .tres do Passo 2 (ex.: `data/mobs/wolf.tres`).
+4. Salve como `Scenes/enemies/<nome>_spawner.tscn` (ex.: `wolf_spawner.tscn`).
 
-**Resultado:** uma cena que, quando colocada no mundo (pelo SpawnerManager), spawne o mob definido no `mob_data`.
+**Resultado:** uma cena de spawner que, quando colocada no mundo, instancia a cena do mob e passa o MobData para ela.
 
 ---
 
-## Passo 4: Criar o AnimalSpawnerData (liga o spawner ao mundo)
+## Passo 4: Registrar no mundo (Level1 / gerador)
 
-**O que é:** o recurso que o **gerador de mundo** (InfiniteWorldGenerator) usa para decidir **quando** e **onde** colocar os spawners (ex.: “spawners de lobo” em bioma X, tier 1).
+1. Abra a cena do nível (ex.: `Scenes/Level1.tscn`).
+2. No nó do **InfiniteWorldGenerator** (ou gerador usado), em **Animal Spawners**, adicione o recurso do spawner (ex.: `world_generator_v2/spawners/wolf_spawner_data.tres`).
+3. O recurso `wolf_spawner_data.tres` deve ter **Spawner Scene** = `wolf_spawner.tscn`.
 
-**Como fazer:**
-
-1. Clique direito em **`world_generator_v2/spawners/`** → **New Resource**.
-2. Procure **AnimalSpawnerData** (script: `res://world_generator_v2/animal_spawner_data.gd`).
-3. Salve como **`world_generator_v2/spawners/<nome>_spawner_data.tres`** (ex.: `wolf_spawner_data.tres`).
-4. No Inspector:
-   - **Spawner Name:** ex. `Lobos` (nome para debug/log).
-   - **Spawner Scene:** arraste a cena do **Passo 3** (ex.: `Scenes/enemies/wolf_spawner.tscn`).
-   - **Difficulty Tier:** mesmo conceito do MobData (ex. `1`).
-   - **Min Height / Max Height:** altura do terreno em que esse spawner pode aparecer (ex. 0 e 20).
-   - **Allowed Biomes:** (opcional) lista de nomes de biomas; vazio = qualquer bioma.
-
-**Resultado:** um `.tres` que diz “use a cena wolf_spawner.tscn quando for spawne de lobos”.
+**Resultado:** o mundo passa a spawne lobos (ou o mob que você configurou) quando o jogador se aproxima.
 
 ---
 
-## Passo 5: Registrar no nível (Level1 ou sua cena de mundo)
+## Resumo: quem referencia quem
 
-**O que é:** dizer ao mundo **quais** spawners podem aparecer (lobos, ursos, etc.).
+| Quem            | Referencia        | Para quê |
+|-----------------|-------------------|----------|
+| **wolf.tres**   | wolf.tscn         | Saber qual cena instanciar |
+| **wolf.tscn**   | Nada (ou mob_data só para teste) | Ser o bicho |
+| **wolf_spawner.tscn** | wolf.tres   | Saber qual mob spawne e quais stats passar |
+| **Spawner (em runtime)** | Instancia wolf.tscn e chama set_mob_data(wolf.tres) | Colocar o lobo no mundo com a receita certa |
 
-**Como fazer:**
-
-1. Abra a cena onde está o **InfiniteWorldGenerator** (ex.: **`Scenes/Level1.tscn`**).
-2. Selecione o nó do gerador (ex. “Level1”).
-3. No Inspector, ache a propriedade **Animal Spawners** (array).
-4. Aumente o tamanho do array (ex. +1) e no novo slot arraste o recurso do **Passo 4** (ex.: `world_generator_v2/spawners/wolf_spawner_data.tres`).
-
-**Resultado:** quando o jogador explorar o mundo, o SpawnerManager vai instanciar spawners de lobo (e de outros que você colocou no array); cada spawner, por sua vez, vai instanciar lobos quando o jogador se aproximar.
-
----
-
-## Resumo em uma frase por arquivo
-
-| Arquivo | O que é |
-|--------|---------|
-| `Scenes/enemies/wolf.tscn` | O lobo em si (herda de mob_base). |
-| `data/mobs/wolf.tres` | Ficha do lobo: cena + stats + comportamento. |
-| `Scenes/enemies/wolf_spawner.tscn` | Nó que spawne lobos quando o jogador chega perto (usa wolf.tres). |
-| `world_generator_v2/spawners/wolf_spawner_data.tres` | Config do mundo: “onde/como colocar spawners de lobo”. |
-| **Level1** → **animal_spawners** | Lista de “quais spawners o mundo pode usar” (inclui wolf_spawner_data). |
-
-Para criar **outro** mob (ex.: urso): repita os 5 passos trocando “wolf” por “bear” e ajustando stats e comportamento no `.tres` do MobData.
+Assim você pode criar vaca, coelho, zumbi, atirador: crie a cena do bicho, crie o .tres apontando para essa cena, crie o spawner que usa o .tres. A cena do mob nunca precisa "ter" o .tres dentro.

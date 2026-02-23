@@ -29,10 +29,7 @@ enum DungeonMode {
 @export var cooldown_seconds: float = 0.5
 var _last_use_time: float = -999.0
 
-## Som (opcional): arraste um AudioStream (.ogg/.wav) no Inspector.
-@export var sound_teleport: AudioStream
-@export var sound_dungeon_enter: AudioStream
-@export var sound_dungeon_exit: AudioStream
+## Sons vêm apenas do SoundManager (IDs: teleport, dungeon_enter, dungeon_exit).
 
 ## Partículas (opcional): nó filho GPUParticles3D/CPUParticles3D; será disparado ao usar o pad.
 @export var particles_node: NodePath = NodePath("")
@@ -79,12 +76,9 @@ func _apply_label_text() -> void:
 	if lbl:
 		lbl.text = get_display_label()
 
-func _play_sound(stream: AudioStream) -> void:
-	if not stream:
-		return
-	var sm = get_node_or_null("/root/SoundManager")
-	if sm and sm.has_method("play_stream"):
-		sm.play_stream(stream)
+func _play_sfx_id(id: StringName) -> void:
+	if SoundManager and SoundManager.has_sfx(id):
+		SoundManager.play_sfx_id(id)
 
 func _trigger_particles() -> void:
 	if particles_node.is_empty():
@@ -144,7 +138,8 @@ func interact(interactor: Node) -> void:
 
 	# ——— Saída da dungeon ———
 	if dungeon_mode == DungeonMode.EXIT:
-		_play_sound(sound_dungeon_exit)
+		#_play_sfx_id(&"dungeon_exit")
+		_play_sfx_id(&"teleport")
 		_trigger_particles()
 		if DungeonManager:
 			if fade_duration > 0.0:
@@ -171,7 +166,8 @@ func interact(interactor: Node) -> void:
 		if not spawn_marker:
 			push_warning("Landingpad: spawn marker não encontrado: %s" % spawn_marker_path)
 			return
-		_play_sound(sound_dungeon_enter)
+		#_play_sfx_id(&"dungeon_enter")
+		_play_sfx_id(&"teleport")
 		_trigger_particles()
 		if fade_duration > 0.0:
 			var sf = get_node_or_null("/root/ScreenFade")
@@ -190,7 +186,7 @@ func interact(interactor: Node) -> void:
 		return
 	var target_pos := dest.global_position
 	target_pos.y += 1
-	_play_sound(sound_teleport)
+	_play_sfx_id(&"teleport")
 	_trigger_particles()
 	if use_fade_on_teleport and fade_duration > 0.0:
 		var sf = get_node_or_null("/root/ScreenFade")

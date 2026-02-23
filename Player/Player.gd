@@ -38,12 +38,21 @@ var jump_buffered := false
 @export var cam_pitch_min := -50.0
 @export var cam_pitch_max := 60.0
 
+## Nó visual do personagem (mesh): só ele vira na direção do movimento; a câmera continua 100% no mouse.
+@export var movement_visual_path: NodePath = NodePath("UAL2_Standard")
+@export_range(0.0, 1.0, 0.05) var movement_facing_strength := 0.35
+@export var movement_facing_speed := 8.0
+## Offset em radianos (ex.: PI = 180°) para o mesh ficar de costas para a câmera em TPP (depende do asset).
+const movement_visual_back_offset: float = TAU / 2.0  # PI
+
 var rotation_x := 0.0
+var _movement_visual: Node3D = null
 
 # ================= VIDA E DANO (HealthComponent) =================
-@export var base_health := 100
-@export var invincibility_duration_after_hit := 0.8
+@export var base_health := 120
+@export var invincibility_duration_after_hit := 1.25
 var _invincibility_timer := 0.0
+@export var knockback_on_hit_strength: float = 4.5
 
 ## Usados por SkillManager (buffs). Movimento usa speed/sprint_speed; dano real vem da arma (weapon_handler).
 var base_speed := 8.0
@@ -58,6 +67,7 @@ var step_timer := 0.0
 @export var step_interval := 0.6
 @export var step_interval_sprint := 0.4
 @onready var step_audio: AudioStreamPlayer3D = $StepAudio
+@onready var step_particles: GPUParticles3D = $StepParticles
 
 # ================= ANIMAÇÕES (AnimationTree — travel por nome de estado) =================
 @export var animation_tree_path: NodePath = NodePath("AnimationTree")
@@ -100,13 +110,23 @@ func _ready():
 		_health_component.max_health = base_health
 		_health_component.current_health = base_health
 		_health_component.died.connect(_on_died)
+		_health_component.damage_taken.connect(_on_damage_taken)
+		_health_component.healed.connect(_on_healed)
 	else:
 		push_warning("Player: HealthComponent não encontrado. Adicione o nó HealthComponent como filho do Player para vida/dano.")
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	add_to_group("player")
+	if step_audio:
+		step_audio.bus = &"SFX"
 	if animation_tree:
 		animation_tree.active = true
 		set_animation("Idle")
+	if movement_visual_path.is_empty():
+		_movement_visual = null
+	else:
+		_movement_visual = get_node_or_null(movement_visual_path) as Node3D
+		if _movement_visual:
+			_movement_visual.rotation.y = movement_visual_back_offset
 
 func set_animation(anim_name: String) -> void:
 	if not animation_tree:
@@ -134,14 +154,20 @@ func apply_skill(_skill) -> void:
 func get_health_component() -> HealthComponent:
 	return _health_component
 
-## Recebe dano. Delega ao HealthComponent; ativa i-frames após o hit.
-func take_damage(amount: float, armor_piercing: float = 0.0, _attacker: Node = null) -> float:
+## Recebe dano. Delega ao HealthComponent; ativa i-frames e knockback para trás após o hit.
+func take_damage(amount: float, armor_piercing: float = 0.0, attacker: Node = null) -> float:
 	if _health_component == null:
 		return 0.0
-	var taken := _health_component.take_damage(amount, armor_piercing, _attacker)
+	var taken := _health_component.take_damage(amount, armor_piercing, attacker)
 	if taken > 0:
 		_health_component.is_invincible = true
 		_invincibility_timer = invincibility_duration_after_hit
+		# Knockback: empurra o jogador para longe do atacante (facilita escapar de 2+ lobos)
+		if attacker is Node3D and knockback_on_hit_strength > 0:
+			var away := (global_position - (attacker as Node3D).global_position).normalized()
+			away.y = 0
+			velocity.x = away.x * knockback_on_hit_strength
+			velocity.z = away.z * knockback_on_hit_strength
 	return taken
 
 ## Cura o jogador. Delega ao HealthComponent.
@@ -154,7 +180,19 @@ func _is_dead() -> bool:
 	return _health_component != null and _health_component.is_dead
 
 func _on_died() -> void:
+	if SoundManager and SoundManager.has_sfx(&"player_death"):
+		SoundManager.play_sfx_id(&"player_death")
 	set_animation("Death")
+
+
+func _on_damage_taken(_amount: float) -> void:
+	if SoundManager and SoundManager.has_sfx(&"player_hurt"):
+		SoundManager.play_sfx_id(&"player_hurt")
+
+
+func _on_healed(_amount: float) -> void:
+	if SoundManager and SoundManager.has_sfx(&"player_heal"):
+		SoundManager.play_sfx_id(&"player_heal")
 
 func _set(property, value):
 	if property == "creative_mode":
@@ -315,13 +353,23 @@ func _physics_process(delta):
 			jump_buffered = false
 			jumps_left -= 1
 			set_animation("Jump")
+			if step_particles:
+				step_particles.restart()
 
 	if direction != Vector3.ZERO:
 		var target = direction * current_speed
 		var used_accel = accel if is_on_floor() else air_accel
 		velocity.x = lerp(velocity.x, target.x, used_accel * delta)
 		velocity.z = lerp(velocity.z, target.z, used_accel * delta)
+		# Só o modelo visual vira na direção do movimento (câmera continua no mouse); offset para costas à câmera (TPP).
+		if _movement_visual and movement_facing_strength > 0 and input_dir.length_squared() > 0.01:
+			var target_visual_y := atan2(-input_dir.x, -input_dir.y) + movement_visual_back_offset
+			var k := (1.0 - exp(-movement_facing_speed * delta)) * movement_facing_strength
+			_movement_visual.rotation.y = lerp_angle(_movement_visual.rotation.y, target_visual_y, k)
 	else:
+		if _movement_visual and movement_facing_strength > 0:
+			var k := (1.0 - exp(-movement_facing_speed * delta)) * movement_facing_strength
+			_movement_visual.rotation.y = lerp_angle(_movement_visual.rotation.y, movement_visual_back_offset, k)
 		var used_deaccel = deaccel if is_on_floor() else air_deaccel
 		velocity.x = lerp(velocity.x, 0.0, used_deaccel * delta)
 		velocity.z = lerp(velocity.z, 0.0, used_deaccel * delta)
@@ -334,6 +382,7 @@ func _physics_process(delta):
 		set_animation("Death")
 	elif not is_on_floor():
 		set_animation("Jump")
+
 	elif direction.length_squared() > 0.01:
 		if current_speed >= sprint_speed * 0.9:
 			set_animation("Run")
@@ -346,6 +395,8 @@ func _physics_process(delta):
 		step_timer -= delta
 		if step_timer <= 0:
 			step_audio.play()
+			if step_particles:
+				step_particles.restart()
 			step_timer = step_current
 	else:
 		step_timer = 0
