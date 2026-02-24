@@ -39,6 +39,17 @@ func _ready() -> void:
 	_outline_material.albedo_color = outline_color
 	_outline_material.roughness = 1.0
 	_outline_material.metallic = 0.0
+	# Auto-descoberta dos nós de prompt caso não estejam configurados no inspetor.
+	# Isso garante que o prompt funcione mesmo quando o editor apaga os NodePath overrides.
+	if not prompt_label or not prompt_label_floating:
+		var player := get_tree().get_first_node_in_group("player")
+		if player:
+			if not prompt_label:
+				prompt_label = player.get_node_or_null(
+					"UI/InteractionPromptBox/FixedPromptBox/InteractionPromptFixedLabel") as Label
+			if not prompt_label_floating:
+				prompt_label_floating = player.get_node_or_null(
+					"UI/InteractionPromptBox/FloatingPromptBox") as Control
 
 
 func _physics_process(_delta: float) -> void:

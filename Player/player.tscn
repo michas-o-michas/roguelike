@@ -23,6 +23,7 @@
 [ext_resource type="Animation" uid="uid://bf3amafincobi" path="res://Assets/Unreal-Godot-2/animações/Chest_Open.res" id="19_qpoj2"]
 [ext_resource type="Animation" uid="uid://cego58550mxsu" path="res://Assets/Unreal-Godot-2/animações/ClimbUp_1m_RM.res" id="20_3e3ym"]
 [ext_resource type="Script" uid="uid://b1vk53dptuq2n" path="res://Player/ThirdPersonCamera.gd" id="20_cam"]
+[ext_resource type="Script" path="res://Player/FirstPersonCamera.gd" id="21_fps"]
 [ext_resource type="Animation" uid="uid://c2psxvutpng8i" path="res://Assets/Unreal-Godot-2/animações/Consume.res" id="21_gxi5p"]
 [ext_resource type="Animation" uid="uid://cafkknpblkkvv" path="res://Assets/Unreal-Godot-2/animações/Farm_Harvest.res" id="22_yxu6j"]
 [ext_resource type="Animation" uid="uid://dm5ebjxp6ok2o" path="res://Assets/Unreal-Godot-2/animações/Farm_PlantSeed.res" id="23_mdkl3"]
@@ -663,22 +664,26 @@ transform = Transform3D(1, 0, 0, 0, 0.9860281, 0.16657946, 0, -0.16657946, 0.986
 target_position = Vector3(0, 0, -2)
 collision_mask = 7
 
-[node name="Camera3D" type="Camera3D" parent="." unique_id=1102373799 node_paths=PackedStringArray("look_at_marker")]
-transform = Transform3D(1, 0, 0, 0, 0.9860281, 0.16657947, 0, -0.16657946, 0.9860281, 0, 2.33368, 2.5019627)
-script = ExtResource("20_cam")
-look_at_marker = NodePath("../CameraPivotMiddle")
+[node name="CameraRig" type="Node3D" parent="." unique_id=1000100001]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.65, 0)
+
+[node name="Camera3D" type="Camera3D" parent="CameraRig" unique_id=1102373799]
+script = ExtResource("21_fps")
 fov_sprint_add = 5.0
 
-[node name="MagicPoint" type="Marker3D" parent="Camera3D" unique_id=485879385]
+[node name="ViewModelPivot" type="Node3D" parent="CameraRig/Camera3D" unique_id=1000100002]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.25, -0.30, -0.55)
+
+[node name="MagicPoint" type="Marker3D" parent="CameraRig/Camera3D" unique_id=485879385]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.50008714, -0.7505561)
 
-[node name="AttackPoint" type="Marker3D" parent="Camera3D" unique_id=1274675329]
+[node name="AttackPoint" type="Marker3D" parent="CameraRig/Camera3D" unique_id=1274675329]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.50008714, -0.74833083)
 
 [node name="InteractionManager" parent="." unique_id=879334259 node_paths=PackedStringArray("camera", "ray_cast_3d", "ray_origin_marker", "crosshair_control") instance=ExtResource("9_00tjw")]
-camera = NodePath("../Camera3D")
+camera = NodePath("../CameraRig/Camera3D")
 ray_cast_3d = NodePath("../CameraPivotMiddle/InteractionRaycast")
-ray_origin_marker = NodePath("../CameraPivotMiddle")
+ray_origin_marker = NodePath("../CameraRig")
 ray_length = 5.0
 crosshair_control = NodePath("../UI/Control/CrossMiddle")
 outline_color = Color(1, 1, 1, 1)
@@ -764,13 +769,14 @@ autoplay = true
 
 [node name="HealthComponent" parent="." unique_id=1271463789 instance=ExtResource("10_health")]
 
-[node name="WeaponHandler" type="Node3D" parent="." unique_id=1527871926 node_paths=PackedStringArray("hand_marker", "attack_area")]
+[node name="WeaponHandler" type="Node3D" parent="." unique_id=1527871926 node_paths=PackedStringArray("hand_marker", "attack_area", "camera_node")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.80339676)
 script = ExtResource("8_dw050")
-hand_marker = NodePath("../UAL2_Standard/Armature/Skeleton/AttachmentHand/HandMarker")
-weapon_display_scale = 0.5
+hand_marker = NodePath("../CameraRig/Camera3D/ViewModelPivot")
+weapon_display_scale = 0.05
 attack_area = NodePath("../UAL2_Standard/AttackArea")
 swing_angle = 90.0
+camera_node = NodePath("../CameraRig/Camera3D")
 
 [node name="AttackAudio" type="AudioStreamPlayer3D" parent="WeaponHandler" unique_id=328879155]
 stream = ExtResource("8_00tjw")
@@ -1251,6 +1257,7 @@ bones/64/rotation = Quaternion(8.730481e-11, 1, -1.192093e-07, 1.1640998e-10)
 bones/64/scale = Vector3(1, 1, 0.9999995)
 
 [node name="Mannequin" type="MeshInstance3D" parent="UAL2_Standard/Armature/Skeleton" unique_id=1613806192]
+visible = false
 mesh = SubResource("ArrayMesh_wijva")
 skin = SubResource("Skin_ls1i0")
 skeleton = NodePath("..")
@@ -1321,6 +1328,3 @@ transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 0, 0.93284756, -0.55426
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.9934889)
 shape = SubResource("SphereShape3D_od3ui")
 
-[node name="Camera3D2" type="Camera3D" parent="." unique_id=972084494]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7119746, -0.19677806)
-current = true

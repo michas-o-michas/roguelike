@@ -47,6 +47,7 @@ const movement_visual_back_offset: float = TAU / 2.0  # PI
 
 var rotation_x := 0.0
 var _movement_visual: Node3D = null
+@onready var _camera_rig: Node3D = get_node_or_null("CameraRig") as Node3D
 
 # ================= VIDA E DANO (HealthComponent) =================
 @export var base_health := 120
@@ -228,15 +229,9 @@ func _input(event):
 		rotate_y(deg_to_rad(-event.relative.x * mouse_sensitivity))
 		rotation_x -= event.relative.y * mouse_sensitivity
 		rotation_x = clamp(rotation_x, cam_pitch_min, cam_pitch_max)
-
-	# Zoom com scroll: aproximar/afastar câmera
-	if event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
-			cam_distance = clampf(cam_distance - cam_zoom_step, cam_distance_min, cam_distance_max)
-			get_viewport().set_input_as_handled()
-		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-			cam_distance = clampf(cam_distance + cam_zoom_step, cam_distance_min, cam_distance_max)
-			get_viewport().set_input_as_handled()
+		# FPS: aplica pitch ao CameraRig (não ao CharacterBody3D inteiro)
+		if _camera_rig:
+			_camera_rig.rotation_degrees.x = rotation_x
 
 func _get_camera_target_position() -> Vector3:
 	# Órbita em volta do pivot (ombro, ligeiramente ao lado), não do centro do personagem
