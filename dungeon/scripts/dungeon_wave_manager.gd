@@ -34,7 +34,11 @@ signal mob_count_changed(alive: int)
 ## Se true: re-entrar na dungeon reinicia as waves do zero.
 @export var reset_on_reenter: bool = true
 
+## Magias disponíveis como recompensa. Se vazio, usa as padrão por nível.
+@export var reward_spells: Array[Spell] = []
+
 var _current_wave: int = -1
+var _reward_chest: Node = null
 var _alive_mobs: int = 0
 var _active_mobs: Array[Node] = []
 var _started: bool = false
@@ -92,6 +96,9 @@ func reset_state() -> void:
 	_active_mobs.clear()
 	_alive_mobs = 0
 	_show_hud(false)
+	if is_instance_valid(_reward_chest):
+		_reward_chest.queue_free()
+		_reward_chest = null
 	if not _completed:
 		_current_wave = -1
 		_lock_exit()
@@ -198,6 +205,7 @@ func _complete() -> void:
 	_announce("DUNGEON COMPLETA!", 5.0)
 	_set_status("Saída liberada!")
 	_unlock_exit()
+	_spawn_reward_chest()
 	await get_tree().create_timer(5.5).timeout
 	_set_status("")
 	_show_hud(false)
@@ -368,3 +376,84 @@ func _announce(text: String, display_for: float = 3.0) -> void:
 func _set_status(text: String) -> void:
 	if _status_label:
 		_status_label.text = text
+
+
+# ─── Recompensa: Baú de Magia ─────────────────────────────────────────────────
+
+func _spawn_reward_chest() -> void:
+	if is_instance_valid(_reward_chest):
+		return  # já existe
+
+	var chest_script: Script = load("res://dungeon/scripts/spell_chest.gd")
+	if not chest_script:
+		push_error("DungeonWaveManager: spell_chest.gd não encontrado.")
+		return
+
+	_reward_chest = chest_script.new()
+	if not _reward_chest:
+		push_error("DungeonWaveManager: falha ao instanciar SpellChest.")
+		return
+
+	# Passa a lista de magias antes do add_child (antes do _ready).
+	_reward_chest.set("possible_spells", _get_reward_spells())
+
+	# Posição: à frente do exit pad, no centro da arena.
+	var pad := _get_exit_pad() as Node3D
+	var chest_pos := Vector3(0.0, 0.0, -6.0)
+	if is_instance_valid(pad):
+		chest_pos = pad.global_position + Vector3(0.0, 0.0, -6.0)
+
+	get_parent().add_child(_reward_chest)
+	_reward_chest.global_position = chest_pos
+
+
+func _get_reward_spells() -> Array[Spell]:
+	if not reward_spells.is_empty():
+		return reward_spells
+	# Gera padrão por nível de dungeon.
+	var out: Array[Spell] = []
+	out.append(_make_spell(
+		"fireball",        "Bola de Fogo",
+		25.0, 1.5, 1.2,   10.0, 0.6,
+		Color(0.95, 0.30, 0.05)
+	))
+	out.append(_make_spell(
+		"ice_shard",       "Estilhaço de Gelo",
+		18.0, 0.8, 1.4,    7.0, 0.4,
+		Color(0.30, 0.70, 1.0)
+	))
+	out.append(_make_spell(
+		"thunder_bolt",    "Raio",
+		38.0, 0.5, 1.8,   15.0, 0.3,
+		Color(1.0, 0.90, 0.10)
+	))
+	if dungeon_level >= 2:
+		out.append(_make_spell(
+			"void_pulse",  "Pulso do Vazio",
+			30.0, 2.5, 1.6,   12.0, 0.8,
+			Color(0.55, 0.10, 0.85)
+		))
+	return out
+
+
+## Cria um Spell com ícone de cor sólida (para uso sem .tres no editor).
+func _make_spell(
+	spell_id: String, name: String,
+	base_dmg: float, base_area: float, base_cd: float,
+	dmg_per_up: float, area_per_up: float,
+	icon_color: Color
+) -> Spell:
+	var s := Spell.new()
+	s.id                         = spell_id
+	s.spell_name                 = name
+	s.base_damage                = base_dmg
+	s.area_radius                = base_area
+	s.cooldown                   = base_cd
+	s.damage_per_upgrade         = dmg_per_up
+	s.area_per_upgrade           = area_per_up
+	s.cooldown_reduction_per_upgrade = 0.05
+	# Ícone: quadrado colorido 32×32 gerado em código.
+	var img := Image.create(32, 32, false, Image.FORMAT_RGB8)
+	img.fill(icon_color)
+	s.icon = ImageTexture.create_from_image(img)
+	return s

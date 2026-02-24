@@ -7,6 +7,8 @@
 extends Node
 
 signal selected_spell_slot_changed(slot: int)
+## Emitido ao desbloquear ou melhorar uma magia — a hotbar escuta para se atualizar.
+signal spells_changed()
 
 # Magias desbloqueadas (recursos Spell). Ordem na hotbar = índice 0-8.
 var unlocked_spells: Array[Spell] = []
@@ -30,9 +32,17 @@ func _ready() -> void:
 	hotbar_order.resize(HOTBAR_SIZE)
 	for i in range(HOTBAR_SIZE):
 		hotbar_order[i] = -1
-	# Por padrão, slot 0 mostra primeira magia se houver
 	if unlocked_spells.size() > 0:
 		hotbar_order[0] = 0
+
+
+## Retorna true se a magia com esse id já está desbloqueada.
+func has_spell(spell_id: String) -> bool:
+	for sp: Spell in unlocked_spells:
+		if sp.id == spell_id:
+			return true
+	return false
+
 
 ## Retorna a magia exibida no slot da hotbar [0-8]
 func get_spell_at_slot(slot_index: int) -> Spell:
@@ -43,20 +53,34 @@ func get_spell_at_slot(slot_index: int) -> Spell:
 		return null
 	return unlocked_spells[idx]
 
+
 ## Retorna a magia atualmente selecionada (a que será disparada no clique)
 func get_selected_spell() -> Spell:
 	return get_spell_at_slot(selected_spell_slot)
+
 
 ## Define o slot selecionado (0-8)
 func set_selected_slot(slot_index: int) -> void:
 	selected_spell_slot = clampi(slot_index, 0, HOTBAR_SIZE - 1)
 
-## Adiciona uma magia ao conjunto desbloqueado (e à hotbar se houver espaço)
+
+## Adiciona uma magia ao conjunto desbloqueado (e ao próximo slot livre na hotbar).
 func unlock_spell(spell: Spell) -> void:
-	if spell == null or unlocked_spells.has(spell):
+	if spell == null or has_spell(spell.id):
 		return
 	unlocked_spells.append(spell)
 	for i in range(HOTBAR_SIZE):
 		if hotbar_order[i] < 0:
 			hotbar_order[i] = unlocked_spells.size() - 1
 			break
+	spells_changed.emit()
+
+
+## Sobe um nível a magia com esse id. Retorna a Spell atualizada, ou null se não encontrada.
+func upgrade_spell(spell_id: String) -> Spell:
+	for sp: Spell in unlocked_spells:
+		if sp.id == spell_id:
+			sp.upgrade_level += 1
+			spells_changed.emit()
+			return sp
+	return null

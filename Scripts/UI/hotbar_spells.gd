@@ -18,6 +18,7 @@ func _ready() -> void:
 				slot.set_slot_background(slot_background_texture)
 	if SpellManager:
 		SpellManager.selected_spell_slot_changed.connect(_on_selected_slot_changed)
+		SpellManager.spells_changed.connect(_refresh_spell_slots)
 	if ToolSelectionManager:
 		ToolSelectionManager.tool_changed.connect(_on_tool_changed)
 	_update_hotbar_visibility()

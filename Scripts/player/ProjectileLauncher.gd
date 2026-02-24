@@ -7,7 +7,7 @@ extends Node
 func _get_handler() -> Node:
 	return get_parent()
 
-## Dispara um projétil com a arma e magia atuais. Retorna true se disparou, false se falhou (sem cena, etc.).
+## Dispara um projétil com a arma e magia atuais. Retorna true se disparou, false se falhou.
 func launch() -> bool:
 	var handler: Node = _get_handler()
 	var weapon: Weapon = handler.get("equipped_weapon") as Weapon
@@ -42,11 +42,12 @@ func launch() -> bool:
 	if spell:
 		ptype = spell.projectile_type
 
+	# Usa o dano e área da magia selecionada; cai de volta no dano da arma se sem magia.
+	var actual_damage: int = int(spell.get_damage()) if spell else weapon.damage
+	var area_radius: float  = spell.get_area()       if spell else 0.0
+
 	if projectile.has_method("setup"):
-		projectile.setup(
-			direction,
-			weapon.projectile_speed,
-			weapon.damage,
-			ptype
-		)
+		projectile.setup(direction, weapon.projectile_speed, actual_damage, ptype)
+	if area_radius > 0.0 and projectile.has_method("set_area"):
+		projectile.set_area(area_radius)
 	return true
