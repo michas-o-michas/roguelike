@@ -8,7 +8,7 @@
 [resource]
 script = ExtResource("3_qtt24")
 model_scene = ExtResource("2_3ol82")
-damage = 40
+damage = 100
 attack_speed = 0.72
 attack_sound = ExtResource("1_3ol82")
 knockback_force = 3.8

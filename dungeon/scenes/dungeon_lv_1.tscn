@@ -107,7 +107,5 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, -35)
 [node name="Decorator" type="Node3D" parent="." unique_id=1000000007]
 script = ExtResource("4_dec1")
 
-[node name="WaveManager" type="Node" parent="." node_paths=PackedStringArray("spawn_points_parent", "exit_pad_path") unique_id=1000000006]
+[node name="WaveManager" type="Node" parent="." unique_id=1000000006]
 script = ExtResource("3_wm1")
-spawn_points_parent = NodePath("../SpawnPoints")
-exit_pad_path = NodePath("../Landingpad")
