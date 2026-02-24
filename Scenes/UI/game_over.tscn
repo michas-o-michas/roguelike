@@ -1,0 +1,80 @@
+[gd_scene format=3 uid="uid://b5eyfmbt5m5ps"]
+
+[ext_resource type="Script" uid="uid://djwx61b0q7fpg" path="res://Scripts/UI/game_over.gd" id="1_gameover"]
+
+[node name="GameOver" type="Control" unique_id=67179412]
+process_mode = 3
+visible = false
+z_index = 100
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_gameover")
+
+[node name="BG" type="ColorRect" parent="." unique_id=74120267]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0)
+
+[node name="Center" type="CenterContainer" parent="." unique_id=1843284466]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Card" type="PanelContainer" parent="Center" unique_id=1096237469]
+custom_minimum_size = Vector2(440, 0)
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="Center/Card" unique_id=766495928]
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="Center/Card/Margin" unique_id=2072206356]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="Center/Card/Margin/VBox" unique_id=725001029]
+layout_mode = 2
+text = "VOCÊ MORREU"
+horizontal_alignment = 1
+
+[node name="Subtitle" type="Label" parent="Center/Card/Margin/VBox" unique_id=781883419]
+layout_mode = 2
+text = "Boa tentativa..."
+horizontal_alignment = 1
+
+[node name="Sep1" type="HSeparator" parent="Center/Card/Margin/VBox" unique_id=1746640748]
+layout_mode = 2
+
+[node name="DaysLabel" type="Label" parent="Center/Card/Margin/VBox" unique_id=261029205]
+layout_mode = 2
+horizontal_alignment = 1
+
+[node name="CoinsLabel" type="Label" parent="Center/Card/Margin/VBox" unique_id=387940305]
+layout_mode = 2
+horizontal_alignment = 1
+
+[node name="Sep2" type="HSeparator" parent="Center/Card/Margin/VBox" unique_id=1108878271]
+layout_mode = 2
+
+[node name="Spacer" type="Control" parent="Center/Card/Margin/VBox" unique_id=1356326093]
+custom_minimum_size = Vector2(0, 6)
+layout_mode = 2
+
+[node name="Gap" type="Control" parent="Center/Card/Margin/VBox" unique_id=1566190918]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+
+[node name="MenuBtn" type="Button" parent="Center/Card/Margin/VBox" unique_id=1476431500]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Menu Principal"

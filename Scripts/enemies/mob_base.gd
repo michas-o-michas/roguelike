@@ -87,6 +87,9 @@ var _wander_timer: float = 0.0
 var _wander_direction: Vector2 = Vector2.ZERO
 ## Para performance: inimigos longe do jogador atualizam AI em frames alternados.
 var _ai_tick: int = 0
+## Raio de detecção base (antes de modificadores de noite).
+var _base_detection_radius: float = 0.0
+var _night_mode: bool = false
 const _AI_SKIP_FRAMES_WHEN_FAR := 3
 const _ANIM_IDLE := "Idle"
 const _ANIM_WALK := "Walk"
@@ -168,6 +171,10 @@ func _ready() -> void:
 	collision_layer = 1
 	collision_mask = 1
 
+	if _base_detection_radius == 0.0:
+		_base_detection_radius = detection_radius
+	call_deferred("_connect_day_night")
+
 func set_mob_data(data: MobData) -> void:
 	mob_data = data
 	if is_node_ready():
@@ -197,6 +204,9 @@ func _apply_mob_data() -> void:
 
 	if mob_data.is_hostile():
 		add_to_group("enemy")
+
+	# Salva o raio base após mob_data sobrescrever (pode ser chamado antes de _ready terminar)
+	_base_detection_radius = detection_radius
 
 func take_damage(amount: float, attacker: Node = null, knockback_strength: float = 0.0) -> float:
 	if not _health_component:
@@ -534,6 +544,52 @@ func _ai_wander(delta: float) -> void:
 func _ai_idle(delta: float) -> void:
 	velocity.x = move_toward(velocity.x, 0, 10.0 * delta)
 	velocity.z = move_toward(velocity.z, 0, 10.0 * delta)
+
+func _connect_day_night() -> void:
+	var dnc = get_tree().get_first_node_in_group("day_night_cycle")
+	if not dnc:
+		return
+	if not dnc.night_started.is_connected(_on_night_started):
+		dnc.night_started.connect(_on_night_started)
+	if not dnc.day_started.is_connected(_on_day_started):
+		dnc.day_started.connect(_on_day_started)
+	if dnc.is_night:
+		_apply_night_mode()
+
+func _on_night_started() -> void:
+	_apply_night_mode()
+
+func _on_day_started() -> void:
+	_apply_day_mode()
+
+func _apply_night_mode() -> void:
+	if _night_mode:
+		return
+	_night_mode = true
+	detection_radius = _base_detection_radius * 1.5
+	# PASSIVE_AGGRESSIVE ficam agressivos à noite
+	if mob_data and mob_data.behaviour == MobData.Behaviour.PASSIVE_AGGRESSIVE:
+		_provoked = true
+
+func _apply_day_mode() -> void:
+	if not _night_mode:
+		return
+	_night_mode = false
+	detection_radius = _base_detection_radius
+
+## Chamado pelo spawner após instanciar: escala vida e dano pelo dia atual.
+## Duplica mob_data para não afetar outros mobs do mesmo tipo.
+func apply_day_scaling(day: int, hp_per_day: float, dmg_per_day: float) -> void:
+	if day <= 1:
+		return
+	var factor := float(day - 1)
+	if _health_component:
+		var hp_mult := 1.0 + factor * hp_per_day
+		_health_component.max_health = roundi(_health_component.max_health * hp_mult)
+		_health_component.current_health = _health_component.max_health
+	if mob_data and dmg_per_day > 0.0:
+		mob_data = mob_data.duplicate() as MobData
+		mob_data.damage = mob_data.damage * (1.0 + factor * dmg_per_day)
 
 func _apply_pending_attack() -> void:
 	if not is_instance_valid(_player) or not _player.has_method("take_damage"):

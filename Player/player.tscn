@@ -66,8 +66,10 @@
 [ext_resource type="Animation" uid="uid://cdru8okagvfhj" path="res://Assets/nunu-player/animation/work.tres" id="63_gxi5p"]
 [ext_resource type="PackedScene" uid="uid://b88vtgx7jfyd6" path="res://Scenes/UI/player_health_bar.tscn" id="64_healthbar"]
 [ext_resource type="PackedScene" uid="uid://cj5ch3shs6uen" path="res://Scenes/UI/player_attack_cooldown_bar.tscn" id="65_cooldown"]
-[ext_resource type="PackedScene" uid="uid://interaction_prompt" path="res://Scenes/UI/interaction_prompt.tscn" id="66_prompt"]
-[ext_resource type="PackedScene" uid="uid://compass_ui_01" path="res://Scenes/UI/compass.tscn" id="67_compass"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/interaction_prompt.tscn" id="66_prompt"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/compass.tscn" id="67_compass"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/day_night_indicator.tscn" id="68_daynight"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/game_over.tscn" id="69_gameover"]
 
 [sub_resource type="SeparationRayShape3D" id="SeparationRayShape3D_o28un"]
 length = 0.25932503
@@ -665,7 +667,7 @@ collision_mask = 7
 transform = Transform3D(1, 0, 0, 0, 0.9860281, 0.16657947, 0, -0.16657946, 0.9860281, 0, 2.33368, 2.5019627)
 script = ExtResource("20_cam")
 look_at_marker = NodePath("../CameraPivotMiddle")
-fov_sprint_add = 20.0
+fov_sprint_add = 5.0
 
 [node name="MagicPoint" type="Marker3D" parent="Camera3D" unique_id=485879385]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.50008714, -0.7505561)
@@ -673,13 +675,11 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.50008714, -0.7505561)
 [node name="AttackPoint" type="Marker3D" parent="Camera3D" unique_id=1274675329]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.50008714, -0.74833083)
 
-[node name="InteractionManager" parent="." unique_id=879334259 node_paths=PackedStringArray("prompt_label", "prompt_label_floating", "camera", "ray_cast_3d", "ray_origin_marker", "crosshair_control") instance=ExtResource("9_00tjw")]
-prompt_label = NodePath("../UI/InteractionPromptBox/FixedPromptBox/InteractionPromptFixedLabel")
-prompt_label_floating = NodePath("../UI/InteractionPromptBox/FloatingPromptBox")
+[node name="InteractionManager" parent="." unique_id=879334259 node_paths=PackedStringArray("camera", "ray_cast_3d", "ray_origin_marker", "crosshair_control") instance=ExtResource("9_00tjw")]
 camera = NodePath("../Camera3D")
 ray_cast_3d = NodePath("../CameraPivotMiddle/InteractionRaycast")
 ray_origin_marker = NodePath("../CameraPivotMiddle")
-ray_length = 3.0
+ray_length = 5.0
 crosshair_control = NodePath("../UI/Control/CrossMiddle")
 outline_color = Color(1, 1, 1, 1)
 
@@ -702,7 +702,8 @@ offset_bottom = 23.0
 script = ExtResource("5_dw050")
 metadata/_edit_use_anchors_ = true
 
-[node name="InteractionPromptBox" parent="UI" instance=ExtResource("66_prompt")]
+[node name="InteractionPromptBox" parent="UI" unique_id=342552178 instance=ExtResource("66_prompt")]
+anchors_preset = -1
 
 [node name="Control" type="Control" parent="UI" unique_id=382537793]
 custom_minimum_size = Vector2(32, 32)
@@ -743,9 +744,17 @@ expand_mode = 1
 
 [node name="Compass" parent="UI" unique_id=4000001 instance=ExtResource("67_compass")]
 
+[node name="DayNightIndicator" parent="UI" unique_id=4000002 instance=ExtResource("68_daynight")]
+
 [node name="PlayerAttackCooldownBar" parent="UI" unique_id=485555042 instance=ExtResource("65_cooldown")]
 offset_top = -136.0
 offset_bottom = -92.0
+
+[node name="GameOver" parent="UI" unique_id=4000003 instance=ExtResource("69_gameover")]
+offset_top = -136.0
+offset_bottom = -92.0
+grow_horizontal = 2
+grow_vertical = 2
 
 [node name="StepAudio" type="AudioStreamPlayer3D" parent="." unique_id=663968099]
 stream = ExtResource("6_od3ui")

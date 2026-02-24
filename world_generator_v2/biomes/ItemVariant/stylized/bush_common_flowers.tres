@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="ItemVariant" format=3 uid="uid://3us4o66ubwcc"]
 
 [ext_resource type="Script" uid="uid://okens1wa1haa" path="res://world_generator_v2/item_variant.gd" id="1_script"]
-[ext_resource type="PackedScene" path="res://Scenes/Vegetacao/CollectibleBush.tscn" id="2_scene"]
+[ext_resource type="PackedScene" uid="uid://vo2stgaraa0e" path="res://Scenes/Vegetacao/CollectibleBush.tscn" id="2_scene"]
 
 [resource]
 script = ExtResource("1_script")

@@ -186,6 +186,16 @@ func _on_died() -> void:
 	if SoundManager and SoundManager.has_sfx(&"player_death"):
 		SoundManager.play_sfx_id(&"player_death")
 	set_animation("Death")
+	await get_tree().create_timer(2.5).timeout
+	_show_game_over()
+
+func _show_game_over() -> void:
+	var dnc := get_tree().get_first_node_in_group("day_night_cycle")
+	var days = dnc.current_day if dnc else 1
+	var coins := InventoryManager.get_coins() if InventoryManager else 0
+	var go := get_node_or_null("UI/GameOver")
+	if go and go.has_method("show_game_over"):
+		go.show_game_over(days, coins)
 
 
 func _on_damage_taken(_amount: float) -> void:

@@ -1,17 +1,19 @@
-[gd_resource type="Resource" script_class="MobData" format=3 uid="uid://dwolfdata01"]
+[gd_resource type="Resource" script_class="MobData" format=3 uid="uid://dbrute01"]
 
 [ext_resource type="Script" uid="uid://6dikqqb2n65a" path="res://Scripts/enemies/mob_data.gd" id="1_script"]
 [ext_resource type="PackedScene" uid="uid://d2bnipyagl5k3" path="res://Scenes/enemies/wolf.tscn" id="2_scene"]
 
 [resource]
 script = ExtResource("1_script")
-id = "wolf"
-display_name = "Lobo"
+id = "dungeon_brute"
+display_name = "Guardião"
 mob_scene = ExtResource("2_scene")
-max_health = 60.0
-damage = 8.0
-speed = 7.0
-detection_radius = 30.0
+behaviour = 1
+max_health = 150.0
+damage = 20.0
+defense = 3.0
+speed = 6.0
+detection_radius = 20.0
 attack_radius = 3.0
-attack_cooldown = 1.65
-difficulty_tier = 3
+attack_cooldown = 1.8
+difficulty_tier = 8

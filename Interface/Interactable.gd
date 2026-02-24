@@ -4,6 +4,9 @@ extends Node3D
 ## Texto exibido no prompt (pode ser sobrescrito em cada filho)
 @export var interact_label: String = "Interact"
 
+func _ready() -> void:
+	add_to_group("interactable")
+
 ## Retorna o texto do prompt; sobrescreva nos filhos para calcular na hora (ex.: landing pad).
 func get_display_label() -> String:
 	return interact_label

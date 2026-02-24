@@ -1,5 +1,9 @@
 extends Node3D
 
+signal night_started
+signal day_started
+signal new_day_started(day: int)
+
 @export var startTime = 6
 @export var dayLengthInSeconds:float = 24
 
@@ -28,8 +32,13 @@ var dayColorList = [
 ]
 var currentDayState = 0
 var durationMultiplier = 1.0
+var is_night: bool = false
+var current_hour: float = 0.0
+var current_day: int = 1
+var _initialized: bool = false
 
 func _ready() -> void:
+	add_to_group("day_night_cycle")
 	world_environment.add_to_group("world_environment_apply")
 	if SettingsManager:
 		SettingsManager.apply_environment_to_scene()
@@ -38,6 +47,8 @@ func _ready() -> void:
 	_set_current_state()
 	_refresh_day_state()
 	_day_change_animation()
+	is_night = (currentDayState == 3)
+	_initialized = true
 
 func _change_duration():
 	durationMultiplier = dayLengthInSeconds/24
@@ -55,15 +66,31 @@ func _set_current_state():
 
 func _refresh_day_state():
 	var newState = false
-	
+	var prev_state = currentDayState
+
 	for i in dayColorList.size():
 		var sameState = i == currentDayState
 		if not sameState and animation_player.current_animation_position > dayColorList[i].startTime:
 			currentDayState = i
 			newState = true
-			
-	if newState: 
+
+	if newState:
 		_day_change_animation()
+		_update_night_state(prev_state)
+
+func _update_night_state(prev_state: int) -> void:
+	if not _initialized:
+		return
+	var was_night := prev_state == 3
+	var now_night = currentDayState == 3
+	if not was_night and now_night:
+		is_night = true
+		night_started.emit()
+	elif was_night and not now_night:
+		is_night = false
+		current_day += 1
+		day_started.emit()
+		new_day_started.emit(current_day)
 
 func _day_change_animation():
 	var topColor = dayColorList[currentDayState]["top"]
@@ -80,26 +107,14 @@ func _day_change_animation():
 	tween.parallel()
 	tween.tween_property(world_environment, "environment:sky:sky_material:ground_horizon_color", hoirzonColor, duration)
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	_refresh_day_state()
-	if currentDayState in [0,1] and sun.shadow_enabled == false:
+	current_hour = animation_player.current_animation_position
+	if currentDayState in [0, 1] and sun.shadow_enabled == false:
 		var tween = create_tween()
-		tween.tween_property(sun, "light_energy", .8, durationMultiplier*2)
-		sun.shadow_enabled =true
-		print("DIAAA")
+		tween.tween_property(sun, "light_energy", 0.8, durationMultiplier * 2)
+		sun.shadow_enabled = true
 	elif currentDayState == 3 and sun.shadow_enabled:
-		print("NOITEE")
-		sun.shadow_enabled =false
+		sun.shadow_enabled = false
 		var tween = create_tween()
-		tween.tween_property(sun, "light_energy", .1, durationMultiplier)
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+		tween.tween_property(sun, "light_energy", 0.02, durationMultiplier)

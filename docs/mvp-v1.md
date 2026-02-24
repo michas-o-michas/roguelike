@@ -1,238 +1,72 @@
-# ROOTFALL
+# ROOTFALL — MVP v1
 
-## Definição do MVP Jogável
+## Objetivo
 
----
+Provar que o loop funciona:
+> matar mobs → moedas → stats/dungeon → boss → morreu → recomeça
 
-## 1. Objetivo do MVP
-
-O **MVP de Rootfall** não tem como objetivo mostrar tudo o que o jogo pode ser, mas sim provar que:
-
-* O **loop survival + roguelike funciona**
-* A **exploração vertical é interessante**
-* O mundo transmite **tensão, decadência e consequência**
-
-Se o jogador terminar o MVP e quiser imediatamente “descer mais fundo”, o MVP cumpriu seu papel.
+Se o jogador morrer e quiser imediatamente recomeçar, o MVP cumpriu seu papel.
 
 ---
 
-## 2. Escopo do MVP (Regra de Ouro)
+## Loop Concreto do MVP
 
-> **Tudo que não reforça o loop central é descartado ou congelado.**
-
-O MVP deve ser:
-
-* Jogável do início ao fim
-* Balanceado o suficiente para gerar decisões
-* Pequeno o bastante para ser finalizado
-
----
-
-## 3. Loop do MVP (Concreto)
-
-1. Jogador nasce na **Superfície Viva**
-2. Explora, coleta e sobrevive
-3. Enfrenta a primeira pressão real (noite / escassez)
-4. Encontra acesso às **Raízes Expostas**
-5. Se prepara no Root Camp
-6. Desce para a segunda camada
-7. Enfrenta o **Boss Estrutural do MVP**
-8. Desbloqueia a próxima profundidade (fim do MVP)
+1. Nasce sem moedas no mundo
+2. Mata lobos na superfície (3 moedas/kill)
+3. Gasta moedas em stats (50/ponto) no menu de status
+4. Acumula 200 moedas → paga para entrar na Dungeon 1
+5. Enfrenta mobs mais fortes (5–8 moedas/kill)
+6. Derrota o boss da Dungeon 1
+7. Morre a qualquer momento → Game Over → recomeça do zero
 
 ---
 
-## 4. Camadas do MVP
+## Checklist de Sistemas
 
-### 4.1 Camada 1 – Superfície Viva
+### Mundo
+- [x] Geração procedural infinita
+- [x] Ciclo dia/noite
+- [x] Dificuldade crescente por dia
 
-**Função:** Ensinar o jogo
+### Combate
+- [x] Espada, machado, staff
+- [x] Inimigo: Lobo (superfície)
+- [ ] Inimigo: Sentinela (dungeon, tier 5)
+- [ ] Inimigo: Guardião (dungeon, tier 8)
+- [ ] Boss da Dungeon 1
 
-* Biomas:
+### Moedas e Progressão
+- [x] Mobs dropam moedas por difficulty_tier
+- [x] Stats comprados com moedas (StatsManager)
+- [ ] Portal da dungeon com custo em moedas
 
-  * Floresta de Raízes Vivas
-  * Campos Abertos
+### Dungeon
+- [x] Sistema de dungeon (entra/sai sem trocar cena)
+- [ ] Portal com custo de 200 moedas
+- [ ] Spawners configurados com mobs de dungeon
 
-* Mecânicas ativas:
-
-  * Coleta básica
-  * Crafting inicial
-  * Combate simples
-  * Ciclo dia/noite
-
-* Ameaças:
-
-  * Inimigos territoriais
-  * Noite mais perigosa
-
-* Objetivo:
-
-  * Sobreviver
-  * Encontrar o acesso às raízes
-
----
-
-### 4.2 Camada 2 – Raízes Expostas
-
-**Função:** Quebrar a sensação de segurança
-
-* Biomas:
-
-  * Túneis de Raiz
-  * Campos Fúngicos
-
-* Mecânicas novas:
-
-  * Recursos contaminados
-  * Ambientes instáveis
-  * Inimigos adaptativos
-
-* Pressões:
-
-  * Menos visibilidade
-  * Mais consumo de recursos
-
-* Objetivo:
-
-  * Atingir o núcleo da camada
+### Game Over / Permadeath
+- [ ] Tela de Game Over (dias + moedas)
+- [ ] Reset completo ao recomeçar
 
 ---
 
-## 5. Biomas do MVP
+## Mobs do MVP
 
-Total: **4 biomas**, combináveis proceduralmente
-
-1. Floresta de Raízes Vivas
-2. Campos Abertos
-3. Túneis de Raiz
-4. Campos Fúngicos
-
-Cada bioma deve ter:
-
-* 1 ameaça única
-* 1 recurso exclusivo
-* 1 característica ambiental
+| Mob | Local | HP | Dano | Tier | Coins/kill |
+|---|---|---|---|---|---|
+| Lobo | Superfície | 60 | 8 | 3 | 3 |
+| Sentinela | Dungeon 1 | 80 | 12 | 5 | 5 |
+| Guardião | Dungeon 1 | 150 | 20 | 8 | 8 |
+| Boss | Dungeon 1 | 500 | 25 | — | 100 |
 
 ---
 
-## 6. Inimigos do MVP
+## O que NÃO entra no MVP
 
-Total recomendado: **6 inimigos**
-
-### Camada 1
-
-* Criatura Territorial
-* Predador Noturno
-* Criatura Passiva Hostil
-
-### Camada 2
-
-* Infestado Fúngico
-* Guardião da Raiz
-
-### Boss do MVP
-
-**Nome provisório:** O Guardião do Colapso
-
-* Não é só um inimigo forte
-* Ele representa a instabilidade da raiz
-* Arena viva (colapsos, raízes se movendo)
-
-Derrotá-lo altera permanentemente o mundo.
-
----
-
-## 7. Sistema de Progressão no MVP
-
-### 7.1 Progressão do Jogador
-
-* Sem árvore gigante de skills
-* Poucas escolhas, mas significativas
-
-Exemplo:
-
-* Mais dano → menos stamina
-* Mais mobilidade → menos defesa
-
----
-
-### 7.2 Metaprogressão
-
-* Essências de Raiz coletadas
-* Desbloqueiam:
-
-  * Nova camada
-  * Pequenos bônus permanentes
-
-Morte não reseta tudo.
-
----
-
-## 8. Combate no MVP (Feeling)
-
-### Diretrizes obrigatórias
-
-* Stamina governa tudo
-* Ataques têm peso
-* Inimigos punem erro
-
-### Cortes conscientes
-
-* Sem combos complexos
-* Sem árvores de habilidades extensas
-* Sem build perfeita
-
----
-
-## 9. Crafting no MVP
-
-* Crafting serve para **sobreviver**, não para colecionar
-* Bancadas limitadas
-* Itens quebram
-
-Total de receitas:
-
-* 15–25 no máximo
-
----
-
-## 10. Root Camp
-
-Único local relativamente seguro.
-
-Funções:
-
-* Crafting
-* Preparação
-* Progressão
-
-Nunca totalmente seguro.
-
----
-
-## 11. Critérios de MVP Pronto
-
-O MVP está pronto quando:
-
-* O jogador entende o mundo sem tutorial explícito
-* Morrer ensina algo
-* Descer para a segunda camada gera tensão real
-* O boss final muda o mundo
-* O jogador quer continuar
-
----
-
-## 12. O que NÃO entra no MVP
-
-* Multiplayer
-* Construção livre
-* Mais de 2 camadas
-* Mais de 1 boss
-* Narrativa explícita
-
----
-
-## 13. Frase de Encerramento
-
-> *O MVP de Rootfall não prova que o jogo é grande.*
->
-> *Prova que ele é profundo.*
+- Sistema de stamina
+- Construção de base
+- Múltiplas camadas de dungeon
+- Narrativa explícita
+- Co-op
+- Crafting avançado (existe mas não é o foco)

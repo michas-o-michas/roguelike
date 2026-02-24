@@ -64,19 +64,23 @@ func _process_grass_circle(_delta: float) -> void:
 	var radius_sq := _world_gen.grass_circle_radius * _world_gen.grass_circle_radius
 	var grass_circle_count: int = _world_gen.grass_circle_count
 
-	for i in grass_circle_count:
-		var gp := _grass_positions[i]
-		if gp.y < -500.0:
-			continue
-		var dx := gp.x - player_pos.x
-		var dz := gp.z - player_pos.z
-		if (dx * dx + dz * dz) > radius_sq:
-			var tr := Transform3D()
-			tr.origin = Vector3(0, -1000, 0)
-			tr.basis = Basis().scaled(Vector3(0.001, 0.001, 0.001))
-			mm.set_instance_transform(i, tr)
-			_grass_positions[i] = Vector3(0, -1000, 0)
-			_grass_free_slots.append(i)
+	# Otimização: só varre para cullar tufos se o jogador se moveu >= 1m.
+	# Evita loop de N instâncias todo frame quando o jogador está parado (ex.: durante geração).
+	var moved_sq := player_pos.distance_squared_to(_grass_last_player_pos)
+	if moved_sq >= 1.0:
+		for i in grass_circle_count:
+			var gp := _grass_positions[i]
+			if gp.y < -500.0:
+				continue
+			var dx := gp.x - player_pos.x
+			var dz := gp.z - player_pos.z
+			if (dx * dx + dz * dz) > radius_sq:
+				var tr := Transform3D()
+				tr.origin = Vector3(0, -1000, 0)
+				tr.basis = Basis().scaled(Vector3(0.001, 0.001, 0.001))
+				mm.set_instance_transform(i, tr)
+				_grass_positions[i] = Vector3(0, -1000, 0)
+				_grass_free_slots.append(i)
 
 	var spawned := 0
 	var max_tries_per_slot := 6

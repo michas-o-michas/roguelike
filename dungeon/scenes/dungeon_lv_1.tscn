@@ -2,6 +2,9 @@
 
 [ext_resource type="Script" uid="uid://brh6h7uclddsm" path="res://dungeon/scripts/room.gd" id="1_edknb"]
 [ext_resource type="PackedScene" uid="uid://nql47rn6v1pw" path="res://Scenes/Landingpad.tscn" id="2_edknb"]
+[ext_resource type="Texture2D" uid="uid://jprmyyen1bkh" path="res://dungeon/scenes/OutoTex PhotoBased Seamless Texture Pack 1024px/Rock1_img.jpg" id="2_fjt7r"]
+[ext_resource type="Script" uid="uid://co37y7rexx40s" path="res://dungeon/scripts/dungeon_wave_manager.gd" id="3_wm1"]
+[ext_resource type="Script" path="res://dungeon/scripts/dungeon_decorator.gd" id="4_dec1"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_x8svo"]
 sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
@@ -16,16 +19,9 @@ sky = SubResource("Sky_edknb")
 tonemap_mode = 2
 glow_enabled = true
 
-[sub_resource type="FastNoiseLite" id="FastNoiseLite_fjt7r"]
-noise_type = 4
-frequency = 1.0
-
-[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_tyhg8"]
-noise = SubResource("FastNoiseLite_fjt7r")
-
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_48ueg"]
-albedo_color = Color(0.06635636, 0.12142318, 0.13514617, 1)
-roughness_texture = SubResource("NoiseTexture2D_tyhg8")
+albedo_texture = ExtResource("2_fjt7r")
+uv1_scale = Vector3(10, 10, 10)
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_56xut"]
 material = SubResource("StandardMaterial3D_48ueg")
@@ -50,6 +46,7 @@ material = SubResource("StandardMaterial3D_fjt7r")
 
 [node name="Dungeon_Lv1" type="Node3D" unique_id=1654411826]
 script = ExtResource("1_edknb")
+dungeon_id = "dungeon_lv1"
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=465325789]
 environment = SubResource("Environment_twy6t")
@@ -90,5 +87,26 @@ transform = Transform3D(1.9106854e-14, 4.371139e-08, -100.000015, 10, -4.371139e
 mesh = SubResource("PlaneMesh_tyhg8")
 
 [node name="MeshInstance3D6" type="MeshInstance3D" parent="." unique_id=334845140]
-transform = Transform3D(100, 0, 0, 0, -100, 8.742278e-06, 0, -8.742278e-06, -100, 0, 10, 0)
+transform = Transform3D(96.473206, 0, 0, 0, -96.473206, 8.433955e-06, 0, -8.433955e-06, -96.473206, 0, 10, 0)
 mesh = SubResource("PlaneMesh_48ueg")
+
+[node name="SpawnPoints" type="Node3D" parent="." unique_id=1000000001]
+
+[node name="SP1" type="Marker3D" parent="SpawnPoints" unique_id=1000000002]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0, -20)
+
+[node name="SP2" type="Marker3D" parent="SpawnPoints" unique_id=1000000003]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, -20)
+
+[node name="SP3" type="Marker3D" parent="SpawnPoints" unique_id=1000000004]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0, -35)
+
+[node name="SP4" type="Marker3D" parent="SpawnPoints" unique_id=1000000005]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, -35)
+
+[node name="Decorator" type="Node3D" parent="." unique_id=1000000007]
+script = ExtResource("4_dec1")
+arena_size = 100.0
+
+[node name="WaveManager" type="Node" parent="." unique_id=1000000006]
+script = ExtResource("3_wm1")

@@ -2,6 +2,8 @@
 
 [ext_resource type="Script" uid="uid://brh6h7uclddsm" path="res://dungeon/scripts/room.gd" id="1_o5qb4"]
 [ext_resource type="PackedScene" uid="uid://nql47rn6v1pw" path="res://Scenes/Landingpad.tscn" id="2_4qm01"]
+[ext_resource type="Script" path="res://dungeon/scripts/dungeon_wave_manager.gd" id="3_wm2"]
+[ext_resource type="Script" path="res://dungeon/scripts/dungeon_decorator.gd" id="4_dec2"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_x8svo"]
 sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
@@ -35,6 +37,7 @@ points = PackedVector3Array(-1, 0, -1, -1, 0, 1, 1, 0, -1, 1, 0, 1)
 
 [node name="Dungeon_Lv1" type="Node3D" unique_id=1654411826]
 script = ExtResource("1_o5qb4")
+dungeon_id = "dungeon_lv2"
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=465325789]
 environment = SubResource("Environment_twy6t")
@@ -52,4 +55,35 @@ mesh = SubResource("PlaneMesh_56xut")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="MeshInstance3D/StaticBody3D" unique_id=866808267]
 shape = SubResource("ConvexPolygonShape3D_x8svo")
 
+[node name="EntranceMarker" type="Marker3D" parent="." unique_id=2000000001]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2)
+
 [node name="Landingpad" parent="." unique_id=1535864988 instance=ExtResource("2_4qm01")]
+dungeon_mode = 2
+
+[node name="SpawnPoints" type="Node3D" parent="." unique_id=2000000002]
+
+[node name="SP1" type="Marker3D" parent="SpawnPoints" unique_id=2000000003]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25, 0, -25)
+
+[node name="SP2" type="Marker3D" parent="SpawnPoints" unique_id=2000000004]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25, 0, -25)
+
+[node name="SP3" type="Marker3D" parent="SpawnPoints" unique_id=2000000005]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -40, 0, -50)
+
+[node name="SP4" type="Marker3D" parent="SpawnPoints" unique_id=2000000006]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 0, -50)
+
+[node name="SP5" type="Marker3D" parent="SpawnPoints" unique_id=2000000007]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -60)
+
+[node name="Decorator" type="Node3D" parent="." unique_id=2000000009]
+script = ExtResource("4_dec2")
+arena_size = 150.0
+
+[node name="WaveManager" type="Node" parent="." node_paths=PackedStringArray("spawn_points_parent", "exit_pad_path") unique_id=2000000008]
+script = ExtResource("3_wm2")
+dungeon_level = 2
+spawn_points_parent = NodePath("../SpawnPoints")
+exit_pad_path = NodePath("../Landingpad")

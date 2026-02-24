@@ -1,10 +1,10 @@
-[gd_resource type="Resource" script_class="PropVariantSet" format=3]
+[gd_resource type="Resource" script_class="PropVariantSet" format=3 uid="uid://dn5f03nnu5ipg"]
 
 [ext_resource type="Script" uid="uid://4tfo552xqm56" path="res://Scripts/PropVariantSet.gd" id="1_script"]
-[ext_resource type="PackedScene" path="res://Assets/Stylized Nature MegaKit[Standard]/FBX/Grass_Common_Short.fbx" id="g1"]
-[ext_resource type="PackedScene" path="res://Assets/Stylized Nature MegaKit[Standard]/FBX/Grass_Common_Tall.fbx" id="g2"]
-[ext_resource type="PackedScene" path="res://Assets/Stylized Nature MegaKit[Standard]/FBX/Grass_Wispy_Short.fbx" id="g3"]
-[ext_resource type="PackedScene" path="res://Assets/Stylized Nature MegaKit[Standard]/FBX/Grass_Wispy_Tall.fbx" id="g4"]
+[ext_resource type="PackedScene" uid="uid://d3d8hk4m0bt0b" path="res://Assets/Stylized Nature MegaKit[Standard]/FBX/Grass_Common_Short.fbx" id="g1"]
+[ext_resource type="PackedScene" uid="uid://bi1fk31a4juxx" path="res://Assets/Stylized Nature MegaKit[Standard]/FBX/Grass_Common_Tall.fbx" id="g2"]
+[ext_resource type="PackedScene" uid="uid://bp0l0gmns4fyk" path="res://Assets/Stylized Nature MegaKit[Standard]/FBX/Grass_Wispy_Short.fbx" id="g3"]
+[ext_resource type="PackedScene" uid="uid://rcp30ypycnq1" path="res://Assets/Stylized Nature MegaKit[Standard]/FBX/Grass_Wispy_Tall.fbx" id="g4"]
 
 [resource]
 script = ExtResource("1_script")

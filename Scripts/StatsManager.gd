@@ -104,6 +104,14 @@ func buy_point_with_coins(spend_on_stat: int = -1) -> bool:
 func buy_point() -> bool:
 	return buy_point_with_coins(-1)
 
+## Reset completo para nova run (permadeath)
+func reset_all() -> void:
+	points_available = 0
+	for s in Stat.values():
+		_stat_levels[s] = 0
+	emit_signal("points_changed", points_available)
+	emit_signal("stats_changed")
+
 ## Aplica todos os bônus no jogador (vida, dano, velocidade, etc.)
 func apply_to_player(player: Node) -> void:
 	if not is_instance_valid(player):

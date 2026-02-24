@@ -2,7 +2,7 @@ extends Interactable
 
 ## Emitidos para você conectar som, fade ou UI (ex.: pad.teleported.connect(_on_pad_teleport)).
 signal teleported(interactor: Node, from_pos: Vector3, to_pos: Vector3)
-signal dungeon_entered(interactor: Node, dungeon: Node)
+signal dungeon_entered(interactor: Node, dungeon_id: String)
 signal dungeon_exited(interactor: Node)
 
 enum PadType {
@@ -22,8 +22,11 @@ enum DungeonMode {
 
 ## Se ativo, este pad entra na dungeon (desliga mapa, liga dungeon e teleporta para spawn).
 @export var dungeon_mode: DungeonMode = DungeonMode.NONE
-@export var dungeon_path: NodePath = NodePath("Main/Dungeon_Lv1")
-@export var spawn_marker_path: NodePath = NodePath("Main/Dungeon_Lv1/EntranceMarker")
+## ID da dungeon registrada via DungeonManager.register_dungeon() (ex.: "dungeon_lv1").
+@export var dungeon_id: String = "dungeon_lv1"
+
+## Custo em moedas para entrar na dungeon (0 = gratuito).
+@export var entry_cost: int = 0
 
 ## Segundos antes de poder usar o pad de novo (evita spam de E).
 @export var cooldown_seconds: float = 0.5
@@ -56,6 +59,8 @@ func get_display_label() -> String:
 		return custom
 	match dungeon_mode:
 		DungeonMode.ENTRANCE:
+			if entry_cost > 0:
+				return "Entrar na dungeon [%d moedas]" % entry_cost
 			return "Entrar na dungeon"
 		DungeonMode.EXIT:
 			return "Voltar ao mapa"
@@ -63,13 +68,10 @@ func get_display_label() -> String:
 			return "Teleportar" if pad_type == PadType.IN else "Voltar"
 
 func _ready() -> void:
+	super._ready()
 	call_deferred("_apply_label_text")
-	if dungeon_mode == DungeonMode.ENTRANCE:
-		var root := get_tree().root
-		if not root.get_node_or_null(dungeon_path):
-			push_warning("Landingpad: dungeon_path inválido em _ready: %s" % dungeon_path)
-		if not root.get_node_or_null(spawn_marker_path):
-			push_warning("Landingpad: spawn_marker_path inválido em _ready: %s" % spawn_marker_path)
+	if dungeon_mode == DungeonMode.ENTRANCE and dungeon_id.is_empty():
+		push_warning("Landingpad: dungeon_id está vazio no modo ENTRANCE.")
 
 func _apply_label_text() -> void:
 	var lbl: Label = get_node_or_null("SubViewport/Label") as Label
@@ -93,14 +95,17 @@ func _trigger_particles() -> void:
 		p.restart()
 		p.emitting = true
 
-func _do_enter_dungeon(body: Node, dungeon: Node, spawn_marker: Node3D) -> void:
+func _do_enter_dungeon_by_id(body: Node) -> void:
 	if DungeonManager:
-		DungeonManager.enter_dungeon(dungeon, spawn_marker.global_position)
+		var ok := DungeonManager.request_enter(dungeon_id, entry_cost)
+		if not ok:
+			_show_no_coins_feedback()
+			return
 	if fade_duration > 0.0:
 		var sf = get_node_or_null("/root/ScreenFade")
 		if sf:
 			sf.fade_in(fade_duration)
-	dungeon_entered.emit(body, dungeon)
+	dungeon_entered.emit(body, dungeon_id)
 
 func _do_exit_dungeon(body: Node) -> void:
 	if DungeonManager:
@@ -157,14 +162,9 @@ func interact(interactor: Node) -> void:
 		if not DungeonManager:
 			push_warning("Landingpad: DungeonManager não encontrado.")
 			return
-		var root := get_tree().root
-		var dungeon: Node = root.get_node_or_null(dungeon_path)
-		var spawn_marker: Node3D = root.get_node_or_null(spawn_marker_path) as Node3D
-		if not dungeon:
-			push_warning("Landingpad: dungeon não encontrado: %s" % dungeon_path)
-			return
-		if not spawn_marker:
-			push_warning("Landingpad: spawn marker não encontrado: %s" % spawn_marker_path)
+		# Verificar moedas antes de iniciar fade (feedback imediato)
+		if entry_cost > 0 and (not InventoryManager or InventoryManager.get_coins() < entry_cost):
+			_show_no_coins_feedback()
 			return
 		#_play_sfx_id(&"dungeon_enter")
 		_play_sfx_id(&"teleport")
@@ -172,11 +172,11 @@ func interact(interactor: Node) -> void:
 		if fade_duration > 0.0:
 			var sf = get_node_or_null("/root/ScreenFade")
 			if sf:
-				sf.fade_out_then(fade_duration, func(): _do_enter_dungeon(body, dungeon, spawn_marker), loading_hold_duration)
+				sf.fade_out_then(fade_duration, func(): _do_enter_dungeon_by_id(body), loading_hold_duration)
 			else:
-				_do_enter_dungeon(body, dungeon, spawn_marker)
+				_do_enter_dungeon_by_id(body)
 		else:
-			_do_enter_dungeon(body, dungeon, spawn_marker)
+			_do_enter_dungeon_by_id(body)
 		return
 
 	# ——— Teleporte normal entre pads ———
@@ -196,6 +196,17 @@ func interact(interactor: Node) -> void:
 			_do_teleport(body, target_pos, false)
 	else:
 		_do_teleport(body, target_pos, false)
+
+func _show_no_coins_feedback() -> void:
+	var lbl: Label = get_node_or_null("SubViewport/Label") as Label
+	if not lbl:
+		return
+	var original := get_display_label()
+	lbl.text = "Moedas insuficientes!"
+	lbl.modulate = Color(1.0, 0.3, 0.3, 1.0)
+	await get_tree().create_timer(1.5).timeout
+	lbl.text = original
+	lbl.modulate = Color(1, 1, 1, 1)
 
 func on_focus_enter() -> void:
 	var lbl: Label = get_node_or_null("SubViewport/Label") as Label

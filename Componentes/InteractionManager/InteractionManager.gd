@@ -45,6 +45,8 @@ func _physics_process(_delta: float) -> void:
 	_update_aim_ray()
 	_update_crosshair_position()
 	_do_raycast()
+	if Input.is_action_just_pressed("interact") and current_interactable:
+		current_interactable.interact(owner)
 
 
 func _do_raycast() -> void:
@@ -98,8 +100,9 @@ func _update_aim_ray() -> void:
 		origin = camera.project_ray_origin(center)
 
 	ray_cast_3d.global_position = origin
-	# -Z do RayCast3D = direction (para target_position (0,0,-ray_length) ir para frente).
-	ray_cast_3d.global_transform.basis = Basis.looking_at(direction, Vector3.UP)
+	# -Z do RayCast3D = direction. Usa Vector3.FORWARD como up se direction for quase paralelo ao UP.
+	var up := Vector3.FORWARD if abs(direction.dot(Vector3.UP)) > 0.99 else Vector3.UP
+	ray_cast_3d.global_transform.basis = Basis.looking_at(direction, up)
 	ray_cast_3d.target_position = Vector3(0, 0, -ray_length)
 	ray_cast_3d.force_raycast_update()
 
@@ -140,8 +143,29 @@ func _focus_exit_resource(interactable: Interactable) -> void:
 		resource_node.remove_health_bar()
 
 
-## Só considera o nó atingido e seus filhos — não sobe ao pai (evita "E Teleportar" ao mirar em mobs).
+## Busca o Interactable a partir do nó atingido:
+## 1) Verifica o próprio nó e todos os descendentes (para ResourceNodes, coletáveis, etc.)
+## 2) Se não encontrar, sobe na cadeia de pais (para estruturas como Landingpad onde o
+##    Interactable é o nó raiz acima da CollisionShape)
 func _find_interactable(node: Node) -> Interactable:
+	if not node:
+		return null
+	# 1) Busca para baixo (ResourceNodes, coletáveis: Interactable é filho do collider)
+	var found := _find_interactable_down(node)
+	if found:
+		return found
+	# 2) Busca para cima (Landingpad-style: Interactable é pai do collider)
+	var parent := node.get_parent()
+	var depth := 0
+	while parent and depth < 6:
+		if parent is Interactable:
+			return parent as Interactable
+		parent = parent.get_parent()
+		depth += 1
+	return null
+
+
+func _find_interactable_down(node: Node) -> Interactable:
 	if not node:
 		return null
 	if node is Interactable:
@@ -149,15 +173,14 @@ func _find_interactable(node: Node) -> Interactable:
 	for child in node.get_children():
 		if child is Interactable:
 			return child as Interactable
-		var found := _find_interactable(child)
+		var found := _find_interactable_down(child)
 		if found:
 			return found
 	return null
 
 
 func _input(event: InputEvent) -> void:
-	if event.is_action_pressed("interact") and current_interactable:
-		current_interactable.interact(owner)
+	pass  # interação tratada em _physics_process (mesmo frame do raycast)
 
 
 func _show_prompt(text: String, world_pos: Vector3) -> void:

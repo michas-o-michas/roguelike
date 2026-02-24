@@ -12,9 +12,27 @@ extends Node3D
 ## Se true, imprime logs de spawn e referência ao jogador (debug)
 @export var debug_log: bool = true
 
+@export_group("Dificuldade por Dia")
+## Aumento percentual de mobs por dia (ex: 0.15 = +15% ao dia)
+@export var difficulty_per_day: float = 0.15
+## Redução percentual do intervalo de spawn por dia (ex: 0.08 = -8% ao dia)
+@export var interval_reduction_per_day: float = 0.08
+## Escalonamento de vida dos mobs por dia (ex: 0.10 = +10% ao dia)
+@export var health_scale_per_day: float = 0.10
+## Escalonamento de dano dos mobs por dia (ex: 0.08 = +8% ao dia)
+@export var damage_scale_per_day: float = 0.08
+## Limite máximo absoluto de mobs (independente do dia)
+@export var max_mobs_cap: int = 12
+## Intervalo mínimo de spawn em segundos (floor)
+@export var min_spawn_interval: float = 2.0
+@export_group("")
+
 var _alive_mobs: Array[Node] = []
 var _last_spawn_time: float = -999.0
 var _player_ref: Node3D = null
+var _base_max_mobs: int = 0
+var _base_spawn_interval: float = 0.0
+var _current_day: int = 1
 
 func _get_world_generator() -> Node:
 	var n: Node = self
@@ -47,6 +65,8 @@ func _get_ground_height_at(x: float, z: float) -> float:
 
 func _ready() -> void:
 	print("[MobSpawner] _ready (spawner ativo)")
+	_base_max_mobs = max_mobs
+	_base_spawn_interval = spawn_interval
 	if not mob_data:
 		push_warning("MobSpawner: mob_data não definido. Defina no Inspector ou set_mob_data().")
 	# Referência ao jogador: do grupo ou do world generator (pai)
@@ -65,6 +85,7 @@ func _ready() -> void:
 					print("[MobSpawner] _ready: jogador obtido do world generator (pai)")
 		if not is_instance_valid(_player_ref) and debug_log:
 			print("[MobSpawner] _ready: jogador NÃO encontrado (grupo nem world gen)")
+	call_deferred("_connect_day_night")
 
 func set_mob_data(data: MobData) -> void:
 	mob_data = data
@@ -154,6 +175,9 @@ func _spawn_one() -> void:
 	if is_instance_valid(_player_ref) and mob_controller.has_method("set_player_ref"):
 		mob_controller.set_player_ref(_player_ref)
 	add_child(instance)
+	# Escalonar stats do mob pelo dia atual (vida e dano)
+	if _current_day > 1 and mob_controller.has_method("apply_day_scaling"):
+		mob_controller.apply_day_scaling(_current_day, health_scale_per_day, damage_scale_per_day)
 	# Posição no nó que realmente se move (CharacterBody3D com mob_base); se for filho, só ele precisa estar em pos
 	if mob_controller is Node3D:
 		mob_controller.global_position = pos
@@ -182,3 +206,45 @@ func _on_mob_died(_mob: Node) -> void:
 				print("[MobSpawner] mob morreu, vivos=%d" % (_alive_mobs.size() - 1))
 			_alive_mobs.remove_at(i)
 			break
+
+func _connect_day_night() -> void:
+	var dnc = get_tree().get_first_node_in_group("day_night_cycle")
+	if not dnc:
+		return
+	if not dnc.night_started.is_connected(_on_night_started):
+		dnc.night_started.connect(_on_night_started)
+	if not dnc.day_started.is_connected(_on_day_started):
+		dnc.day_started.connect(_on_day_started)
+	if not dnc.new_day_started.is_connected(_on_new_day):
+		dnc.new_day_started.connect(_on_new_day)
+	# Sincroniza estado atual ao conectar (pode spawnar no dia 3, por exemplo)
+	_current_day = dnc.current_day
+	_recalculate_limits(dnc.is_night)
+
+func _recalculate_limits(is_night_now: bool) -> void:
+	var factor := float(_current_day - 1)
+	# Base escalada pelo dia
+	var day_max := int(round(float(_base_max_mobs) * (1.0 + factor * difficulty_per_day)))
+	var day_interval := _base_spawn_interval * (1.0 - factor * interval_reduction_per_day)
+	day_max = mini(day_max, max_mobs_cap)
+	day_interval = maxf(day_interval, min_spawn_interval)
+	# Noite: multiplica por 2 (com caps)
+	if is_night_now:
+		max_mobs = mini(day_max * 2, max_mobs_cap)
+		spawn_interval = maxf(day_interval * 0.5, min_spawn_interval)
+	else:
+		max_mobs = day_max
+		spawn_interval = day_interval
+
+func _on_night_started() -> void:
+	_recalculate_limits(true)
+
+func _on_day_started() -> void:
+	_recalculate_limits(false)
+
+func _on_new_day(day: int) -> void:
+	_current_day = day
+	var dnc = get_tree().get_first_node_in_group("day_night_cycle")
+	_recalculate_limits(dnc != null and dnc.is_night)
+	if debug_log:
+		print("[MobSpawner] Dia %d: max_mobs=%d, spawn_interval=%.1fs" % [day, max_mobs, spawn_interval])
