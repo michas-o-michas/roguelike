@@ -4,7 +4,7 @@
 [ext_resource type="PackedScene" uid="uid://nql47rn6v1pw" path="res://Scenes/Landingpad.tscn" id="2_edknb"]
 [ext_resource type="Texture2D" uid="uid://jprmyyen1bkh" path="res://dungeon/scenes/OutoTex PhotoBased Seamless Texture Pack 1024px/Rock1_img.jpg" id="2_fjt7r"]
 [ext_resource type="Script" uid="uid://co37y7rexx40s" path="res://dungeon/scripts/dungeon_wave_manager.gd" id="3_wm1"]
-[ext_resource type="Script" path="res://dungeon/scripts/dungeon_decorator.gd" id="4_dec1"]
+[ext_resource type="Script" uid="uid://bedjejf3mkmgn" path="res://dungeon/scripts/dungeon_decorator.gd" id="4_dec1"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_x8svo"]
 sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
@@ -106,7 +106,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, -35)
 
 [node name="Decorator" type="Node3D" parent="." unique_id=1000000007]
 script = ExtResource("4_dec1")
-arena_size = 100.0
 
-[node name="WaveManager" type="Node" parent="." unique_id=1000000006]
+[node name="WaveManager" type="Node" parent="." node_paths=PackedStringArray("spawn_points_parent", "exit_pad_path") unique_id=1000000006]
 script = ExtResource("3_wm1")
+spawn_points_parent = NodePath("../SpawnPoints")
+exit_pad_path = NodePath("../Landingpad")

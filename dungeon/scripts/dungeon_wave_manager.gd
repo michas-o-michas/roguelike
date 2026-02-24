@@ -384,12 +384,12 @@ func _spawn_reward_chest() -> void:
 	if is_instance_valid(_reward_chest):
 		return  # já existe
 
-	var chest_script: Script = load("res://dungeon/scripts/spell_chest.gd")
-	if not chest_script:
-		push_error("DungeonWaveManager: spell_chest.gd não encontrado.")
+	var chest_scene: PackedScene = load("res://dungeon/scenes/spell_chest.tscn")
+	if not chest_scene:
+		push_error("DungeonWaveManager: spell_chest.tscn não encontrado.")
 		return
 
-	_reward_chest = chest_script.new()
+	_reward_chest = chest_scene.instantiate()
 	if not _reward_chest:
 		push_error("DungeonWaveManager: falha ao instanciar SpellChest.")
 		return
@@ -397,14 +397,18 @@ func _spawn_reward_chest() -> void:
 	# Passa a lista de magias antes do add_child (antes do _ready).
 	_reward_chest.set("possible_spells", _get_reward_spells())
 
-	# Posição: à frente do exit pad, no centro da arena.
+	# Posição: à frente do exit pad; caso não configurado, usa centro da arena.
 	var pad := _get_exit_pad() as Node3D
-	var chest_pos := Vector3(0.0, 0.0, -6.0)
+	var parent_3d := get_parent() as Node3D
+	var origin := parent_3d.global_position if parent_3d else Vector3.ZERO
+	var chest_pos: Vector3
 	if is_instance_valid(pad):
-		chest_pos = pad.global_position + Vector3(0.0, 0.0, -6.0)
+		chest_pos = pad.global_position + Vector3(0.0, 0.3, -5.0)
+	else:
+		chest_pos = origin + Vector3(0.0, 0.3, -5.0)
 
 	get_parent().add_child(_reward_chest)
-	_reward_chest.global_position = chest_pos
+	(_reward_chest as Node3D).global_position = chest_pos
 
 
 func _get_reward_spells() -> Array[Spell]:

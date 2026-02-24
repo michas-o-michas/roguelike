@@ -5,7 +5,8 @@ extends Interactable
 ## Contém uma magia aleatória da lista possible_spells.
 ## Se o jogador já possui a magia sorteada, ela sobe de nível em vez de desbloquear.
 
-var possible_spells: Array[Spell] = []
+## Array de Spell (não tipado para evitar problemas de atribuição via set()).
+var possible_spells: Array = []
 
 var _opened: bool = false
 var _light: OmniLight3D

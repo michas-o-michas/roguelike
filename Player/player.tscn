@@ -675,7 +675,9 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.50008714, -0.7505561)
 [node name="AttackPoint" type="Marker3D" parent="Camera3D" unique_id=1274675329]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.50008714, -0.74833083)
 
-[node name="InteractionManager" parent="." unique_id=879334259 node_paths=PackedStringArray("camera", "ray_cast_3d", "ray_origin_marker", "crosshair_control") instance=ExtResource("9_00tjw")]
+[node name="InteractionManager" parent="." unique_id=879334259 node_paths=PackedStringArray("prompt_label", "prompt_label_floating", "camera", "ray_cast_3d", "ray_origin_marker", "crosshair_control") instance=ExtResource("9_00tjw")]
+prompt_label = NodePath("../UI/InteractionPromptBox/FixedPromptBox/InteractionPromptFixedLabel")
+prompt_label_floating = NodePath("../UI/InteractionPromptBox/FloatingPromptBox")
 camera = NodePath("../Camera3D")
 ray_cast_3d = NodePath("../CameraPivotMiddle/InteractionRaycast")
 ray_origin_marker = NodePath("../CameraPivotMiddle")
