@@ -175,7 +175,7 @@ func _spawn_wave(wave: WaveData) -> void:
 				hc.died.connect(func(): _on_mob_died(mob), CONNECT_ONE_SHOT)
 			# Boss: spawna HUD após um frame (garante que set_mob_data e apply_day_scaling já rodaram)
 			if mob_data.is_boss:
-				var _mob := mob
+				var _mob = mob
 				var _bname := mob_data.display_name
 				get_tree().process_frame.connect(
 					func():
@@ -443,16 +443,14 @@ func _announce_boss(display_for: float) -> void:
 	)
 
 
-## Instancia o boss health bar e conecta ao mob.
+## Instancia o boss health bar (cena) e conecta ao mob.
 func _spawn_boss_hud(boss: Node, boss_display_name: String) -> void:
-	var bar_script := load("res://dungeon/scripts/boss_health_bar.gd") as GDScript
-	if not bar_script:
-		push_warning("DungeonWaveManager: boss_health_bar.gd não encontrado.")
+	var bar_scene := load("res://dungeon/scenes/boss_health_bar.tscn") as PackedScene
+	if not bar_scene:
+		push_warning("DungeonWaveManager: boss_health_bar.tscn não encontrado.")
 		return
-	var bar: CanvasLayer = CanvasLayer.new()
-	bar.set_script(bar_script)
+	var bar := bar_scene.instantiate()
 	bar.name = "BossHealthBar"
-	# Adiciona ao pai da dungeon para ficar no mundo correto
 	get_parent().add_child(bar)
 	if bar.has_method("connect_to_boss"):
 		bar.connect_to_boss(boss, boss_display_name)
