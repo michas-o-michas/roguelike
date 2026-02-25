@@ -65,7 +65,7 @@ func _on_phase_changed(new_phase: int) -> void:
 
 
 func _on_boss_died() -> void:
-	# Fade out e remove
 	var tw := create_tween()
-	tw.tween_property(self, "modulate:a", 0.0, 1.0).set_delay(1.5)
+	tw.tween_interval(1.5)
+	tw.tween_property(self, "modulate:a", 0.0, 1.0)
 	tw.tween_callback(queue_free)
