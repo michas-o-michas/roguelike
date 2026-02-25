@@ -15,9 +15,8 @@ var _hp_bar_damage:    ColorRect   ## barra de dano (trail vermelho escuro)
 var _phase_label:      Label
 var _tween_damage:     Tween
 
-var _max_hp: float = 1.0
+var _hc: HealthComponent = null   ## referência ao HealthComponent do boss
 var _current_fill_color: Color = FILL_NORMAL
-var _hp_bar_width: float = 700.0
 
 func _ready() -> void:
 	layer = 12  # acima do WaveHUD (layer 11)
@@ -90,13 +89,12 @@ func connect_to_boss(boss: Node, boss_display_name: String) -> void:
 	_boss_name_label.text = "⚔ %s ⚔" % boss_display_name.to_upper()
 
 	# HealthComponent
-	var hc := boss.get_node_or_null("HealthComponent")
-	if hc:
-		_max_hp = hc.max_health
+	_hc = boss.get_node_or_null("HealthComponent")
+	if _hc:
 		_set_fill(1.0)
 		_hp_bar_damage.anchor_right = 1.0
-		hc.health_changed.connect(_on_health_changed)
-		hc.died.connect(_on_boss_died)
+		_hc.health_changed.connect(_on_health_changed)
+		_hc.died.connect(_on_boss_died)
 
 	# Fase 2
 	if boss.has_signal("boss_phase_changed"):
@@ -104,7 +102,8 @@ func connect_to_boss(boss: Node, boss_display_name: String) -> void:
 
 
 func _on_health_changed(_old: float, new_val: float) -> void:
-	var ratio := clampf(new_val / _max_hp, 0.0, 1.0)
+	var max_hp := _hc.max_health if _hc else 1.0
+	var ratio := clampf(new_val / max_hp, 0.0, 1.0)
 	# Trail de dano: barra damage fica onde estava, fill vai para ratio
 	_tween_damage = create_tween()
 	_tween_damage.tween_property(_hp_bar_fill, "anchor_right", ratio, 0.08)

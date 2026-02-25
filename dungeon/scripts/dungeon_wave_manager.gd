@@ -173,16 +173,18 @@ func _spawn_wave(wave: WaveData) -> void:
 			var hc := mob.get_node_or_null("HealthComponent")
 			if hc and hc.has_signal("died"):
 				hc.died.connect(func(): _on_mob_died(mob), CONNECT_ONE_SHOT)
+			# Boss: spawna HUD após um frame (garante que set_mob_data e apply_day_scaling já rodaram)
+			if mob_data.is_boss:
+				var _mob := mob
+				var _bname := mob_data.display_name
+				get_tree().process_frame.connect(
+					func():
+						_spawn_boss_hud(_mob, _bname)
+						boss_spawned.emit(_mob),
+					CONNECT_ONE_SHOT
+				)
 	mob_count_changed.emit(_alive_mobs)
 	_set_status("Inimigos: %d" % _alive_mobs)
-	# Boss: cria HUD dedicado para o primeiro boss spawnado nesta wave
-	for mob in _active_mobs:
-		if is_instance_valid(mob) and mob.has_signal("boss_phase_changed"):
-			var data: MobData = mob.get("mob_data") as MobData
-			var bname := data.display_name if data else "Chefe"
-			_spawn_boss_hud(mob, bname)
-			boss_spawned.emit(mob)
-			break
 
 
 ## Converte hp_multiplier em pseudo-day para apply_day_scaling(day, 0.1, …).
