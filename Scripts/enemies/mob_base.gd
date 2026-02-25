@@ -1,4 +1,5 @@
 extends CharacterBody3D
+class_name MobBase
 ## Base genérica para todos os mobs: lobo, vaca, coelho, zumbi, atirador, etc.
 ## Usa HealthComponent; stats e comportamento vêm do MobData que o SPAWNER seta ao instanciar.
 ## Não preencha mob_data na cena — o spawner chama set_mob_data() ao spawne. Preencha só para testar a cena sozinha no editor.
@@ -87,6 +88,15 @@ var _wander_timer: float = 0.0
 var _wander_direction: Vector2 = Vector2.ZERO
 ## Para performance: inimigos longe do jogador atualizam AI em frames alternados.
 var _ai_tick: int = 0
+
+# ── BOSS (só ativo quando mob_data.is_boss = true) ────────────────────────────
+signal boss_phase_changed(new_phase: int)
+var _boss_phase: int = 1          ## Fase 1 = normal  |  Fase 2 (<50% HP) = enraivecido
+var _boss_charge_cd:   float = 0.0
+var _boss_slam_cd:     float = 0.0
+var _boss_charging:    bool  = false
+var _boss_charge_timer: float = 0.0
+var _boss_minions_spawned: bool = false
 ## Raio de detecção base (antes de modificadores de noite).
 var _base_detection_radius: float = 0.0
 var _night_mode: bool = false
@@ -376,6 +386,15 @@ func _physics_process(delta: float) -> void:
 	if _attack_cooldown > 0:
 		_attack_cooldown -= delta
 
+	# Boss: cooldowns especiais e investida
+	if mob_data and mob_data.is_boss:
+		if _boss_charge_cd   > 0: _boss_charge_cd   -= delta
+		if _boss_slam_cd     > 0: _boss_slam_cd     -= delta
+		if _boss_charging:
+			_boss_charge_timer -= delta
+			if _boss_charge_timer <= 0.0:
+				_boss_charging = false
+
 	# Ataque telegrafado: aplicar dano no momento certo (após attack_hit_delay)
 	var now := Time.get_ticks_msec() / 1000.0
 	if _attack_damage_pending and now >= _attack_pending_hit_time:
@@ -444,6 +463,21 @@ func _run_ai(delta: float) -> void:
 		if debug_log and not _logged_no_mob_data:
 			_logged_no_mob_data = true
 			print("[MobBase] _run_ai: mob_data é null, AI em idle. Nome: ", name)
+		return
+
+	# Boss: verifica transição para fase 2
+	if mob_data.is_boss and _boss_phase == 1 and _health_component:
+		var ratio := _health_component.current_health / _health_component.max_health
+		if ratio <= 0.5:
+			_boss_enter_phase2()
+
+	# Boss em carga: não recalcula AI, só aplica velocidade de carga
+	if _boss_charging and is_instance_valid(_player):
+		var dir := (_player.global_position - global_position).normalized()
+		dir.y = 0
+		var charge_speed := (mob_data.speed if mob_data else 7.0) * 3.5
+		velocity.x = dir.x * charge_speed
+		velocity.z = dir.z * charge_speed
 		return
 
 	var dist_sq := global_position.distance_squared_to(_player.global_position)
@@ -634,6 +668,81 @@ func _try_attack_player() -> void:
 	_pending_armor_piercing = mob_data.armor_piercing if mob_data else 0.0
 	_attack_pending_hit_time = Time.get_ticks_msec() / 1000.0 + attack_hit_delay
 	_attack_damage_pending = true
+	# Boss: tenta habilidade especial junto com o ataque normal
+	if mob_data and mob_data.is_boss:
+		_boss_try_special()
+
+# ─── Habilidades do Boss ───────────────────────────────────────────────────────
+
+func _boss_enter_phase2() -> void:
+	_boss_phase = 2
+	boss_phase_changed.emit(2)
+	if mob_data:
+		mob_data = mob_data.duplicate() as MobData
+		mob_data.speed  = mob_data.speed  * 1.5
+		mob_data.damage = mob_data.damage * 1.25
+		mob_data.attack_cooldown = mob_data.attack_cooldown * 0.7
+	attack_cooldown_time = mob_data.attack_cooldown if mob_data else 1.0
+	if not _boss_minions_spawned:
+		_boss_minions_spawned = true
+		_boss_spawn_minions(2)
+
+func _boss_try_special() -> void:
+	if not is_instance_valid(_player):
+		return
+	var dist := global_position.distance_to(_player.global_position)
+	# Golpe em área: perto do boss
+	if dist <= attack_radius * 1.3 and _boss_slam_cd <= 0:
+		_boss_slam_cd = 4.0 if _boss_phase == 1 else 2.5
+		_boss_do_slam()
+	# Carga: player a média distância e cooldown livre
+	elif dist > attack_radius * 1.5 and dist < 12.0 and _boss_charge_cd <= 0:
+		_boss_charge_cd = 5.0 if _boss_phase == 1 else 3.0
+		_boss_do_charge()
+
+func _boss_do_charge() -> void:
+	_boss_charging    = true
+	_boss_charge_timer = 0.38
+
+func _boss_do_slam() -> void:
+	var slam_radius := attack_radius * 2.2
+	var space := get_world_3d().direct_space_state
+	if not space:
+		return
+	var sphere := SphereShape3D.new()
+	sphere.radius = slam_radius
+	var params := PhysicsShapeQueryParameters3D.new()
+	params.shape     = sphere
+	params.transform = Transform3D(Basis.IDENTITY, global_position + Vector3(0, 1, 0))
+	params.collide_with_bodies = true
+	for dict in space.intersect_shape(params):
+		var body = dict.get("collider", null)
+		if body == null:
+			continue
+		if body == self:
+			continue
+		if body.is_in_group("player") and body.has_method("take_damage"):
+			var dmg := (mob_data.damage if mob_data else 20.0) * 0.7
+			body.take_damage(dmg, 0.0, self)
+
+func _boss_spawn_minions(count: int) -> void:
+	if not MobRegistry:
+		return
+	var minion_data: MobData = MobRegistry.get_mob("dungeon_sentinel")
+	if not minion_data or not minion_data.mob_scene:
+		return
+	var parent := get_parent()
+	if not parent:
+		return
+	for i in count:
+		var mob = minion_data.mob_scene.instantiate()
+		if not mob:
+			continue
+		parent.add_child(mob)
+		var angle := float(i) / float(count) * TAU
+		mob.global_position = global_position + Vector3(cos(angle) * 3.0, 0.2, sin(angle) * 3.0)
+		if mob.has_method("set_mob_data"):
+			mob.set_mob_data(minion_data)
 
 func _set_animation(anim_name: String) -> void:
 	if _current_anim_name == anim_name:

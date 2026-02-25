@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="MobData" format=3 uid="uid://dboss01"]
+
+[ext_resource type="Script" uid="uid://6dikqqb2n65a" path="res://Scripts/enemies/mob_data.gd" id="1_script"]
+[ext_resource type="PackedScene" uid="uid://d2bnipyagl5k3" path="res://Scenes/enemies/wolf.tscn" id="2_scene"]
+
+[resource]
+script = ExtResource("1_script")
+id = "dungeon_lord"
+display_name = "Senhor da Dungeon"
+mob_scene = ExtResource("2_scene")
+behaviour = 1
+max_health = 800.0
+damage = 35.0
+defense = 8.0
+speed = 7.0
+detection_radius = 40.0
+attack_radius = 3.5
+attack_cooldown = 1.5
+difficulty_tier = 20
+is_boss = true

@@ -10,6 +10,8 @@ signal wave_started(wave_index: int, total_waves: int)
 signal wave_cleared(wave_index: int)
 ## Emitido quando todas as waves são concluídas.
 signal all_waves_cleared()
+## Emitido ao spawnar o boss (passa o nó do boss).
+signal boss_spawned(boss: Node)
 ## Emitido a cada morte de mob.
 signal mob_count_changed(alive: int)
 
@@ -114,7 +116,11 @@ func _next_wave() -> void:
 	var wave: WaveData = waves[_current_wave]
 	var total := waves.size()
 	wave_started.emit(_current_wave, total)
-	_announce("ONDA %d / %d" % [_current_wave + 1, total], wave.spawn_delay)
+	# Anúncio especial para onda de boss
+	if wave.has_meta("is_boss_wave") and wave.get_meta("is_boss_wave"):
+		_announce_boss(wave.spawn_delay)
+	else:
+		_announce("ONDA %d / %d" % [_current_wave + 1, total], wave.spawn_delay)
 	_set_status("Aguardando...")
 	await get_tree().create_timer(wave.spawn_delay).timeout
 	if not _started:
@@ -169,6 +175,14 @@ func _spawn_wave(wave: WaveData) -> void:
 				hc.died.connect(func(): _on_mob_died(mob), CONNECT_ONE_SHOT)
 	mob_count_changed.emit(_alive_mobs)
 	_set_status("Inimigos: %d" % _alive_mobs)
+	# Boss: cria HUD dedicado para o primeiro boss spawnado nesta wave
+	for mob in _active_mobs:
+		if is_instance_valid(mob) and mob.has_signal("boss_phase_changed"):
+			var data: MobData = mob.get("mob_data") as MobData
+			var bname := data.display_name if data else "Chefe"
+			_spawn_boss_hud(mob, bname)
+			boss_spawned.emit(mob)
+			break
 
 
 ## Converte hp_multiplier em pseudo-day para apply_day_scaling(day, 0.1, …).
@@ -273,22 +287,50 @@ func _setup_default_waves() -> void:
 	waves.clear()
 	match dungeon_level:
 		1:
-			# Dungeon Lv1 — 3 ondas: sentinelas + guardiões
+			# Lv1 — 4 ondas + BOSS
 			waves.append(_make_wave([["dungeon_sentinel", 3]], 1.5))
 			waves.append(_make_wave([["dungeon_sentinel", 4], ["dungeon_brute", 1]], 2.0))
-			waves.append(_make_wave([["dungeon_sentinel", 5], ["dungeon_brute", 2]], 2.0, 1.3, 1.1))
+			waves.append(_make_wave([["dungeon_sentinel", 5], ["dungeon_brute", 2]], 2.0, 1.2, 1.0))
+			waves.append(_make_wave([["dungeon_sentinel", 3], ["dungeon_brute", 2]], 2.5, 1.4, 1.1))
+			waves.append(_make_boss_wave("dungeon_lord", 3.0))          # BOSS
 		2:
-			# Dungeon Lv2 — 4 ondas: mais intensas
+			# Lv2 — 5 ondas + BOSS mais forte
 			waves.append(_make_wave([["dungeon_sentinel", 4]], 1.5))
 			waves.append(_make_wave([["dungeon_sentinel", 5], ["dungeon_brute", 2]], 2.0))
 			waves.append(_make_wave([["dungeon_sentinel", 4], ["dungeon_brute", 3]], 2.0, 1.2, 1.0))
 			waves.append(_make_wave([["dungeon_sentinel", 3], ["dungeon_brute", 4]], 2.5, 1.5, 1.2))
+			waves.append(_make_wave([["dungeon_sentinel", 2], ["dungeon_brute", 3]], 2.0, 1.6, 1.3))
+			waves.append(_make_boss_wave("dungeon_lord", 3.0, 1.5, 1.3)) # BOSS mais forte
+		3:
+			# Lv3 — 6 ondas + BOSS épico
+			waves.append(_make_wave([["dungeon_sentinel", 5]], 1.5))
+			waves.append(_make_wave([["dungeon_sentinel", 6], ["dungeon_brute", 2]], 2.0))
+			waves.append(_make_wave([["dungeon_sentinel", 4], ["dungeon_brute", 4]], 2.0, 1.3, 1.1))
+			waves.append(_make_wave([["dungeon_brute", 5]], 2.0, 1.5, 1.2))
+			waves.append(_make_wave([["dungeon_sentinel", 4], ["dungeon_brute", 4]], 2.5, 1.7, 1.3))
+			waves.append(_make_wave([["dungeon_brute", 4]], 2.0, 2.0, 1.4))
+			waves.append(_make_boss_wave("dungeon_lord", 3.0, 2.0, 1.5)) # BOSS épico
 		_:
-			# Genérico: escala com dungeon_level
+			# Genérico escalado pelo nível
 			var n := dungeon_level
 			waves.append(_make_wave([["dungeon_sentinel", n + 2]], 1.5))
 			waves.append(_make_wave([["dungeon_sentinel", n + 2], ["dungeon_brute", n]], 2.0))
-			waves.append(_make_wave([["dungeon_brute", n + 2]], 2.0, 1.5, 1.2))
+			waves.append(_make_wave([["dungeon_sentinel", n], ["dungeon_brute", n + 1]], 2.0, 1.3, 1.1))
+			waves.append(_make_wave([["dungeon_brute", n + 2]], 2.5, 1.5, 1.2))
+			waves.append(_make_boss_wave("dungeon_lord", 3.0, 1.0 + n * 0.2, 1.0 + n * 0.1))
+
+
+## Cria uma onda de BOSS com anúncio especial e HUD dedicado.
+func _make_boss_wave(
+	boss_id: String,
+	spawn_delay: float = 3.0,
+	hp_mult: float = 1.0,
+	dmg_mult: float = 1.0
+) -> WaveData:
+	var wd := _make_wave([[boss_id, 1]], spawn_delay, hp_mult, dmg_mult)
+	wd.set_meta("is_boss_wave", true)
+	wd.set_meta("boss_id", boss_id)
+	return wd
 
 
 ## Cria um WaveData programaticamente.
@@ -376,6 +418,42 @@ func _announce(text: String, display_for: float = 3.0) -> void:
 func _set_status(text: String) -> void:
 	if _status_label:
 		_status_label.text = text
+
+
+## Anúncio especial em vermelho para a onda do boss.
+func _announce_boss(display_for: float) -> void:
+	if not _announce_label:
+		return
+	_announce_label.text = "⚠ CHEFE SE APROXIMA! ⚠"
+	_announce_label.add_theme_color_override("font_color", Color(1.0, 0.15, 0.08))
+	if _tween_announce and _tween_announce.is_valid():
+		_tween_announce.kill()
+	_announce_label.modulate.a = 0.0
+	_tween_announce = create_tween().set_parallel(false)
+	_tween_announce.tween_property(_announce_label, "modulate:a", 1.0, 0.4)
+	var hold := display_for - 0.9
+	if hold > 0.0:
+		_tween_announce.tween_interval(hold)
+	_tween_announce.tween_property(_announce_label, "modulate:a", 0.0, 0.5)
+	# Restaura a cor amarela original depois
+	_tween_announce.tween_callback(func():
+		_announce_label.add_theme_color_override("font_color", Color(1.0, 0.92, 0.22))
+	)
+
+
+## Instancia o boss health bar e conecta ao mob.
+func _spawn_boss_hud(boss: Node, boss_display_name: String) -> void:
+	var bar_script := load("res://dungeon/scripts/boss_health_bar.gd") as GDScript
+	if not bar_script:
+		push_warning("DungeonWaveManager: boss_health_bar.gd não encontrado.")
+		return
+	var bar: CanvasLayer = CanvasLayer.new()
+	bar.set_script(bar_script)
+	bar.name = "BossHealthBar"
+	# Adiciona ao pai da dungeon para ficar no mundo correto
+	get_parent().add_child(bar)
+	if bar.has_method("connect_to_boss"):
+		bar.connect_to_boss(boss, boss_display_name)
 
 
 # ─── Recompensa: Baú de Magia ─────────────────────────────────────────────────

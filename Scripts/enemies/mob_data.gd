@@ -45,7 +45,9 @@ enum Behaviour {
 @export var armor_piercing: float = 0.0
 
 @export var loot_table_id: String = ""
-@export_range(1, 10) var difficulty_tier: int = 1
+@export_range(1, 30) var difficulty_tier: int = 1
+## Se true, mob recebe comportamento de chefe (fases, habilidades especiais, HUD próprio).
+@export var is_boss: bool = false
 
 ## Animações: só se a cena usar nós com outro nome (ex.: "SharedAnim/AnimationTree").
 @export var animation_tree_path_override: NodePath = NodePath("")
