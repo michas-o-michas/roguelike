@@ -320,6 +320,7 @@ func _try_attack() -> void:
 		player.play_attack_animation(anim_name)
 
 	_play_attack_sound()
+	_play_viewmodel_swing()
 
 	# Roteia para melee ou ranged
 	match equipped_weapon.weapon_type:
@@ -473,6 +474,16 @@ func _try_mine_target(target: Node3D) -> void:
 func _attack_ranged() -> void:
 	if _projectile_launcher and _projectile_launcher.has_method("launch"):
 		_projectile_launcher.launch()
+
+# ================= ANIMAÇÃO VIEWMODEL (FPS) =================
+
+## Dispara o swing visual da arma no ViewModelPivot (primeiro pessoa).
+func _play_viewmodel_swing() -> void:
+	if camera_node == null:
+		return
+	var vmp := camera_node.get_node_or_null("ViewModelPivot") as Node3D
+	if vmp and vmp.has_method("play_swing"):
+		vmp.play_swing()
 
 # ================= SOM =================
 
