@@ -10,7 +10,7 @@
 [ext_resource type="Script" uid="uid://dh8cw2d6nnl6u" path="res://Scenes/fps-test.gd" id="5_efk68"]
 [ext_resource type="Script" uid="uid://cckc1eka3ujni" path="res://world_generator_v2/poi_data.gd" id="6_rarx8"]
 [ext_resource type="Resource" uid="uid://bqpqu6d4gt3re" path="res://world_generator_v2/POIData/temple.tres" id="7_wjxug"]
-[ext_resource type="ArrayMesh" uid="uid://08aj7yowiacx" path="res://grass4.tres" id="8_bqkvc"]
+[ext_resource type="QuadMesh" uid="uid://8ys171f60s6d" path="res://gress.tres" id="8_bqkvc"]
 [ext_resource type="Script" uid="uid://el3it5rlbpge" path="res://world_generator_v2/animal_spawner_data.gd" id="9_3la1u"]
 [ext_resource type="Resource" uid="uid://clpq5lxgnutv5" path="res://world_generator_v2/spawners/wolf_spawner_data.tres" id="10_wolfspawner"]
 [ext_resource type="Script" uid="uid://bbwcjlccr203h" path="res://Scripts/SkillManager.gd" id="18_fc4x2"]
@@ -28,6 +28,9 @@
 [ext_resource type="AudioStream" uid="uid://dcobdymhcson2" path="res://Assets/sounds/Music/street-corner-jazz-cafe-338559.mp3" id="26_r6o88"]
 [ext_resource type="Script" uid="uid://b4fyoobgjged2" path="res://Scenes/Level1_main.gd" id="27_main"]
 [ext_resource type="PackedScene" path="res://Scenes/PauseMenu.tscn" id="28_pause"]
+[ext_resource type="Script" uid="uid://nuge6xaqg0e5" path="res://Scripts/enemies/night_spawner.gd" id="29_nightspawner"]
+[ext_resource type="Script" uid="uid://6dikqqb2n65a" path="res://Scripts/enemies/mob_data.gd" id="30_mobdata_class"]
+[ext_resource type="Resource" uid="uid://dwolfdata01" path="res://data/mobs/wolf.tres" id="31_wolfmob"]
 
 [sub_resource type="Resource" id="Resource_ikiii"]
 script = ExtResource("19_r3dg4")
@@ -56,25 +59,27 @@ script = ExtResource("27_main")
 script = ExtResource("1_rxb08")
 world_seed = 0
 world_theme = ExtResource("2_wjxug")
+enable_origin_rebase = false
 origin_rebase_threshold = 100.0
 enable_collision_lod = false
 noise_amplitude = 200.0
 lacunarity = 1.8
 terrain_subdivisions = 50
+reduce_near_subdivisions = true
 rock_start_height = 60.0
 rock_thickness = 40.0
 snow_start_height = 80.0
-spawn_spacing = 10.0
+spawn_spacing = 15.0
 biomes = Array[ExtResource("2_rxb08")]([ExtResource("4_kq4yt"), ExtResource("3_kq4yt"), ExtResource("5_8d4ee")])
 grass_mesh = ExtResource("8_bqkvc")
-grass_circle_radius = 30.0
-grass_circle_count = 1500
+grass_circle_radius = 55.0
+grass_circle_count = 12500
 grass_min_scale = 1.0
-grass_max_scale = 1.0
+grass_max_scale = 1.5
 grass_max_height = 100.0
 water_size = 1000000.0
-poi_check_interval = 1.0
-poi_min_spacing = 1.0
+poi_check_interval = 60.0
+poi_min_spacing = 80.0
 poi_per_area_chance = 1.0
 pois = Array[ExtResource("6_rarx8")]([ExtResource("7_wjxug")])
 spawner_per_area_chance = 1.0
@@ -110,13 +115,11 @@ max_polyphony = 1294
 
 [node name="Music" type="AudioStreamPlayer2D" parent="Level1" unique_id=1638091883]
 stream = ExtResource("22_iswit")
-volume_db = -11.629
 autoplay = true
 max_polyphony = 1294
 
 [node name="NightCycle" type="AudioStreamPlayer2D" parent="Level1" unique_id=154092956]
 stream = ExtResource("25_txpnq")
-volume_db = -12.169
 max_distance = 1293.55
 
 [node name="JazzAmbient" type="AudioStreamPlayer2D" parent="Level1" unique_id=1100434845]
@@ -125,6 +128,13 @@ volume_db = -20.756
 
 [node name="Day_Night" parent="Level1" unique_id=606555801 instance=ExtResource("23_2qiau")]
 dayLengthInSeconds = 300.0
+
+[node name="NightSpawner" type="Node3D" parent="Level1" unique_id=606555802]
+script = ExtResource("29_nightspawner")
+mob_data_list = Array[ExtResource("30_mobdata_class")]([ExtResource("31_wolfmob")])
+min_distance = 30.0
+max_distance = 60.0
+debug_log = true
 
 [node name="Dungeon_Lv1" parent="." unique_id=1654411826 instance=ExtResource("24_384de")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 203.3359, -1.7163544, 0)

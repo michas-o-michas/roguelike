@@ -86,19 +86,47 @@ func _update_night_state(prev_state: int) -> void:
 	if not was_night and now_night:
 		is_night = true
 		night_started.emit()
+		_switch_audio(true)
 	elif was_night and not now_night:
 		is_night = false
 		current_day += 1
 		day_started.emit()
 		new_day_started.emit(current_day)
+		_switch_audio(false)
+
+func _switch_audio(night: bool) -> void:
+	var parent = get_parent()
+	var day_audio: AudioStreamPlayer2D = parent.get_node_or_null("DayCycle")
+	var night_audio: AudioStreamPlayer2D = parent.get_node_or_null("NightCycle")
+	if not day_audio or not night_audio:
+		return
+
+	const DAY_VOL = 7.31
+	const NIGHT_VOL = -12.169
+	const SILENT = -80.0
+	const FADE_TIME = 3.0
+
+	var tween = create_tween()
+	if night:
+		night_audio.volume_db = SILENT
+		night_audio.play()
+		tween.tween_property(night_audio, "volume_db", NIGHT_VOL, FADE_TIME)
+		tween.parallel()
+		tween.tween_property(day_audio, "volume_db", SILENT, FADE_TIME)
+	else:
+		day_audio.volume_db = SILENT
+		day_audio.play()
+		tween.tween_property(day_audio, "volume_db", DAY_VOL, FADE_TIME)
+		tween.parallel()
+		tween.tween_property(night_audio, "volume_db", SILENT, FADE_TIME)
 
 func _day_change_animation():
 	var topColor = dayColorList[currentDayState]["top"]
 	var hoirzonColor = dayColorList[currentDayState]["horizon"]
 	var tween = create_tween()
-	
+
 	var duration = durationMultiplier
-	
+
 	tween.tween_property(world_environment, "environment:sky:sky_material:sky_top_color", topColor, duration)
 	tween.parallel()
 	tween.tween_property(world_environment, "environment:sky:sky_material:sky_horizon_color", hoirzonColor, duration)
@@ -106,6 +134,9 @@ func _day_change_animation():
 	tween.tween_property(world_environment, "environment:sky:sky_material:ground_bottom_color", topColor, duration)
 	tween.parallel()
 	tween.tween_property(world_environment, "environment:sky:sky_material:ground_horizon_color", hoirzonColor, duration)
+	tween.parallel()
+	var target_ambient = 0.0 if currentDayState == 3 else 1.0
+	tween.tween_property(world_environment, "environment:ambient_light_energy", target_ambient, duration)
 
 func _process(_delta: float) -> void:
 	_refresh_day_state()

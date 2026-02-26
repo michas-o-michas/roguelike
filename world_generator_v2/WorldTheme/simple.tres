@@ -22,3 +22,4 @@ material_grass = ExtResource("1_saork")
 material_rock = ExtResource("2_bwdr1")
 material_snow = ExtResource("4_defk5")
 custom_mountain_level = 40.0
+sun_energy = 0.0

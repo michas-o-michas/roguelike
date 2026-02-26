@@ -35,7 +35,7 @@ var jump_buffered := false
 @export var cam_distance_max := 10.0 ## Distância máxima (scroll para longe)
 @export var cam_zoom_step := 0.5 ## Quanto altera a distância por “clique” do scroll
 @export var cam_height_offset := 0.35 ## Altura da câmera em relação ao pivot (acima/abaixo)
-@export var cam_pitch_min := -50.0
+@export var cam_pitch_min := -70.0
 @export var cam_pitch_max := 60.0
 
 ## Nó visual do personagem (mesh): só ele vira na direção do movimento; a câmera continua 100% no mouse.
@@ -133,15 +133,11 @@ func _ready():
 		StatsManager.apply_to_player(self)
 
 func set_animation(anim_name: String) -> void:
-	if not animation_tree:
-		return
-	var playback = animation_tree.get("parameters/playback")
-	if playback:
-		playback.travel(anim_name)
+	pass
 
 ## Chamado ao atacar (weapon_handler) — evita que Idle/Walk/Run sobrescrevam a animação
 func play_attack_animation(anim_state_name: String = "Attack") -> void:
-	set_animation(anim_state_name)
+	$AnimationPlayer.play("Attack")
 	is_attacking = true
 	_attack_end_time = Time.get_ticks_msec() / 1000.0 + attack_anim_duration
 

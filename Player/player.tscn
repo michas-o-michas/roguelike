@@ -21,6 +21,8 @@
 [ext_resource type="PackedScene" path="res://Scenes/UI/compass.tscn" id="67_compass"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/day_night_indicator.tscn" id="68_daynight"]
 [ext_resource type="PackedScene" uid="uid://b5eyfmbt5m5ps" path="res://Scenes/UI/game_over.tscn" id="69_gameover"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/minimap.tscn" id="70_minimap"]
+[ext_resource type="Script" uid="uid://6rdf1ibcc2dk" path="res://Scripts/UI/night_effects_ui.gd" id="71_nightui"]
 
 [sub_resource type="SeparationRayShape3D" id="SeparationRayShape3D_o28un"]
 length = 0.25932503
@@ -150,7 +152,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.65, 0)
 script = ExtResource("21_fps")
 
 [node name="ViewModelPivot" type="Node3D" parent="CameraRig/Camera3D" unique_id=1000100002]
-transform = Transform3D(-0.061227802, 0.19425246, -0.97903913, -0.6830126, 0.70710695, 0.18301278, 0.72783566, 0.6799016, 0.0893823, 0.6768646, -0.7747458, -0.55)
+transform = Transform3D(-0.0612278, 0.19425246, -0.97903913, -0.6830126, 0.70710695, 0.18301278, 0.72783566, 0.6799016, 0.0893823, 0.6768646, -0.7747458, -0.55)
 script = ExtResource("22_viewmodel")
 
 [node name="MagicPoint" type="Marker3D" parent="CameraRig/Camera3D" unique_id=485879385]
@@ -227,8 +229,16 @@ expand_mode = 1
 [node name="PlayerHealthBar" parent="UI" unique_id=485555041 instance=ExtResource("64_healthbar")]
 
 [node name="Compass" parent="UI" unique_id=4000001 instance=ExtResource("67_compass")]
+offset_left = -329.0
+offset_top = 43.0
+offset_right = -233.0
+offset_bottom = 151.0
 
 [node name="DayNightIndicator" parent="UI" unique_id=4000002 instance=ExtResource("68_daynight")]
+offset_left = -171.0
+offset_top = 225.0
+offset_right = -75.0
+offset_bottom = 321.0
 
 [node name="PlayerAttackCooldownBar" parent="UI" unique_id=485555042 instance=ExtResource("65_cooldown")]
 offset_top = -136.0
@@ -237,6 +247,23 @@ offset_bottom = -92.0
 [node name="GameOver" parent="UI" unique_id=4000003 instance=ExtResource("69_gameover")]
 offset_top = -136.0
 offset_bottom = -92.0
+
+[node name="Minimap" parent="UI" unique_id=4000004 instance=ExtResource("70_minimap")]
+offset_left = -213.0
+offset_top = -1041.0
+offset_right = -59.0
+offset_bottom = -887.0
+dot_size = 2.0
+
+[node name="NightEffectsUI" type="Control" parent="UI" unique_id=4000005]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("71_nightui")
 
 [node name="StepAudio" type="AudioStreamPlayer3D" parent="." unique_id=663968099]
 stream = ExtResource("6_od3ui")

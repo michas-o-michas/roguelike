@@ -1,10 +1,8 @@
 [gd_resource type="Resource" script_class="ItemVariant" format=3 uid="uid://dsijpohvusbl6"]
 
 [ext_resource type="Script" uid="uid://okens1wa1haa" path="res://world_generator_v2/item_variant.gd" id="1_5dmw4"]
-[ext_resource type="PackedScene" uid="uid://b1k04w8r0ffed" path="res://Assets/Stylized Nature MegaKit[Standard]/FBX/Flower_4_Single.fbx" id="1_6tng5"]
 
 [resource]
 script = ExtResource("1_5dmw4")
 variant_name = "flor roxa"
-scene = ExtResource("1_6tng5")
 metadata/_custom_type_script = "uid://okens1wa1haa"

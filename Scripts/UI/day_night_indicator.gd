@@ -41,9 +41,11 @@ func _draw() -> void:
 	# Estado atual do ciclo
 	var current_hour := 12.0
 	var is_night := false
+	var current_day := 1
 	if _dnc and is_instance_valid(_dnc):
 		current_hour = float(_dnc.current_hour)
 		is_night = bool(_dnc.is_night)
+		current_day = int(_dnc.current_day)
 
 	# ——— Arcos do ciclo ———
 	# Em Godot 2D: -PI/2 = cima, 0 = direita, PI/2 = baixo, ±PI = esquerda
@@ -75,6 +77,19 @@ func _draw() -> void:
 		# Sol: halo + círculo dourado
 		draw_circle(dot_pos, 7.5, Color(1.0, 0.82, 0.22, 0.40))
 		draw_circle(dot_pos, 5.5, Color(1.0, 0.93, 0.38, 1.0))
+
+	# ——— Contador de dias ———
+	var font := get_theme_font("font")
+	var label_top := "DIA"
+	var label_num := str(current_day)
+	var text_color_top := Color(0.72, 0.60, 0.38, 0.85)
+	var text_color_num := Color(1.0, 0.92, 0.60, 1.0) if not is_night else Color(0.72, 0.82, 1.0, 1.0)
+	var sz_top := 8
+	var sz_num := 14
+	var top_w := font.get_string_size(label_top, HORIZONTAL_ALIGNMENT_LEFT, -1, sz_top).x
+	var num_w := font.get_string_size(label_num, HORIZONTAL_ALIGNMENT_LEFT, -1, sz_num).x
+	draw_string(font, center + Vector2(-top_w * 0.5, -3.0), label_top, HORIZONTAL_ALIGNMENT_LEFT, -1, sz_top, text_color_top)
+	draw_string(font, center + Vector2(-num_w * 0.5, 11.0), label_num, HORIZONTAL_ALIGNMENT_LEFT, -1, sz_num, text_color_num)
 
 	# ——— Pivô central ———
 	draw_circle(center, 3.5, inner_ring_color)

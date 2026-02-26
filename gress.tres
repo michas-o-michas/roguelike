@@ -6,8 +6,13 @@
 transparency = 1
 cull_mode = 2
 albedo_texture = ExtResource("1_52yl7")
+uv2_scale = Vector3(2, 2, 2)
+texture_repeat = false
+billboard_mode = 2
+grow = true
+grow_amount = 0.1
+proximity_fade_enabled = true
 stencil_flags = 2
-stencil_color = Color(1, 0, 0, 1)
 
 [resource]
 material = SubResource("StandardMaterial3D_qdibi")

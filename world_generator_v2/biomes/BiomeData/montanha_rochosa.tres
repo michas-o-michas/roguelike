@@ -7,11 +7,12 @@
 [ext_resource type="Resource" uid="uid://c2lprocksmt" path="res://world_generator_v2/biomes/BiomeItem/lowpoly/lowpoly_rocks_montanha.tres" id="4_lpr"]
 [ext_resource type="Script" uid="uid://cckc1eka3ujni" path="res://world_generator_v2/poi_data.gd" id="9_ntxb3"]
 [ext_resource type="Script" uid="uid://el3it5rlbpge" path="res://world_generator_v2/animal_spawner_data.gd" id="10_llkaf"]
+[ext_resource type="Resource" path="res://world_generator_v2/biomes/BiomeItem/pebble.tres" id="11_pebble"]
 
 [resource]
 script = ExtResource("2_hfggp")
 biome_name = "Montanha Rochosa"
 min_height = 20.0
 biome_noise_value = 0.172
-biome_items = Array[ExtResource("1_h4kd2")]([ExtResource("2_sga6u"), ExtResource("3_lpt"), ExtResource("4_lpr")])
+biome_items = Array[ExtResource("1_h4kd2")]([ExtResource("2_sga6u"), ExtResource("3_lpt"), ExtResource("4_lpr"), ExtResource("11_pebble")])
 metadata/_custom_type_script = "uid://b21qcx74inoxd"

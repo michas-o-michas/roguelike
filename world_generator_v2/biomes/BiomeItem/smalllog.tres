@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="BiomeItem" format=3 uid="uid://bbkohl0n6igvg"]
+
+[ext_resource type="Script" uid="uid://b78jp2kr0j5w" path="res://world_generator_v2/biome_item.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://bhgcthxjxafoq" path="res://world_generator_v2/sub_biome_item.gd" id="2_fxbf0"]
+[ext_resource type="Script" uid="uid://okens1wa1haa" path="res://world_generator_v2/item_variant.gd" id="2_var"]
+[ext_resource type="Resource" uid="uid://o5kpo4qevbso" path="res://world_generator_v2/biomes/ItemVariant/collectible/small_log.tres" id="l1"]
+
+[resource]
+script = ExtResource("1_script")
+item_name = "Tronco Pequeno"
+spawn_chance = 0.06
+min_scale = 0.7
+max_scale = 1.3
+variants = Array[ExtResource("2_var")]([ExtResource("l1")])
+metadata/_custom_type_script = "uid://b78jp2kr0j5w"

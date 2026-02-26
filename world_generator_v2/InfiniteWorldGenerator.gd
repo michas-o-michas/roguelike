@@ -433,6 +433,10 @@ func _process(_delta: float):
 				_process_chunk_queue()
 		_process_vegetation_queue()
 		_process_collision_queue()
+		if enable_pois and poi_manager:
+			poi_manager.check_and_spawn_pois(self)
+		if enable_spawners and spawner_manager:
+			spawner_manager.check_and_spawn_spawners(self)
 		return
 
 	# Durante carregamento inicial: verificações de segurança e progresso

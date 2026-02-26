@@ -5,6 +5,9 @@
 
 [resource]
 script = ExtResource("1_14umt")
+poi_name = "Portal da Dungeon"
 scene = ExtResource("1_860li")
-max_height = 60.0
+difficulty_tier = 1
+min_height = -4.0
+max_height = 200.0
 metadata/_custom_type_script = "uid://cckc1eka3ujni"

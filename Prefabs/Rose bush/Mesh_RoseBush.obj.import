@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://dluhnq4cgkewt"
+path="res://.godot/imported/Mesh_RoseBush.obj-cda848f59a34ce76a0a9e6cafde0f89f.mesh"
+
+[deps]
+
+files=["res://.godot/imported/Mesh_RoseBush.obj-cda848f59a34ce76a0a9e6cafde0f89f.mesh"]
+
+source_file="res://Prefabs/Rose bush/Mesh_RoseBush.obj"
+dest_files=["res://.godot/imported/Mesh_RoseBush.obj-cda848f59a34ce76a0a9e6cafde0f89f.mesh", "res://.godot/imported/Mesh_RoseBush.obj-cda848f59a34ce76a0a9e6cafde0f89f.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false

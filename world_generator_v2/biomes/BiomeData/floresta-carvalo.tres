@@ -11,6 +11,8 @@
 [ext_resource type="Resource" uid="uid://c2lplogs01" path="res://world_generator_v2/biomes/BiomeItem/lowpoly/lowpoly_logs.tres" id="9_lpl"]
 [ext_resource type="Script" uid="uid://cckc1eka3ujni" path="res://world_generator_v2/poi_data.gd" id="10_y4u32"]
 [ext_resource type="Script" uid="uid://el3it5rlbpge" path="res://world_generator_v2/animal_spawner_data.gd" id="11_o0c2a"]
+[ext_resource type="Resource" path="res://world_generator_v2/biomes/BiomeItem/smalllog.tres" id="12_slog"]
+[ext_resource type="Resource" path="res://world_generator_v2/biomes/BiomeItem/pebble.tres" id="13_pebble"]
 
 [resource]
 script = ExtResource("2_5rm5j")
@@ -19,5 +21,5 @@ max_height = 40.0
 preferred_moisture = 1.0
 preferred_temperature = 1.0
 biome_noise_value = 0.0
-biome_items = Array[ExtResource("1_ee0u6")]([ExtResource("2_8exqf"), ExtResource("4_rocks"), ExtResource("6_lpb"), ExtResource("7_lpp"), ExtResource("8_lpg"), ExtResource("8_flowers"), ExtResource("9_lpl")])
+biome_items = Array[ExtResource("1_ee0u6")]([ExtResource("2_8exqf"), ExtResource("4_rocks"), ExtResource("6_lpb"), ExtResource("7_lpp"), ExtResource("8_lpg"), ExtResource("8_flowers"), ExtResource("9_lpl"), ExtResource("12_slog"), ExtResource("13_pebble")])
 metadata/_custom_type_script = "uid://b21qcx74inoxd"
